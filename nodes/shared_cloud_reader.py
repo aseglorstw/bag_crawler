@@ -14,6 +14,8 @@ def save_shared_cloud(bag):
     rospy.init_node('tf_listener')
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
     buffer = load_buffer(bag)
+    coord_x_base_link = []
+    coord_y_base_link = []
     cloud_combined = []
     saved_times = set()
     for topic, msg, time in bag.read_messages(topics=['/points']):
@@ -26,11 +28,16 @@ def save_shared_cloud(bag):
             msg = PointCloud2(*slots(msg))
             cloud = np.array(list(read_points(msg)))
             try:
-                transform = buffer.lookup_transform_full("map", time, "os_sensor", time, "map", rospy.Duration(1))
-                matrix = numpify(transform.transform)
+                transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
+                                                                       rospy.Duration(1))
+                matrix = numpify(transform_map_os_sensor.transform)
                 vectors = np.array([cloud[::400, 0], cloud[::400, 1], cloud[::400, 2]])
                 transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                 cloud_combined.append(transformed_vectors)
+                transform_map_base_link = buffer.lookup_transform_full("map", time, "base_link", time, "map",
+                                                                       rospy.Duration(1))
+                coord_x_base_link.append(transform_map_base_link.transform.translation.x)
+                coord_y_base_link.append(transform_map_base_link.transform.translation.y)
                 saved_times.add(save_time)
             except ExtrapolationException:
                 continue
@@ -39,7 +46,7 @@ def save_shared_cloud(bag):
         marker_size = 0.5
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
-        plt.title("Shared Point Cloud")
+        plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
         combined_points = np.concatenate(cloud_combined, axis=1)
         colors = combined_points[2, :] * 2
         ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
