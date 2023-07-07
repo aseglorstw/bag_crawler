@@ -3,7 +3,7 @@ import shared_cloud_reader
 import tf_reader
 import cloud_reader
 import image_reader
-import numpy as np
+
 
 
 def main():

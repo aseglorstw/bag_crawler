@@ -50,6 +50,7 @@ def save_shared_cloud(bag):
         combined_points = np.concatenate(cloud_combined, axis=1)
         colors = combined_points[2, :] * 2
         ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
+        ax.plot(coord_x_base_link, coord_y_base_link, color='red')
     plt.savefig(output_path)
     plt.close()
         
