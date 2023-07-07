@@ -10,7 +10,7 @@ from tf2_ros import ExtrapolationException
 from ros_numpy import numpify
 
 
-def save_shared_cloud(bag):
+def save_shared_cloud_with_graph(bag):
     rospy.init_node('tf_listener')
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
     buffer = load_buffer(bag)

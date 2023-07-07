@@ -12,7 +12,7 @@ def main():
     #tf_reader.save_graph(bag)
     #cloud_reader.save_cloud(bag)
     #image_reader.save_image(bag)
-    shared_cloud_reader.save_shared_cloud(bag)
+    shared_cloud_reader.save_shared_cloud_with_graph(bag)
     bag.close()
 
 
