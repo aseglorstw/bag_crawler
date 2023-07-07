@@ -78,3 +78,4 @@ def save_png(cloud_combined, coord_x_base_link, coord_y_base_link):
     ax.plot(coord_x_base_link, coord_y_base_link, color='red')
     plt.savefig(output_path)
     plt.close()
+
