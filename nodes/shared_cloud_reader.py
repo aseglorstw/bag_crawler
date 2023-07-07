@@ -12,7 +12,6 @@ from ros_numpy import numpify
 
 def save_shared_cloud_with_graph(bag):
     rospy.init_node('tf_listener')
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
     buffer = load_buffer(bag)
     coord_x_base_link = []
     coord_y_base_link = []
@@ -42,17 +41,7 @@ def save_shared_cloud_with_graph(bag):
             except ExtrapolationException:
                 continue
     if len(cloud_combined) > 0:
-        fig, ax = plt.subplots()
-        marker_size = 0.5
-        plt.xlabel('X-coordinate')
-        plt.ylabel('Y-coordinate')
-        plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
-        combined_points = np.concatenate(cloud_combined, axis=1)
-        colors = combined_points[2, :] * 2
-        ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
-        ax.plot(coord_x_base_link, coord_y_base_link, color='red')
-    plt.savefig(output_path)
-    plt.close()
+        save_png(cloud_combined, coord_x_base_link, coord_y_base_link)
         
 
 def slots(msg):
@@ -74,3 +63,18 @@ def load_buffer(bag):
     except ROSBagException:
         print('Could not read')
     return buffer
+
+
+def save_png(cloud_combined, coord_x_base_link, coord_y_base_link):
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
+    fig, ax = plt.subplots()
+    marker_size = 0.5
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
+    combined_points = np.concatenate(cloud_combined, axis=1)
+    colors = combined_points[2, :] * 2
+    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
+    ax.plot(coord_x_base_link, coord_y_base_link, color='red')
+    plt.savefig(output_path)
+    plt.close()
