@@ -1,3 +1,5 @@
+import numpy
+
 from sensor_msgs.msg import PointCloud2
 import matplotlib.pyplot as plt
 import rospy
@@ -74,6 +76,7 @@ def save_png(cloud_combined, coord_x_base_link, coord_y_base_link):
     plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = combined_points[2, :] * 2
+    print(numpy.unique(colors))
     ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
     ax.plot(coord_x_base_link, coord_y_base_link, color='red')
     plt.savefig(output_path)
