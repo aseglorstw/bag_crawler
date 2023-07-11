@@ -1,5 +1,3 @@
-import numpy
-
 from sensor_msgs.msg import PointCloud2
 import matplotlib.pyplot as plt
 import rospy
@@ -32,7 +30,7 @@ def save_shared_cloud_with_graph(bag):
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
                                                                        rospy.Duration(1))
                 matrix = numpify(transform_map_os_sensor.transform)
-                vectors = np.array([cloud[::400, 0], cloud[::400, 1], cloud[::400, 2]])
+                vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                 transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                 cloud_combined.append(transformed_vectors)
                 transform_map_base_link = buffer.lookup_transform_full("map", time, "base_link", time, "map",
@@ -75,9 +73,11 @@ def save_png(cloud_combined, coord_x_base_link, coord_y_base_link):
     plt.ylabel('Y-coordinate')
     plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
     combined_points = np.concatenate(cloud_combined, axis=1)
-    colors = combined_points[2, :] * 2
-    print(numpy.unique(colors))
-    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='winter', alpha=1)
+    colors = combined_points[2, :]
+    colors += abs(np.min(colors))
+    transformed_colors = np.log1p(colors)
+    print(np.min(transformed_colors), np.max(transformed_colors))
+    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=transformed_colors , cmap='Blues')
     ax.plot(coord_x_base_link, coord_y_base_link, color='red')
     plt.savefig(output_path)
     plt.close()
