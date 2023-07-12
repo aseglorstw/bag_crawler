@@ -51,7 +51,7 @@ def create_graphs(bag):
             except ExtrapolationException:
                 continue
     if len(cloud_combined) > 0:
-        create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y)
+        create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y)
         create_graph_x_coord_and_time(icp_x, imu_x, saved_times)
         create_graph_y_coord_and_time(icp_y, imu_y, saved_times)
         create_graph_z_coord_and_time(icp_z, imu_z, saved_times)
@@ -78,7 +78,7 @@ def load_buffer(bag):
     return buffer
 
 
-def create_graph_tf_and_point_cloud(cloud_combined, coord_x_robot, coord_y_robot):
+def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
@@ -89,8 +89,9 @@ def create_graph_tf_and_point_cloud(cloud_combined, coord_x_robot, coord_y_robot
     colors = combined_points[2, :]
     colors += abs(np.min(colors))
     transformed_colors = np.log1p(colors)
-    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=transformed_colors, cmap='Blues')
-    ax.plot(coord_x_robot, coord_y_robot, color='red')
+    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=transformed_colors, cmap='Greens')
+    ax.plot(icp_x, icp_y, color='blue')
+    ax.plot(imu_x, imu_y, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
