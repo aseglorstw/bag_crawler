@@ -13,9 +13,9 @@ from ros_numpy import numpify
 def create_graphs(bag):
     rospy.init_node('tf_listener')
     buffer = load_buffer(bag)
-    coord_x_robot = []
-    coord_y_robot = []
-    coord_z_robot = []
+    icp_x = []
+    icp_y = []
+    icp_z = []
     cloud_combined = []
     saved_times = list()
     for topic, msg, time in bag.read_messages(topics=['/points']):
@@ -28,11 +28,10 @@ def create_graphs(bag):
             msg = PointCloud2(*slots(msg))
             cloud = np.array(list(read_points(msg)))
             try:
-                transform_map_base_link = buffer.lookup_transform_full("map", time, "base_link", time, "map",
-                                                                       rospy.Duration(1))
-                coord_x_robot.append(transform_map_base_link.transform.translation.x)
-                coord_y_robot.append(transform_map_base_link.transform.translation.y)
-                coord_z_robot.append(transform_map_base_link.transform.translation.z)
+                transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
+                icp_x.append(transform_icp.transform.translation.x)
+                icp_y.append(transform_icp.transform.translation.y)
+                icp_z.append(transform_icp.transform.translation.z)
                 saved_times.append(save_time)
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
                                                                        rospy.Duration(1))
@@ -43,10 +42,10 @@ def create_graphs(bag):
             except ExtrapolationException:
                 continue
     if len(cloud_combined) > 0:
-        create_graph_tf_and_point_cloud(cloud_combined, coord_x_robot, coord_y_robot)
-        create_graph_x_coord_and_time(coord_x_robot, saved_times)
-        create_graph_y_coord_and_time(coord_y_robot, saved_times)
-        create_graph_z_coord_and_time(coord_z_robot, saved_times)
+        create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y)
+        create_graph_x_coord_and_time(icp_x, saved_times)
+        create_graph_y_coord_and_time(icp_y, saved_times)
+        create_graph_z_coord_and_time(icp_z, saved_times)
 
         
 def slots(msg):
