@@ -84,14 +84,15 @@ def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     marker_size = 0.5
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
-    plt.title("Shared Point Cloud with Coordinate Graph (Base Link relative to Map)")
+    plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = combined_points[2, :]
     colors += abs(np.min(colors))
     transformed_colors = np.log1p(colors)
     ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=transformed_colors, cmap='Greens')
-    ax.plot(icp_x, icp_y, color='blue')
-    ax.plot(imu_x, imu_y, color='red', linestyle='--')
+    ax.plot(imu_x, imu_y, color='blue', label='imu_odom')
+    ax.plot(icp_x, icp_y, color='red', linestyle='--', label='icp_odom')
+    plt.legend()
     plt.savefig(output_path)
     plt.close()
 
@@ -99,11 +100,11 @@ def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
 def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_x_and_time.png"
     fig, ax = plt.subplots()
-    plt.xlabel('Time')
-    plt.ylabel('X-coordinate')
-    plt.title("Change of coordinate X with time")
-    ax.plot(saved_times, icp_x, color='blue')
-    ax.plot(saved_times, imu_x, color='red', linestyle='--')
+    plt.xlabel('time [s]')
+    plt.ylabel('distance[m]')
+    plt.title("UGV's movement in X direction")
+    ax.plot(saved_times, imu_x, color='blue')
+    ax.plot(saved_times, icp_x, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -111,11 +112,11 @@ def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
 def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_y_and_time.png"
     fig, ax = plt.subplots()
-    plt.xlabel('Time')
-    plt.ylabel('Y-coordinate')
-    plt.title("Change of coordinate Y with time")
-    ax.plot(saved_times, icp_y, color='blue')
-    ax.plot(saved_times, imu_y, color='red', linestyle='--')
+    plt.xlabel('time [s]')
+    plt.ylabel('distance[m]')
+    plt.title("UGV's movement in Y direction")
+    ax.plot(saved_times, imu_y, color='blue')
+    ax.plot(saved_times, icp_y, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -123,10 +124,10 @@ def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
 def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_z_and_time.png"
     fig, ax = plt.subplots()
-    plt.xlabel('Time')
-    plt.ylabel('Z-coordinate')
-    plt.title("Change of coordinate Z with time")
-    ax.plot(saved_times, icp_z, color='blue')
-    ax.plot(saved_times, imu_z, color='red', linestyle='--')
+    plt.xlabel('time [s]')
+    plt.ylabel('distance[m]')
+    plt.title("UGV's movement in Z direction")
+    ax.plot(saved_times, imu_z, color='blue')
+    ax.plot(saved_times, icp_z, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
