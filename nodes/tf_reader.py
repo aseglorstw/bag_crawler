@@ -16,14 +16,16 @@ def create_graphs(bag):
     icp_x = []
     icp_y = []
     icp_z = []
+    imu_x = []
+    imu_y = []
+    imu_z = []
     cloud_combined = []
     saved_times = list()
+    start_time = bag.get_start_time()
     for topic, msg, time in bag.read_messages(topics=['/points']):
         time = rospy.Time.from_sec(time.to_sec())
         time_sec = time.to_sec()
-        start_time = bag.get_start_time()
-        time_sec = time_sec - start_time
-        save_time = int(time_sec)
+        save_time = int(time_sec - start_time)
         if save_time % 5 == 0:
             msg = PointCloud2(*slots(msg))
             cloud = np.array(list(read_points(msg)))
@@ -32,6 +34,11 @@ def create_graphs(bag):
                 icp_x.append(transform_icp.transform.translation.x)
                 icp_y.append(transform_icp.transform.translation.y)
                 icp_z.append(transform_icp.transform.translation.z)
+
+                transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
+                imu_x.append(transform_imu.transform.translation.x)
+                imu_y.append(transform_imu.transform.translation.y)
+                imu_z.append(transform_imu.transform.translation.z)
                 saved_times.append(save_time)
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
                                                                        rospy.Duration(1))
