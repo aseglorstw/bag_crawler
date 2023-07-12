@@ -22,39 +22,39 @@ def create_graphs(bag):
     cloud_combined = []
     saved_times = list()
     start_time = bag.get_start_time()
-    for topic, msg, time in bag.read_messages(topics=['/points']):
+    for idx, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
         time = rospy.Time.from_sec(time.to_sec())
-        time_sec = time.to_sec()
-        save_time = int(time_sec - start_time)
-        if save_time % 5 == 0:
-            msg = PointCloud2(*slots(msg))
-            cloud = np.array(list(read_points(msg)))
-            try:
-                transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
-                icp_x.append(transform_icp.transform.translation.x)
-                icp_y.append(transform_icp.transform.translation.y)
-                icp_z.append(transform_icp.transform.translation.z)
+        save_time = time.to_sec() - start_time
+        try:
+            transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
+            icp_x.append(transform_icp.transform.translation.x)
+            icp_y.append(transform_icp.transform.translation.y)
+            icp_z.append(transform_icp.transform.translation.z)
 
-                transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
-                imu_x.append(transform_imu.transform.translation.x)
-                imu_y.append(transform_imu.transform.translation.y)
-                imu_z.append(transform_imu.transform.translation.z)
+            transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
+            imu_x.append(transform_imu.transform.translation.x)
+            imu_y.append(transform_imu.transform.translation.y)
+            imu_z.append(transform_imu.transform.translation.z)
 
-                saved_times.append(save_time)
-
+            saved_times.append(save_time)
+            if idx % 10 == 0:
+                print(idx)
+                msg = PointCloud2(*slots(msg))
+                cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
                                                                        rospy.Duration(1))
                 matrix = numpify(transform_map_os_sensor.transform)
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                 transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                 cloud_combined.append(transformed_vectors)
-            except ExtrapolationException:
-                continue
+        except ExtrapolationException:
+            continue
     if len(cloud_combined) > 0:
         create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y)
         create_graph_x_coord_and_time(icp_x, imu_x, saved_times)
         create_graph_y_coord_and_time(icp_y, imu_y, saved_times)
         create_graph_z_coord_and_time(icp_z, imu_z, saved_times)
+        create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times)
 
         
 def slots(msg):
@@ -125,6 +125,22 @@ def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
+    ax.plot(saved_times, imu_z, color='blue')
+    ax.plot(saved_times, icp_z, color='red', linestyle='--')
+    plt.savefig(output_path)
+    plt.close()
+
+
+def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times):
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/distance_and_time.png"
+    fig, ax = plt.subplots()
+    plt.xlabel('time [s]')
+    plt.ylabel('distance[m]')
+    plt.title("UGV's travelled distance over time")
+    icp_x = np.array(icp_x)
+    print()
+    icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
+    print(icp_distances_x)
     ax.plot(saved_times, imu_z, color='blue')
     ax.plot(saved_times, icp_z, color='red', linestyle='--')
     plt.savefig(output_path)
