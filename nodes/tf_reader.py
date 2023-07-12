@@ -39,7 +39,9 @@ def create_graphs(bag):
                 imu_x.append(transform_imu.transform.translation.x)
                 imu_y.append(transform_imu.transform.translation.y)
                 imu_z.append(transform_imu.transform.translation.z)
+
                 saved_times.append(save_time)
+
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
                                                                        rospy.Duration(1))
                 matrix = numpify(transform_map_os_sensor.transform)
@@ -50,7 +52,7 @@ def create_graphs(bag):
                 continue
     if len(cloud_combined) > 0:
         create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y)
-        create_graph_x_coord_and_time(icp_x, saved_times)
+        create_graph_x_coord_and_time(icp_x, imu_x, saved_times)
         create_graph_y_coord_and_time(icp_y, saved_times)
         create_graph_z_coord_and_time(icp_z, saved_times)
 
@@ -93,13 +95,14 @@ def create_graph_tf_and_point_cloud(cloud_combined, coord_x_robot, coord_y_robot
     plt.close()
 
 
-def create_graph_x_coord_and_time(coord_x_robot, saved_times):
+def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_x_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('Time')
     plt.ylabel('X-coordinate')
     plt.title("Change of coordinate X with time")
-    ax.plot(saved_times, coord_x_robot, color='blue')
+    ax.plot(saved_times, icp_x, color='blue')
+    ax.plot(saved_times, imu_x, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
