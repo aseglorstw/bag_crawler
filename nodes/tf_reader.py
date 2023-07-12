@@ -53,8 +53,8 @@ def create_graphs(bag):
     if len(cloud_combined) > 0:
         create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y)
         create_graph_x_coord_and_time(icp_x, imu_x, saved_times)
-        create_graph_y_coord_and_time(icp_y, saved_times)
-        create_graph_z_coord_and_time(icp_z, saved_times)
+        create_graph_y_coord_and_time(icp_y, imu_y, saved_times)
+        create_graph_z_coord_and_time(icp_z, imu_z, saved_times)
 
         
 def slots(msg):
@@ -107,23 +107,25 @@ def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
     plt.close()
 
 
-def create_graph_y_coord_and_time(coord_y_robot, saved_times):
+def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_y_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('Time')
     plt.ylabel('Y-coordinate')
     plt.title("Change of coordinate Y with time")
-    ax.plot(saved_times, coord_y_robot, color='blue')
+    ax.plot(saved_times, icp_y, color='blue')
+    ax.plot(saved_times, imu_y, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
 
-def create_graph_z_coord_and_time(coord_z_robot, saved_times):
+def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_z_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('Time')
     plt.ylabel('Z-coordinate')
     plt.title("Change of coordinate Z with time")
-    ax.plot(saved_times, coord_z_robot, color='blue')
+    ax.plot(saved_times, icp_z, color='blue')
+    ax.plot(saved_times, imu_z, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
