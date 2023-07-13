@@ -137,25 +137,8 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
-    icp_x = np.array(icp_x)
-    icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
-    icp_movement_x = [0]
-    for distance in icp_distances_x:
-        icp_movement_x.append(distance + icp_movement_x[-1])
-    icp_y = np.array(icp_y)
-    icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
-    icp_movement_y = [0]
-    for distance in icp_distances_y:
-        icp_movement_y.append(distance + icp_movement_y[-1])
-    icp_z = np.array(icp_z)
-    icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
-    icp_movement_z = [0]
-    for distance in icp_distances_z:
-        icp_movement_z.append(distance + icp_movement_z[-1])
-    icp_movement = []
-    for i in range(len(icp_movement_x)):
-        icp_movement.append(sqrt(pow(icp_movement_x[i], 2) + pow(icp_movement_y[i], 2) + pow(icp_movement_z[i], 2)))
-    ax.plot(saved_times, icp_movement, color='red', linestyle='--')
+    ax.plot(saved_times, get_array_with_movement(imu_x, imu_y, imu_z), color='blue')
+    ax.plot(saved_times, get_array_with_movement(icp_x, icp_y, icp_z), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -168,3 +151,22 @@ def z_coord_transform_for_color(coord_z):
 
 def move_coordinates_to_the_origin(coordinates):
     return np.array(coordinates) - coordinates[0]
+
+
+def get_array_with_movement(coord_x, coord_y, coord_z):
+    coord_x = np.array(coord_x)
+    coord_y = np.array(coord_y)
+    coord_z = np.array(coord_z)
+    distances_x = np.abs(coord_x[1:] - coord_x[:-1])
+    distances_y = np.abs(coord_y[1:] - coord_y[:-1])
+    distances_z = np.abs(coord_z[1:] - coord_z[:-1])
+    movements_x = [0]
+    movements_y = [0]
+    movements_z = [0]
+    movements = [0]
+    for i in range(len(distances_x)):
+        movements_x.append(distances_x[i] + movements_x[-1])
+        movements_y.append(distances_y[i] + movements_y[-1])
+        movements_z.append(distances_z[i] + movements_z[-1])
+        movements.append(sqrt(pow(movements_x[i + 1], 2) + pow(movements_y[i + 1], 2) + pow(movements_z[i + 1], 2)))
+    return movements
