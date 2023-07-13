@@ -139,13 +139,13 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     icp_x = np.array(icp_x)
     icp_y = np.array(icp_y)
     icp_z = np.array(icp_z)
-    icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
-    icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
-    icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
-    icp_dist_x = []
-    for i in range(0, len(icp_distances_x) - 1):
-        icp_dist_x[i] = np.sum(icp_distances_x[:i + 1])
-    print(icp_dist_x)
+    # icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
+    # icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
+    # icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
+    # icp_dist_x = []
+    # for i in range(0, len(icp_distances_x) - 1):
+    #     icp_dist_x[i] = np.sum(icp_distances_x[:i + 1])
+    # print(icp_dist_x)
     ax.plot(saved_times, imu_z, color='blue')
     ax.plot(saved_times, icp_z, color='red', linestyle='--')
     plt.savefig(output_path)
