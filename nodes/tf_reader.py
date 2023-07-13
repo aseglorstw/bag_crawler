@@ -23,7 +23,7 @@ def create_graphs(bag):
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
-    for idx, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
+    for msg_number, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
         time = rospy.Time.from_sec(time.to_sec())
         save_time = time.to_sec() - start_time
         try:
@@ -31,14 +31,12 @@ def create_graphs(bag):
             icp_x.append(transform_icp.transform.translation.x)
             icp_y.append(transform_icp.transform.translation.y)
             icp_z.append(transform_icp.transform.translation.z)
-
             transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
             imu_x.append(transform_imu.transform.translation.x)
             imu_y.append(transform_imu.transform.translation.y)
             imu_z.append(transform_imu.transform.translation.z)
-
             saved_times.append(save_time)
-            if idx % 10 == 0:
+            if msg_number % 10 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
@@ -50,11 +48,11 @@ def create_graphs(bag):
         except ExtrapolationException:
             continue
     if len(cloud_combined) > 0:
-        create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y)
-        create_graph_x_coord_and_time(icp_x, imu_x, saved_times)
-        create_graph_y_coord_and_time(icp_y, imu_y, saved_times)
-        create_graph_z_coord_and_time(icp_z, imu_z, saved_times)
-        create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times)
+        create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y)
+        create_graph_x_over_time(icp_x, imu_x, saved_times)
+        create_graph_y_over_time(icp_y, imu_y, saved_times)
+        create_graph_z_over_time(icp_z, imu_z, saved_times)
+        create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times)
 
         
 def slots(msg):
@@ -78,7 +76,7 @@ def load_buffer(bag):
     return buffer
 
 
-def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
+def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
@@ -95,7 +93,7 @@ def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     plt.close()
 
 
-def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
+def create_graph_x_over_time(icp_x, imu_x, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_x_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
@@ -107,7 +105,7 @@ def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
     plt.close()
 
 
-def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
+def create_graph_y_over_time(icp_y, imu_y, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_y_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
@@ -119,7 +117,7 @@ def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
     plt.close()
 
 
-def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
+def create_graph_z_over_time(icp_z, imu_z, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_z_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
@@ -131,14 +129,14 @@ def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
     plt.close()
 
 
-def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times):
+def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/distance_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
-    ax.plot(saved_times, get_array_with_movement(imu_x, imu_y, imu_z), color='blue')
-    ax.plot(saved_times, get_array_with_movement(icp_x, icp_y, icp_z), color='red', linestyle='--')
+    ax.plot(saved_times, get_distances(imu_x, imu_y, imu_z), color='blue')
+    ax.plot(saved_times, get_distances(icp_x, icp_y, icp_z), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -153,20 +151,20 @@ def move_coordinates_to_the_origin(coordinates):
     return np.array(coordinates) - coordinates[0]
 
 
-def get_array_with_movement(coord_x, coord_y, coord_z):
+def get_distances(coord_x, coord_y, coord_z):
     coord_x = np.array(coord_x)
     coord_y = np.array(coord_y)
     coord_z = np.array(coord_z)
-    distances_x = np.abs(coord_x[1:] - coord_x[:-1])
-    distances_y = np.abs(coord_y[1:] - coord_y[:-1])
-    distances_z = np.abs(coord_z[1:] - coord_z[:-1])
-    movements_x = [0]
-    movements_y = [0]
-    movements_z = [0]
-    movements = [0]
-    for i in range(len(distances_x)):
-        movements_x.append(distances_x[i] + movements_x[-1])
-        movements_y.append(distances_y[i] + movements_y[-1])
-        movements_z.append(distances_z[i] + movements_z[-1])
-        movements.append(sqrt(pow(movements_x[i + 1], 2) + pow(movements_y[i + 1], 2) + pow(movements_z[i + 1], 2)))
-    return movements
+    distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
+    distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
+    distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
+    distances_x = [0]
+    distances_y = [0]
+    distances_z = [0]
+    distances = [0]
+    for i in range(len(distances_one_period_x)):
+        distances_x.append(distances_one_period_x[i] + distances_x[-1])
+        distances_y.append(distances_one_period_y[i] + distances_y[-1])
+        distances_z.append(distances_one_period_z[i] + distances_z[-1])
+        distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
+    return distances
