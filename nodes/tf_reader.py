@@ -86,7 +86,7 @@ def create_graph_tf_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
-    colors = z_coord_transform_for_color(combined_points[2, :])
+    colors = transform_z_coordinates_to_color(combined_points[2, :])
     ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='Greens')
     ax.plot(imu_x, imu_y, color='blue', label='imu_odom')
     ax.plot(icp_x, icp_y, color='red', linestyle='--', label='icp_odom')
@@ -143,7 +143,7 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     plt.close()
 
 
-def z_coord_transform_for_color(coord_z):
+def transform_z_coordinates_to_color(coord_z):
     coord_z += abs(np.min(coord_z))
     colors = np.log1p(coord_z)
     return colors
