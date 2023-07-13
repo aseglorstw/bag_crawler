@@ -8,6 +8,7 @@ from tqdm import tqdm
 import tf2_ros
 from tf2_ros import ExtrapolationException
 from ros_numpy import numpify
+from math import sqrt
 
 
 def create_graphs(bag):
@@ -137,12 +138,24 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
     icp_x = np.array(icp_x)
+    icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
+    icp_movement_x = [0]
+    for distance in icp_distances_x:
+        icp_movement_x.append(distance + icp_movement_x[-1])
     icp_y = np.array(icp_y)
+    icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
+    icp_movement_y = [0]
+    for distance in icp_distances_y:
+        icp_movement_y.append(distance + icp_movement_y[-1])
     icp_z = np.array(icp_z)
-    icp_dists_x = np.abs(icp_x[1:] - icp_x[:-1])
-    print(icp_dists_x[0], saved_times[0])
-    ax.plot(saved_times, imu_z, color='blue')
-    ax.plot(saved_times, icp_z, color='red', linestyle='--')
+    icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
+    icp_movement_z = [0]
+    for distance in icp_distances_z:
+        icp_movement_z.append(distance + icp_movement_z[-1])
+    icp_movement = []
+    for i in range(len(icp_movement_x)):
+        icp_movement.append(sqrt(pow(icp_movement_x[i], 2) + pow(icp_movement_y[i], 2) + pow(icp_movement_z[i], 2)))
+    ax.plot(saved_times, icp_movement, color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
