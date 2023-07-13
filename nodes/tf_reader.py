@@ -20,7 +20,7 @@ def create_graphs(bag):
     imu_y = []
     imu_z = []
     cloud_combined = []
-    saved_times = list()
+    saved_times = []
     start_time = bag.get_start_time()
     for idx, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
         time = rospy.Time.from_sec(time.to_sec())
@@ -38,7 +38,6 @@ def create_graphs(bag):
 
             saved_times.append(save_time)
             if idx % 10 == 0:
-                print(idx)
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
@@ -138,9 +137,15 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
     icp_x = np.array(icp_x)
-    print()
+    icp_y = np.array(icp_y)
+    icp_z = np.array(icp_z)
     icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
-    print(icp_distances_x)
+    icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
+    icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
+    icp_dist_x = []
+    for i in range(0, len(icp_distances_x) - 1):
+        icp_dist_x[i] = np.sum(icp_distances_x[:i + 1])
+    print(icp_dist_x)
     ax.plot(saved_times, imu_z, color='blue')
     ax.plot(saved_times, icp_z, color='red', linestyle='--')
     plt.savefig(output_path)

@@ -1,60 +1,38 @@
-/camera_front/camera_info sensor_msgs/CameraInfo 2617
-/camera_front/image_color/compressed sensor_msgs/CompressedImage 2616
-/camera_left/camera_info sensor_msgs/CameraInfo 2609
-/camera_left/image_color/compressed sensor_msgs/CompressedImage 2607
-/camera_rear/camera_info sensor_msgs/CameraInfo 2623
-/camera_rear/image_color/compressed sensor_msgs/CompressedImage 2621
-/camera_right/camera_info sensor_msgs/CameraInfo 2622
-/camera_right/image_color/compressed sensor_msgs/CompressedImage 2621
-/diagnostics diagnostic_msgs/DiagnosticArray 58042
-/diagnostics_agg diagnostic_msgs/DiagnosticArray 536
-/diagnostics_toplevel_state diagnostic_msgs/DiagnosticStatus 536
-/gps/fix sensor_msgs/NavSatFix 2668
-/gps/fix_status gps_to_path/NavSatDetailedStatus 2668
-/gps/llh gps_to_path/LlhFix 2668
-/gps/mag_azimuth stamped_msgs/Float64 53361
-/gps/mag_shift gps_to_path/MagShift 1
-/gps/waypoints sensor_msgs/PointCloud2 2668
-/husky_velocity_controller/cmd_vel geometry_msgs/Twist 9175
-/husky_velocity_controller/odom nav_msgs/Odometry 7843
-/husky_velocity_controller/parameter_descriptions dynamic_reconfigure/ConfigDescription 1
-/husky_velocity_controller/parameter_updates dynamic_reconfigure/Config 1
-/icp_odom nav_msgs/Odometry 3525
-/imu/data sensor_msgs/Imu 53546
-/imu/mag sensor_msgs/MagneticField 53546
-/imu_and_wheel_odom nav_msgs/Odometry 53545
-/imu_data_str std_msgs/String 53546
-/joint_states sensor_msgs/JointState 7844
-/joy_local/cmd_vel geometry_msgs/Twist 5260
-/joy_local/joy sensor_msgs/Joy 12913
-/nav/cmd_vel geometry_msgs/Twist 4923
-/nonrigid/out_model sensor_msgs/PointCloud2 392
-/nonrigid/waypoints_out sensor_msgs/PointCloud2 92
-/os_cloud_node/heartbeat cras_msgs/Heartbeat 5354
-/os_cloud_node/imu sensor_msgs/Imu 53536
-/os_node/alerts cras_ouster_msgs/Alerts 528
-/os_node/alerts_log cras_ouster_msgs/Alerts 1
-/os_node/heartbeat cras_msgs/Heartbeat 341667
-/os_node/imu_packets ouster_ros/PacketMsg 53529
-/os_node/lidar_packets ouster_ros/PacketMsg 340931
-/os_node/sensor_info cras_ouster_msgs/SensorInfo 1
-/points sensor_msgs/PointCloud2 4683
-/rds/k3_gui_odom rds_msgs/K3 7
-/rds/k3_in rds_msgs/K3 8
-/rds/k3_out rds_msgs/K3 7
-/rds/odom nav_msgs/Odometry 7383
-/rds/path nav_msgs/Path 83
-/rds/path_nonrigid nav_msgs/Path 101
-/rds/reach sensor_msgs/PointCloud2 810
-/rds/route nav_msgs/Path 246
-/rds/sparse_viz/traveled_route visualization_msgs/MarkerArray 246
-/rds/waypoints_in sensor_msgs/PointCloud2 1006
-/rosout rosgraph_msgs/Log 8535
-/rosout_agg rosgraph_msgs/Log 8511
-/status husky_msgs/HuskyStatus 535
-/temperature sensor_msgs/Temperature 535
-/tf tf2_msgs/TFMessage 78300
-/tf_static tf2_msgs/TFMessage 3
-bumper_activations augmented_robot_trackers/BumperActivations 5353
-bumper_bbx visualization_msgs/Marker 13230
-bumpers_vis sensor_msgs/PointCloud2 5353
+/camera_front/camera_info sensor_msgs/CameraInfo 510 4.958304321356165
+/camera_front/image_color/compressed sensor_msgs/CompressedImage 509 4.964025847989206
+/camera_left/camera_info sensor_msgs/CameraInfo 512 4.956458645994588
+/camera_left/image_color/compressed sensor_msgs/CompressedImage 510 4.957770985075756
+/camera_rear/camera_info sensor_msgs/CameraInfo 512 4.957091294163253
+/camera_rear/image_color/compressed sensor_msgs/CompressedImage 510 4.95614823882791
+/camera_right/camera_info sensor_msgs/CameraInfo 512 4.957425256924704
+/camera_right/image_color/compressed sensor_msgs/CompressedImage 510 4.964431256369315
+/diagnostics diagnostic_msgs/DiagnosticArray 11184 100.40946088288806
+/diagnostics_agg diagnostic_msgs/DiagnosticArray 103 0.9999948740268251
+/diagnostics_toplevel_state diagnostic_msgs/DiagnosticStatus 103 0.9999942779868431
+/husky_velocity_controller/cmd_vel geometry_msgs/Twist 3410 39.638459939138485
+/husky_velocity_controller/odom nav_msgs/Odometry 1530 15.643150184243112
+/husky_velocity_controller/parameter_descriptions dynamic_reconfigure/ConfigDescription 1 None
+/husky_velocity_controller/parameter_updates dynamic_reconfigure/Config 1 None
+/icp_odom nav_msgs/Odometry 1025 10.220375182906846
+/imu/data sensor_msgs/Imu 10323 99.99294330806275
+/imu/mag sensor_msgs/MagneticField 10323 99.98340882002384
+/imu_and_wheel_odom nav_msgs/Odometry 10324 91180.52173913043
+/imu_data_str std_msgs/String 10323 260.06349206349205
+/joint_states sensor_msgs/JointState 1530 15.64542589104202
+/joy_local/cmd_vel geometry_msgs/Twist 3412 39.66920137706654
+/joy_local/joy sensor_msgs/Joy 3666 35.59351318324154
+/os_cloud_node/heartbeat cras_msgs/Heartbeat 1032 10.082679673358317
+/os_cloud_node/imu sensor_msgs/Imu 10319 125.86058514628657
+/os_node/alerts cras_ouster_msgs/Alerts 104 1.0002513563465092
+/os_node/alerts_log cras_ouster_msgs/Alerts 1 None
+/os_node/heartbeat cras_msgs/Heartbeat 66057 646.1722384840549
+/os_node/imu_packets ouster_ros/PacketMsg 10322 105.7725324053059
+/os_node/lidar_packets ouster_ros/PacketMsg 66056 648.1693710400248
+/os_node/sensor_info cras_ouster_msgs/SensorInfo 1 None
+/points sensor_msgs/PointCloud2 1032 10.067988804554991
+/rosout rosgraph_msgs/Log 282 5.634059815569779
+/rosout_agg rosgraph_msgs/Log 263 4.878152716750367
+/status husky_msgs/HuskyStatus 103 1.0076873234002202
+/temperature sensor_msgs/Temperature 103 0.999935273545559
+/tf tf2_msgs/TFMessage 15438 147.2874249394248
+/tf_static tf2_msgs/TFMessage 2 194.76684467146507
