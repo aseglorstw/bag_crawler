@@ -100,8 +100,8 @@ def create_graph_x_coord_and_time(icp_x, imu_x, saved_times):
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in X direction")
-    ax.plot(saved_times, imu_x, color='blue')
-    ax.plot(saved_times, icp_x, color='red', linestyle='--')
+    ax.plot(saved_times, move_coordinates_to_the_origin(imu_x), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(icp_x), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -112,8 +112,8 @@ def create_graph_y_coord_and_time(icp_y, imu_y, saved_times):
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Y direction")
-    ax.plot(saved_times, imu_y, color='blue')
-    ax.plot(saved_times, icp_y, color='red', linestyle='--')
+    ax.plot(saved_times, move_coordinates_to_the_origin(imu_y), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(icp_y), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -124,8 +124,8 @@ def create_graph_z_coord_and_time(icp_z, imu_z, saved_times):
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
-    ax.plot(saved_times, imu_z, color='blue')
-    ax.plot(saved_times, icp_z, color='red', linestyle='--')
+    ax.plot(saved_times, move_coordinates_to_the_origin(imu_z), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(icp_z), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
@@ -139,13 +139,8 @@ def create_graph_distance_and_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sav
     icp_x = np.array(icp_x)
     icp_y = np.array(icp_y)
     icp_z = np.array(icp_z)
-    # icp_distances_x = np.abs(icp_x[1:] - icp_x[:-1])
-    # icp_distances_y = np.abs(icp_y[1:] - icp_y[:-1])
-    # icp_distances_z = np.abs(icp_z[1:] - icp_z[:-1])
-    # icp_dist_x = []
-    # for i in range(0, len(icp_distances_x) - 1):
-    #     icp_dist_x[i] = np.sum(icp_distances_x[:i + 1])
-    # print(icp_dist_x)
+    icp_dists_x = np.abs(icp_x[1:] - icp_x[:-1])
+    print(icp_dists_x[0], saved_times[0])
     ax.plot(saved_times, imu_z, color='blue')
     ax.plot(saved_times, icp_z, color='red', linestyle='--')
     plt.savefig(output_path)
@@ -156,3 +151,7 @@ def z_coord_transform_for_color(coord_z):
     coord_z += abs(np.min(coord_z))
     colors = np.log1p(coord_z)
     return colors
+
+
+def move_coordinates_to_the_origin(coordinates):
+    return np.array(coordinates) - coordinates[0]
