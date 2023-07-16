@@ -16,6 +16,7 @@ def create_graphs(bag):
     buffer = load_buffer(bag)
     icp = []
     odom = []
+    colors = []
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
@@ -85,6 +86,7 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
+    colors = transform_z_coordinates_to_color(combined_points[2, :])
     ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=combined_points[2, :], cmap='Greens')
     ax.plot(imu_x, imu_y, color='blue', label='imu_odom')
     ax.plot(icp_x, icp_y, color='red', linestyle='--', label='icp_odom')
