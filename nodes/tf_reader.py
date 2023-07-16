@@ -48,14 +48,15 @@ def create_graphs(bag):
         except ExtrapolationException:
             continue
     if len(cloud_combined) > 0:
-        start_of_moving, end_of_moving = find_start_and_end_of_moving(icp_x, icp_y, icp_z, saved_times)
+        speeds = get_speeds_one_period(icp_x, icp_y, icp_z, saved_times)
+        start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
         create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, odom_x, odom_y)
         create_graph_x_over_time(icp_x, odom_x, saved_times)
         create_graph_y_over_time(icp_y, odom_y, saved_times)
         create_graph_z_over_time(icp_z, odom_z, saved_times)
         create_graph_distance_over_time(icp_x, icp_y, icp_z, odom_x, odom_y, odom_z, saved_times, start_of_moving,
                                         end_of_moving)
-        write_info_to_file(get_distances(icp_x, icp_y, icp_z), saved_times, start_of_moving, end_of_moving)
+        write_info_to_file(get_distances(icp_x, icp_y, icp_z), start_of_moving, end_of_moving, speeds)
         
 
 def slots(msg):
@@ -177,17 +178,29 @@ def get_distances(coord_x, coord_y, coord_z):
     return distances
 
 
-def write_info_to_file(distances_icp, saved_times, start_of_moving, end_of_moving):
+def write_info_to_file(distances_icp,  start_of_moving, end_of_moving, speeds):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/bag_info.txt"
-    average_speed_icp = distances_icp[-1] / saved_times[-1]
+    speeds = np.array(speeds)
+    average_speed_icp = np.sum(speeds)/len(speeds)
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n{start_of_moving}\n{end_of_moving}\n")
 
 
-def find_start_and_end_of_moving(coord_x, coord_y, coord_z, saved_times):
-    coord_x = np.array(coord_x)
-    coord_y = np.array(coord_y)
-    coord_z = np.array(coord_z)
+def find_start_and_end_of_moving(speeds, saved_times):
+    start_of_moving = -1
+    end_of_moving = -1
+    for i in range(len(speeds)):
+        if speeds[i] > 0.1 and start_of_moving == -1:
+            start_of_moving = saved_times[i]
+        elif speeds[i] < 0.1 or (i == len(speeds) - 1 and speeds[i] > 0.1):
+            end_of_moving = saved_times[i]
+    return start_of_moving, end_of_moving
+
+
+def get_speeds_one_period(icp_x, icp_y, icp_z, saved_times):
+    coord_x = np.array(icp_x)
+    coord_y = np.array(icp_y)
+    coord_z = np.array(icp_z)
     saved_times = np.array(saved_times)
     distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
     distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
@@ -197,13 +210,6 @@ def find_start_and_end_of_moving(coord_x, coord_y, coord_z, saved_times):
     speeds_y = distances_one_period_y / times_one_period
     speeds_z = distances_one_period_z / times_one_period
     speeds = []
-    start_of_moving = -1
-    end_of_moving = -1
     for i in range(len(speeds_x)):
         speeds.append(sqrt(pow(speeds_x[i], 2) + pow(speeds_y[i], 2) + pow(speeds_z[i], 2)))
-        if speeds[i] > 0.1 and start_of_moving == -1:
-            start_of_moving = saved_times[i]
-        elif speeds[i] < 0.1 or (i == len(speeds_x) - 1 and speeds[i] > 0.1):
-            end_of_moving = saved_times[i]
-    return start_of_moving, end_of_moving
-
+    return speeds
