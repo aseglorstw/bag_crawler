@@ -9,7 +9,6 @@ def save_bag_info(bag):
         file.seek(0, 2)
         file.write(f"{get_date(info_dict['start'])}\n{get_date(info_dict['end'])}\n{info_dict['duration']}\n"
                    f"{round((info_dict['size']/pow(10, 9)), 2)}\n{info_dict['messages']}\n")
-        print(info_dict)
 
 
 def get_date(seconds):

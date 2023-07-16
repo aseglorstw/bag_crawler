@@ -47,23 +47,15 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
-    traj = np.vstack([icp_x, icp_y, icp_z]).T
-    traj -= traj[0]
-
-    cloud_combined = np.asarray(cloud_combined)
-    cloud_combined -= traj[0]
-
     if len(cloud_combined) > 0:
+        start_of_moving, end_of_moving = find_start_and_end_of_moving(icp_x, icp_y, icp_z, saved_times)
         create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, odom_x, odom_y)
-        # create_graph_x_over_time(icp_x, odom_x, saved_times)
-        # create_graph_y_over_time(icp_y, odom_y, saved_times)
-        # create_graph_z_over_time(icp_z, odom_z, saved_times)
-        create_graph_x_over_time(traj[:, 0], odom_x, saved_times)
-        create_graph_y_over_time(traj[:, 1], odom_y, saved_times)
-        create_graph_z_over_time(traj[:, 2], odom_z, saved_times)
-        create_graph_distance_over_time(icp_x, icp_y, icp_z, odom_x, odom_y, odom_z, saved_times)
-        find_start_and_end_of_moving(icp_x, icp_y, icp_z, saved_times)
-        write_info_to_file(get_distances(icp_x, icp_y, icp_z), get_distances(odom_x, odom_y, odom_z), saved_times)
+        create_graph_x_over_time(icp_x, odom_x, saved_times)
+        create_graph_y_over_time(icp_y, odom_y, saved_times)
+        create_graph_z_over_time(icp_z, odom_z, saved_times)
+        create_graph_distance_over_time(icp_x, icp_y, icp_z, odom_x, odom_y, odom_z, saved_times, start_of_moving,
+                                        end_of_moving)
+        write_info_to_file(get_distances(icp_x, icp_y, icp_z), saved_times, start_of_moving, end_of_moving)
         
 
 def slots(msg):
@@ -140,7 +132,8 @@ def create_graph_z_over_time(icp_z, imu_z, saved_times):
     plt.close()
 
 
-def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times):
+def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times, start_of_moving,
+                                    end_of_moving):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/distance_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
@@ -148,6 +141,9 @@ def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, sa
     plt.title("UGV's travelled distance over time")
     ax.plot(saved_times, get_distances(imu_x, imu_y, imu_z), color='blue')
     ax.plot(saved_times, get_distances(icp_x, icp_y, icp_z), color='red', linestyle='--')
+    ax.axvline(start_of_moving, color='green', linestyle=':', label='start_of_moving')
+    ax.axvline(end_of_moving, color='green', linestyle='--', label='end_of_moving')
+    plt.legend()
     plt.savefig(output_path)
     plt.close()
 
@@ -181,12 +177,11 @@ def get_distances(coord_x, coord_y, coord_z):
     return distances
 
 
-def write_info_to_file(distances_icp, distances_imu, saved_times):
+def write_info_to_file(distances_icp, saved_times, start_of_moving, end_of_moving):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/bag_info.txt"
-    average_speed_icp = distances_icp[-1] / saved_times[-1] #Указать это. Сделать второй способ.
-
+    average_speed_icp = distances_icp[-1] / saved_times[-1]
     with open(output_path, "w", encoding="utf-8") as file:
-        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n")
+        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n{start_of_moving}\n{end_of_moving}\n")
 
 
 def find_start_and_end_of_moving(coord_x, coord_y, coord_z, saved_times):
@@ -203,11 +198,12 @@ def find_start_and_end_of_moving(coord_x, coord_y, coord_z, saved_times):
     speeds_z = distances_one_period_z / times_one_period
     speeds = []
     start_of_moving = -1
+    end_of_moving = -1
     for i in range(len(speeds_x)):
         speeds.append(sqrt(pow(speeds_x[i], 2) + pow(speeds_y[i], 2) + pow(speeds_z[i], 2)))
         if speeds[i] > 0.1 and start_of_moving == -1:
             start_of_moving = saved_times[i]
         elif speeds[i] < 0.1 or (i == len(speeds_x) - 1 and speeds[i] > 0.1):
             end_of_moving = saved_times[i]
-    print(start_of_moving, end_of_moving)
     return start_of_moving, end_of_moving
+
