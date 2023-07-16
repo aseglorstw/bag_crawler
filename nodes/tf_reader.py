@@ -14,12 +14,8 @@ from math import sqrt
 def create_graphs(bag):
     rospy.init_node('tf_listener')
     buffer = load_buffer(bag)
-    icp_x = []
-    icp_y = []
-    icp_z = []
-    odom_x = []
-    odom_y = []
-    odom_z = []
+    icp = []
+    odom = []
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
@@ -28,13 +24,11 @@ def create_graphs(bag):
         save_time = time.to_sec() - start_time
         try:
             transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
-            icp_x.append(transform_icp.transform.translation.x)
-            icp_y.append(transform_icp.transform.translation.y)
-            icp_z.append(transform_icp.transform.translation.z)
+            icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
+                        transform_icp.transform.translation.z])
             transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
-            odom_x.append(transform_imu.transform.translation.x)
-            odom_y.append(transform_imu.transform.translation.y)
-            odom_z.append(transform_imu.transform.translation.z)
+            odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
+                         transform_imu.transform.translation.z])
             saved_times.append(save_time)
             if msg_number % 50 == 0:
                 msg = PointCloud2(*slots(msg))
@@ -47,15 +41,16 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
-    icp = move_coordinates_to_the_origin(np.vstack([icp_x, icp_y, icp_z]).T)
+    icp = move_coordinates_to_the_origin(icp)
+    odom = move_coordinates_to_the_origin(odom)
     if len(cloud_combined) > 0:
         speeds = get_speeds_one_period(icp[:, 0], icp[:, 1], icp[:, 2], saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
-        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom_x, odom_y)
-        create_graph_x_over_time(icp[:, 0], odom_x, saved_times)
-        create_graph_y_over_time(icp[:, 1], odom_y, saved_times)
-        create_graph_z_over_time(icp[:, 2], odom_z, saved_times)
-        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom_x, odom_y, odom_z, saved_times,
+        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom[:, 0], odom[:, 1])
+        create_graph_x_over_time(icp[:, 0], odom[:, 0], saved_times)
+        create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
+        create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
+        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom[:, 0], odom[:, 1], odom[:, 2], saved_times,
                                         start_of_moving, end_of_moving)
         write_info_to_file(get_distances(icp[:, 0], icp[:, 1], icp[:, 2]), start_of_moving, end_of_moving, speeds)
         
