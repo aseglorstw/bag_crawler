@@ -17,9 +17,9 @@ def create_graphs(bag):
     icp_x = []
     icp_y = []
     icp_z = []
-    imu_x = []
-    imu_y = []
-    imu_z = []
+    odom_x = []
+    odom_y = []
+    odom_z = []
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
@@ -32,11 +32,11 @@ def create_graphs(bag):
             icp_y.append(transform_icp.transform.translation.y)
             icp_z.append(transform_icp.transform.translation.z)
             transform_imu = buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
-            imu_x.append(transform_imu.transform.translation.x)
-            imu_y.append(transform_imu.transform.translation.y)
-            imu_z.append(transform_imu.transform.translation.z)
+            odom_x.append(transform_imu.transform.translation.x)
+            odom_y.append(transform_imu.transform.translation.y)
+            odom_z.append(transform_imu.transform.translation.z)
             saved_times.append(save_time)
-            if msg_number % 10 == 0:
+            if msg_number % 50 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
@@ -47,14 +47,25 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
-    if len(cloud_combined) > 0:
-        create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y)
-        create_graph_x_over_time(icp_x, imu_x, saved_times)
-        create_graph_y_over_time(icp_y, imu_y, saved_times)
-        create_graph_z_over_time(icp_z, imu_z, saved_times)
-        create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times)
+    traj = np.vstack([icp_x, icp_y, icp_z]).T
+    traj -= traj[0]
 
+    cloud_combined = np.asarray(cloud_combined)
+    cloud_combined -= traj[0]
+
+    if len(cloud_combined) > 0:
+        create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, odom_x, odom_y)
+        # create_graph_x_over_time(icp_x, odom_x, saved_times)
+        # create_graph_y_over_time(icp_y, odom_y, saved_times)
+        # create_graph_z_over_time(icp_z, odom_z, saved_times)
+        create_graph_x_over_time(traj[:, 0], odom_x, saved_times)
+        create_graph_y_over_time(traj[:, 1], odom_y, saved_times)
+        create_graph_z_over_time(traj[:, 2], odom_z, saved_times)
+        create_graph_distance_over_time(icp_x, icp_y, icp_z, odom_x, odom_y, odom_z, saved_times)
+        find_start_and_end_of_moving(icp_x, icp_y, icp_z, saved_times)
+        write_info_to_file(get_distances(icp_x, icp_y, icp_z), get_distances(odom_x, odom_y, odom_z), saved_times)
         
+
 def slots(msg):
     return [getattr(msg, var) for var in msg.__slots__]
 
@@ -168,3 +179,35 @@ def get_distances(coord_x, coord_y, coord_z):
         distances_z.append(distances_one_period_z[i] + distances_z[-1])
         distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
     return distances
+
+
+def write_info_to_file(distances_icp, distances_imu, saved_times):
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/bag_info.txt"
+    average_speed_icp = distances_icp[-1] / saved_times[-1] #Указать это. Сделать второй способ.
+
+    with open(output_path, "w", encoding="utf-8") as file:
+        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n")
+
+
+def find_start_and_end_of_moving(coord_x, coord_y, coord_z, saved_times):
+    coord_x = np.array(coord_x)
+    coord_y = np.array(coord_y)
+    coord_z = np.array(coord_z)
+    saved_times = np.array(saved_times)
+    distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
+    distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
+    distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
+    times_one_period = saved_times[1:] - saved_times[:-1]
+    speeds_x = distances_one_period_x / times_one_period
+    speeds_y = distances_one_period_y / times_one_period
+    speeds_z = distances_one_period_z / times_one_period
+    speeds = []
+    start_of_moving = -1
+    for i in range(len(speeds_x)):
+        speeds.append(sqrt(pow(speeds_x[i], 2) + pow(speeds_y[i], 2) + pow(speeds_z[i], 2)))
+        if speeds[i] > 0.1 and start_of_moving == -1:
+            start_of_moving = saved_times[i]
+        elif speeds[i] < 0.1 or (i == len(speeds_x) - 1 and speeds[i] > 0.1):
+            end_of_moving = saved_times[i]
+    print(start_of_moving, end_of_moving)
+    return start_of_moving, end_of_moving

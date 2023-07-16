@@ -9,7 +9,7 @@ def main():
     path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-27-15-01-44.bag'
     bag = rosbag.Bag(path)
     #image_reader.save_image(bag)
-    #tf_reader.create_graphs(bag)
+    tf_reader.create_graphs(bag)
     #topics_reader.save_topics(bag)
     bag_info_reader.save_bag_info(bag)
     bag.close()
