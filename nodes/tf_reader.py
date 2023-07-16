@@ -47,16 +47,17 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
+    icp = move_coordinates_to_the_origin(np.vstack([icp_x, icp_y, icp_z]).T)
     if len(cloud_combined) > 0:
-        speeds = get_speeds_one_period(icp_x, icp_y, icp_z, saved_times)
+        speeds = get_speeds_one_period(icp[:, 0], icp[:, 1], icp[:, 2], saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
-        create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, odom_x, odom_y)
-        create_graph_x_over_time(icp_x, odom_x, saved_times)
-        create_graph_y_over_time(icp_y, odom_y, saved_times)
-        create_graph_z_over_time(icp_z, odom_z, saved_times)
-        create_graph_distance_over_time(icp_x, icp_y, icp_z, odom_x, odom_y, odom_z, saved_times, start_of_moving,
-                                        end_of_moving)
-        write_info_to_file(get_distances(icp_x, icp_y, icp_z), start_of_moving, end_of_moving, speeds)
+        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom_x, odom_y)
+        create_graph_x_over_time(icp[:, 0], odom_x, saved_times)
+        create_graph_y_over_time(icp[:, 1], odom_y, saved_times)
+        create_graph_z_over_time(icp[:, 2], odom_z, saved_times)
+        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom_x, odom_y, odom_z, saved_times,
+                                        start_of_moving, end_of_moving)
+        write_info_to_file(get_distances(icp[:, 0], icp[:, 1], icp[:, 2]), start_of_moving, end_of_moving, speeds)
         
 
 def slots(msg):
