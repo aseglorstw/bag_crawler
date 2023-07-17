@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def save_topics_info(bag):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/topics.txt"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/topics.txt"
     topics_info = bag.get_type_and_topic_info()[1]
     with open(output_path, "w", encoding="utf-8") as file:
         for topic_name, topic_info in topics_info.items():
@@ -57,7 +57,7 @@ def create_array_of_binary_control_joy(time_array, saved_times):
 
 
 def save_graph_control_joy_and_time(time_array, control_joy):
-    output_path = '/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/control_joy_and_time.png'
+    output_path = '/home/robert/catkin_ws/src/bag_crawler/web_server/control_joy_and_time.png'
     fig, ax = plt.subplots()
     ax.step(time_array, control_joy, color='blue', where='post')
     ax.set_xlabel('time')

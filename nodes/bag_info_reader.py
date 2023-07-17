@@ -3,7 +3,7 @@ import datetime
 
 
 def save_bag_info(bag):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/bag_info.txt"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/bag_info.txt"
     info_dict = yaml.load(bag._get_yaml_info(), Loader=yaml.Loader)
     with open(output_path, "r+", encoding="utf-8") as file:
         file.seek(0, 2)

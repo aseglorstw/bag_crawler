@@ -79,7 +79,7 @@ def load_buffer(bag):
 
 
 def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/shared_point_cloud.png"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
     plt.xlabel('X-coordinate')
@@ -96,7 +96,7 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
 
 
 def create_graph_x_over_time(icp_x, imu_x, saved_times):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_x_and_time.png"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_x_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -108,7 +108,7 @@ def create_graph_x_over_time(icp_x, imu_x, saved_times):
 
 
 def create_graph_y_over_time(icp_y, imu_y, saved_times):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_y_and_time.png"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_y_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -120,7 +120,7 @@ def create_graph_y_over_time(icp_y, imu_y, saved_times):
 
 
 def create_graph_z_over_time(icp_z, imu_z, saved_times):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/coord_z_and_time.png"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_z_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -133,7 +133,7 @@ def create_graph_z_over_time(icp_z, imu_z, saved_times):
 
 def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times, start_of_moving,
                                     end_of_moving):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/distance_and_time.png"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/distance_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -177,7 +177,7 @@ def get_distances(coord_x, coord_y, coord_z):
 
 
 def write_info_to_file(distances_icp,  start_of_moving, end_of_moving, speeds):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/bag_info.txt"
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/bag_info.txt"
     speeds = np.array(speeds)
     average_speed_icp = np.sum(speeds)/len(speeds)
     with open(output_path, "w", encoding="utf-8") as file:
