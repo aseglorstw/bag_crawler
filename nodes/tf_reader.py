@@ -16,7 +16,6 @@ def create_graphs(bag):
     buffer = load_buffer(bag)
     icp = []
     odom = []
-    colors = []
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
@@ -31,7 +30,7 @@ def create_graphs(bag):
             odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
                          transform_imu.transform.translation.z])
             saved_times.append(save_time)
-            if msg_number % 25 == 0:
+            if msg_number % 50 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
@@ -52,8 +51,8 @@ def create_graphs(bag):
         create_graph_x_over_time(icp[:, 0], odom[:, 0], saved_times)
         create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
         create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
-        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom[:, 0], odom[:, 1], odom[:, 2], saved_times,
-                                        start_of_moving, end_of_moving)
+        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom[:, 0], odom[:, 1], odom[:, 2],
+                                        saved_times, start_of_moving, end_of_moving)
         write_info_to_file(get_distances(icp[:, 0], icp[:, 1], icp[:, 2]), start_of_moving, end_of_moving, speeds)
         
 
