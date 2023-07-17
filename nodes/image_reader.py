@@ -17,9 +17,9 @@ def save_video(bag):
         msg = CompressedImage(*slots(msg))
         np_arr = np.fromstring(msg.data, np.uint8)
         image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        current_datetime = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S') + " + " + \
+        current_datetime = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
             str(datetime.timedelta(seconds=time_from_start))
-        cv2.putText(image, current_datetime, (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+        cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
         video_out.write(image)
     video_out.release()
 
