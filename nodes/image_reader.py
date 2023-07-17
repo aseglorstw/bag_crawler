@@ -4,11 +4,9 @@ import cv2
 
 
 def save_image(bag):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/video.mp4"
-    frame_size = (640, 480)
-    fps = 30.0
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video_out = cv2.VideoWriter(output_path, fourcc, fps, frame_size)
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/video.avi"
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    video_out = cv2.VideoWriter(output_path, fourcc, 30.0, (1920, 1200), True)
     for topic, msg, time in bag.read_messages(topics=['/camera_front/image_color/compressed']):
         msg = CompressedImage(*slots(msg))
         np_arr = np.fromstring(msg.data, np.uint8)
