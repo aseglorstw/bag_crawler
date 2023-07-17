@@ -31,10 +31,3 @@ def slots(msg):
 def calculate_fps(bag):
     video_duration = 20
     return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration
-
-
-def format_time(seconds):
-    milliseconds = int((seconds - int(seconds)) * 1000)
-    minutes = int(seconds // 60)
-    seconds = int(seconds % 60)
-    return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
