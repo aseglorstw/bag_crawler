@@ -1,6 +1,8 @@
 import numpy as np
 from sensor_msgs.msg import CompressedImage
 import cv2
+import datetime
+import rospy
 
 
 def save_video(bag):
@@ -8,10 +10,16 @@ def save_video(bag):
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     fps = calculate_fps(bag)
     video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
+    start_time = bag.get_start_time()
     for topic, msg, time in bag.read_messages(topics=['/camera_front/image_color/compressed']):
+        time = rospy.Time.from_sec(time.to_sec())
+        time_from_start = int(time.to_sec() - start_time)
         msg = CompressedImage(*slots(msg))
         np_arr = np.fromstring(msg.data, np.uint8)
         image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        current_datetime = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S') + " + " + \
+            str(datetime.timedelta(seconds=time_from_start))
+        cv2.putText(image, current_datetime, (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
         video_out.write(image)
     video_out.release()
 
@@ -24,3 +32,9 @@ def calculate_fps(bag):
     video_duration = 20
     return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration
 
+
+def format_time(seconds):
+    milliseconds = int((seconds - int(seconds)) * 1000)
+    minutes = int(seconds // 60)
+    seconds = int(seconds % 60)
+    return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
