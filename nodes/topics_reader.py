@@ -4,7 +4,7 @@ import yaml
 import matplotlib.pyplot as plt
 
 
-def save_topics(bag):
+def save_topics_info(bag):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/nodes/web_server/topics.txt"
     topics_info = bag.get_type_and_topic_info()[1]
     with open(output_path, "w", encoding="utf-8") as file:
@@ -63,5 +63,6 @@ def save_graph_control_joy_and_time(time_array, control_joy):
     ax.set_xlabel('time')
     ax.set_ylabel('control joy')
     ax.set_title('Joystick robot control chart')
+    ax.set_yticks([0, 1])
     plt.savefig(output_path)
     plt.close()

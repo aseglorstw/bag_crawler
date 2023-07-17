@@ -23,6 +23,7 @@ def create_graphs(bag):
         time = rospy.Time.from_sec(time.to_sec())
         save_time = time.to_sec() - start_time
         try:
+            print(save_time)
             transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
             icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
                         transform_icp.transform.translation.z])
@@ -33,7 +34,7 @@ def create_graphs(bag):
             if msg_number % 50 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
-                transform_map_os_sensor = buffer.lookup_transform_full("map", time, "os_sensor", time, "map",
+                transform_map_os_sensor = buffer.lookup_transform_full("map", time, msg.header.frame_id, time, "map",
                                                                        rospy.Duration(1))
                 matrix = numpify(transform_map_os_sensor.transform)
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
