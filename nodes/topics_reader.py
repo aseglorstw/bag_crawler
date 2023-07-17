@@ -19,7 +19,7 @@ def create_graph_control_joy_and_time(bag):
     saved_times = []
     start_time = bag.get_start_time()
     joy_name = find_joy_topic(bag)
-    if joy_name is not "Topic not found":
+    if joy_name != -1:
         for topic, msg, time in bag.read_messages(topics=[joy_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = int(time.to_sec() - start_time)
@@ -28,6 +28,8 @@ def create_graph_control_joy_and_time(bag):
         time_array = create_time_array(bag)
         control_joy = create_array_of_binary_control_joy(time_array, saved_times)
         save_graph_control_joy_and_time(time_array, control_joy)
+    else:
+        print("Topic joy not founded")
 
 
 def find_joy_topic(bag):
@@ -35,7 +37,7 @@ def find_joy_topic(bag):
     for topic_name, topics_info in topics_info.items():
         if "joy" in topic_name:
             return topic_name
-    return "Topic not found"
+    return -1
 
 
 def create_time_array(bag):
