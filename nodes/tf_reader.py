@@ -49,7 +49,7 @@ def create_graphs(bag):
     if len(cloud_combined) > 0:
         speeds = get_speeds_one_period(icp[:, 0], icp[:, 1], icp[:, 2], saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
-        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom[:, 0], odom[:, 1], diff_x, diff_y)
+        create_graph_xy_and_point_cloud(cloud_combined, icp, odom, diff_x, diff_y)
         create_graph_x_over_time(icp[:, 0], odom[:, 0], saved_times)
         create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
         create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
@@ -79,7 +79,7 @@ def load_buffer(bag):
     return buffer
 
 
-def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y, diff_x, diff_y):
+def create_graph_xy_and_point_cloud(cloud_combined, icp, odom, diff_x, diff_y):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
@@ -89,44 +89,44 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y, 
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = transform_z_coordinates_to_color(combined_points[2, :])
     ax.scatter(combined_points[0, :] - diff_x, combined_points[1, :] - diff_y, s=marker_size, c=colors, cmap='Greens')
-    ax.plot(imu_x, imu_y, color='blue', label='imu_odom')
-    ax.plot(icp_x, icp_y, color='red', linestyle='--', label='icp_odom')
+    ax.plot(odom[:, 0], odom[:, 1], color='blue', label='imu_odom')
+    ax.plot(icp[:, 0], icp[:, 0], color='red', linestyle='--', label='icp_odom')
     plt.legend()
     plt.savefig(output_path)
     plt.close()
 
 
-def create_graph_x_over_time(icp_x, imu_x, saved_times):
+def create_graph_x_over_time(icp_x, odom_x, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_x_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in X direction")
-    ax.plot(saved_times, move_coordinates_to_the_origin(imu_x), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(odom_x), color='blue')
     ax.plot(saved_times, move_coordinates_to_the_origin(icp_x), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
 
-def create_graph_y_over_time(icp_y, imu_y, saved_times):
+def create_graph_y_over_time(icp_y, odom_y, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_y_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Y direction")
-    ax.plot(saved_times, move_coordinates_to_the_origin(imu_y), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(odom_y), color='blue')
     ax.plot(saved_times, move_coordinates_to_the_origin(icp_y), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
 
 
-def create_graph_z_over_time(icp_z, imu_z, saved_times):
+def create_graph_z_over_time(icp_z, odom_z, saved_times):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/coord_z_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
-    ax.plot(saved_times, move_coordinates_to_the_origin(imu_z), color='blue')
+    ax.plot(saved_times, move_coordinates_to_the_origin(odom_z), color='blue')
     ax.plot(saved_times, move_coordinates_to_the_origin(icp_z), color='red', linestyle='--')
     plt.savefig(output_path)
     plt.close()
