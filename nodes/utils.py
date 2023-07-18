@@ -5,6 +5,7 @@ from tqdm import tqdm
 import numpy as np
 from math import sqrt
 import yaml
+import datetime
 
 
 def slots(msg):
@@ -93,3 +94,8 @@ def create_array_of_binary_control_joy(time_array, saved_times):
         else:
             control_joy.append(0)
     return control_joy
+
+
+def get_date(seconds):
+    return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')
+

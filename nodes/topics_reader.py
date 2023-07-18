@@ -55,15 +55,7 @@ def read_lidar_topic_and_icp_with_odom(bag):
         write_info_to_file(utils.get_distances(icp), start_of_moving, end_of_moving, speeds)
         
 
-def write_info_to_file(distances_icp,  start_of_moving, end_of_moving, speeds):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/bag_info.txt"
-    speeds = np.array(speeds)
-    average_speed_icp = np.sum(speeds)/len(speeds)
-    with open(output_path, "w", encoding="utf-8") as file:
-        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n{start_of_moving}\n{end_of_moving}\n")
-
-
-def create_graph_control_joy_and_time(bag):
+def read_joy_topic_and_icp(bag):
     saved_times = []
     start_time = bag.get_start_time()
     joy_name = utils.find_joy_topic(bag)
@@ -77,3 +69,12 @@ def create_graph_control_joy_and_time(bag):
         control_joy = utils.create_array_of_binary_control_joy(time_array, saved_times)
     else:
         print("Topic joy not founded")
+
+
+def save_bag_info_to_file(distances_icp,  start_of_moving, end_of_moving, speeds):
+    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/bag_info.txt"
+    speeds = np.array(speeds)
+    average_speed_icp = np.sum(speeds)/len(speeds)
+    with open(output_path, "w", encoding="utf-8") as file:
+        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n{start_of_moving}\n{end_of_moving}\n")
+
