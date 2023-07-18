@@ -6,7 +6,7 @@ import bag_info_reader
 
 
 def main():
-    path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-27-15-01-44.bag'
+    path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-23-12-38-31.bag'
     bag = rosbag.Bag(path)
     image_reader.save_video(bag)
     #tf_reader.create_graphs(bag)

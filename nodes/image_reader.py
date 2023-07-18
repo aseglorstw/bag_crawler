@@ -11,7 +11,7 @@ def save_video(bag):
     fps = calculate_fps(bag)
     video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
     start_time = bag.get_start_time()
-    for topic, msg, time in bag.read_messages(topics=['/camera_front/image_color/compressed']):
+    for msg_number, (topic, msg, time) in enumerate(bag.read_messages(topics=['/camera_front/image_color/compressed'])):
         time = rospy.Time.from_sec(time.to_sec())
         time_from_start = int(time.to_sec() - start_time)
         msg = CompressedImage(*slots(msg))
