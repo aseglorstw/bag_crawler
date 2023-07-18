@@ -42,20 +42,17 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
-    diff_x = icp[0][0]
-    diff_y = icp[0][1]
-    icp = move_coordinates_to_the_origin(icp)
-    odom = move_coordinates_to_the_origin(odom)
     if len(cloud_combined) > 0:
-        speeds = get_speeds_one_period(icp[:, 0], icp[:, 1], icp[:, 2], saved_times)
+        icp = np.array(icp)
+        odom = np.array(odom)
+        speeds = get_speeds_one_period(icp, saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
-        create_graph_xy_and_point_cloud(cloud_combined, icp, odom, diff_x, diff_y)
+        create_graph_xy_and_point_cloud(cloud_combined, icp, odom)
         create_graph_x_over_time(icp[:, 0], odom[:, 0], saved_times)
         create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
         create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
-        create_graph_distance_over_time(icp[:, 0], icp[:, 1], icp[:, 2], odom[:, 0], odom[:, 1], odom[:, 2],
-                                        saved_times, start_of_moving, end_of_moving)
-        write_info_to_file(get_distances(icp[:, 0], icp[:, 1], icp[:, 2]), start_of_moving, end_of_moving, speeds)
+        create_graph_distance_over_time(icp, odom,  saved_times, start_of_moving, end_of_moving)
+        write_info_to_file(get_distances(icp), start_of_moving, end_of_moving, speeds)
         
 
 def slots(msg):
@@ -79,7 +76,7 @@ def load_buffer(bag):
     return buffer
 
 
-def create_graph_xy_and_point_cloud(cloud_combined, icp, odom, diff_x, diff_y):
+def create_graph_xy_and_point_cloud(cloud_combined, icp, odom):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
@@ -88,9 +85,11 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp, odom, diff_x, diff_y):
     plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = transform_z_coordinates_to_color(combined_points[2, :])
-    ax.scatter(combined_points[0, :] - diff_x, combined_points[1, :] - diff_y, s=marker_size, c=colors, cmap='Greens')
+    ax.scatter(combined_points[0, :] - icp[:, 0][0], combined_points[1, :] - icp[:, 1][0], s=marker_size, c=colors, cmap='Greens')
+    icp = move_coordinates_to_the_origin(icp)
+    odom = move_coordinates_to_the_origin(odom)
     ax.plot(odom[:, 0], odom[:, 1], color='blue', label='imu_odom')
-    ax.plot(icp[:, 0], icp[:, 0], color='red', linestyle='--', label='icp_odom')
+    ax.plot(icp[:, 0], icp[:, 1], color='red', linestyle='--', label='icp_odom')
     plt.legend()
     plt.savefig(output_path)
     plt.close()
@@ -132,15 +131,14 @@ def create_graph_z_over_time(icp_z, odom_z, saved_times):
     plt.close()
 
 
-def create_graph_distance_over_time(icp_x, icp_y, icp_z, imu_x, imu_y, imu_z, saved_times, start_of_moving,
-                                    end_of_moving):
+def create_graph_distance_over_time(icp, odom, saved_times, start_of_moving, end_of_moving):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/distance_and_time.png"
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
-    ax.plot(saved_times, get_distances(imu_x, imu_y, imu_z), color='blue')
-    ax.plot(saved_times, get_distances(icp_x, icp_y, icp_z), color='red', linestyle='--')
+    ax.plot(saved_times, get_distances(odom), color='blue')
+    ax.plot(saved_times, get_distances(icp), color='red', linestyle='--')
     ax.axvline(start_of_moving, color='green', linestyle=':', label='start_of_moving')
     ax.axvline(end_of_moving, color='green', linestyle='--', label='end_of_moving')
     plt.legend()
@@ -158,10 +156,10 @@ def move_coordinates_to_the_origin(coordinates):
     return np.array(coordinates) - coordinates[0]
 
 
-def get_distances(coord_x, coord_y, coord_z):
-    coord_x = np.array(coord_x)
-    coord_y = np.array(coord_y)
-    coord_z = np.array(coord_z)
+def get_distances(coord):
+    coord_x = np.array(coord[:, 0])
+    coord_y = np.array(coord[:, 1])
+    coord_z = np.array(coord[:, 2])
     distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
     distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
     distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
@@ -196,10 +194,10 @@ def find_start_and_end_of_moving(speeds, saved_times):
     return start_of_moving, end_of_moving
 
 
-def get_speeds_one_period(icp_x, icp_y, icp_z, saved_times):
-    coord_x = np.array(icp_x)
-    coord_y = np.array(icp_y)
-    coord_z = np.array(icp_z)
+def get_speeds_one_period(icp, saved_times):
+    coord_x = np.array(icp[:, 0])
+    coord_y = np.array(icp[:, 1])
+    coord_z = np.array(icp[:, 2])
     saved_times = np.array(saved_times)
     distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
     distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
