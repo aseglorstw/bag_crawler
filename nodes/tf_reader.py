@@ -19,11 +19,11 @@ def create_graphs(bag):
     cloud_combined = []
     saved_times = []
     start_time = bag.get_start_time()
+    first_transform_lidar = []
     for msg_number, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
         time = rospy.Time.from_sec(time.to_sec())
         save_time = time.to_sec() - start_time
         try:
-            print(save_time)
             transform_icp = buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
             icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
                         transform_icp.transform.translation.z])
@@ -36,15 +36,18 @@ def create_graphs(bag):
                 cloud = np.array(list(read_points(msg)))
                 transform_map_lidar = buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                    "map", rospy.Duration(1))
+                if len(first_transform_lidar) == 0:
+                    first_transform_lidar = np.array([transform_map_lidar.transform.translation.x,
+                            transform_map_lidar.transform.translation.y, transform_map_lidar.transform.translation.z])
                 matrix = numpify(transform_map_lidar.transform)
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
-                transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
+                transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4] - first_transform_lidar.reshape(3, 1)
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
     if len(cloud_combined) > 0:
-        icp = np.array(icp)
-        odom = np.array(odom)
+        icp = move_coordinates_to_the_origin(icp)
+        odom = move_coordinates_to_the_origin(odom)
         speeds = get_speeds_one_period(icp, saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
         create_graph_xy_and_point_cloud(cloud_combined, icp, odom)
@@ -85,9 +88,7 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp, odom):
     plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = transform_z_coordinates_to_color(combined_points[2, :])
-    ax.scatter(combined_points[0, :] - icp[:, 0][0], combined_points[1, :] - icp[:, 1][0], s=marker_size, c=colors, cmap='Greens')
-    icp = move_coordinates_to_the_origin(icp)
-    odom = move_coordinates_to_the_origin(odom)
+    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='Greens')
     ax.plot(odom[:, 0], odom[:, 1], color='blue', label='imu_odom')
     ax.plot(icp[:, 0], icp[:, 1], color='red', linestyle='--', label='icp_odom')
     plt.legend()
