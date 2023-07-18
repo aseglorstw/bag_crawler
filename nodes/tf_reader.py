@@ -158,21 +158,15 @@ def move_coordinates_to_the_origin(coordinates):
 
 
 def get_distances(coord):
-    coord_x = np.array(coord[:, 0])
-    coord_y = np.array(coord[:, 1])
-    coord_z = np.array(coord[:, 2])
-    distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
-    distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
-    distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
-    distances_x = [0]
-    distances_y = [0]
-    distances_z = [0]
-    distances = [0]
-    for i in range(len(distances_one_period_x)):
-        distances_x.append(distances_one_period_x[i] + distances_x[-1])
-        distances_y.append(distances_one_period_y[i] + distances_y[-1])
-        distances_z.append(distances_one_period_z[i] + distances_z[-1])
-        distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
+    distances_one_period = np.abs(coord[1:] - coord[:-1])
+    distances = []
+    for i in range(len(distances_one_period)):
+    #     distances_x.append(distances_one_period_x[i] + distances_x[-1])
+    #     distances_y.append(distances_one_period_y[i] + distances_y[-1])
+    #     distances_z.append(distances_one_period_z[i] + distances_z[-1])
+    #     distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
+        distances.append(distances[-1] + distances_one_period[i])
+    print(distances)
     return distances
 
 
