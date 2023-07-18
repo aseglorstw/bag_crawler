@@ -158,21 +158,13 @@ def move_coordinates_to_the_origin(coordinates):
 
 
 def get_distances(coord):
-    coord_x = np.array(coord[:, 0])
-    coord_y = np.array(coord[:, 1])
-    coord_z = np.array(coord[:, 2])
-    distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
-    distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
-    distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
-    distances_x = [0]
-    distances_y = [0]
-    distances_z = [0]
+    distances_one_period = np.abs(coord[1:] - coord[:-1])
+    distances_xyz = [[0, 0, 0]]
     distances = [0]
-    for i in range(len(distances_one_period_x)):
-        distances_x.append(distances_one_period_x[i] + distances_x[-1])
-        distances_y.append(distances_one_period_y[i] + distances_y[-1])
-        distances_z.append(distances_one_period_z[i] + distances_z[-1])
-        distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
+    for distance in distances_one_period:
+        distances_xyz.append(distances_xyz[-1] + distance)
+        distances.append(sqrt(pow(distances_xyz[-1][0], 2) + pow(distances_xyz[-1][1], 2) +
+                              pow(distances_xyz[-1][2], 2)))
     return distances
 
 
@@ -196,18 +188,11 @@ def find_start_and_end_of_moving(speeds, saved_times):
 
 
 def get_speeds_one_period(icp, saved_times):
-    coord_x = np.array(icp[:, 0])
-    coord_y = np.array(icp[:, 1])
-    coord_z = np.array(icp[:, 2])
+    distances_one_period = np.abs(icp[1:] - icp[:-1])
     saved_times = np.array(saved_times)
-    distances_one_period_x = np.abs(coord_x[1:] - coord_x[:-1])
-    distances_one_period_y = np.abs(coord_y[1:] - coord_y[:-1])
-    distances_one_period_z = np.abs(coord_z[1:] - coord_z[:-1])
     times_one_period = saved_times[1:] - saved_times[:-1]
-    speeds_x = distances_one_period_x / times_one_period
-    speeds_y = distances_one_period_y / times_one_period
-    speeds_z = distances_one_period_z / times_one_period
+    speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
     speeds = []
-    for i in range(len(speeds_x)):
-        speeds.append(sqrt(pow(speeds_x[i], 2) + pow(speeds_y[i], 2) + pow(speeds_z[i], 2)))
+    for speed in speeds_xyz:
+        speeds.append(sqrt(pow(speed[0], 2) + pow(speed[1], 2) + pow(speed[2], 2)))
     return speeds
