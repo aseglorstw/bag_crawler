@@ -36,7 +36,7 @@ def create_graphs(bag):
                 cloud = np.array(list(read_points(msg)))
                 transform_map_lidar = buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                    "map", rospy.Duration(1))
-                if len(first_transform_lidar) == 0:
+                if len(first_transform_lidar) == 0: #Надо как то изменить
                     first_transform_lidar = np.array([transform_map_lidar.transform.translation.x,
                             transform_map_lidar.transform.translation.y, transform_map_lidar.transform.translation.z])
                 matrix = numpify(transform_map_lidar.transform)
