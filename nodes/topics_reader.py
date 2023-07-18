@@ -10,7 +10,6 @@ from tf2_ros import ExtrapolationException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
-import yaml
 
 
 class Reader:
