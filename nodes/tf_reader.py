@@ -36,7 +36,7 @@ def create_graphs(bag):
                 cloud = np.array(list(read_points(msg)))
                 transform_map_lidar = buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                    "map", rospy.Duration(1))
-                if len(first_transform_lidar) == 0: #Надо как то изменить
+                if len(first_transform_lidar) == 0:
                     first_transform_lidar = np.array([transform_map_lidar.transform.translation.x,
                             transform_map_lidar.transform.translation.y, transform_map_lidar.transform.translation.z])
                 matrix = numpify(transform_map_lidar.transform)
@@ -159,12 +159,12 @@ def move_coordinates_to_the_origin(coordinates):
 
 def get_distances(coord):
     distances_one_period = np.abs(coord[1:] - coord[:-1])
-    distances = []
-    distances.append([0, 0, 0])
+    distances_xyz = [[0, 0, 0]]
+    distances = [0]
     for distance in distances_one_period:
-        distances.append(distances[-1] + distance)
-        #distances[-1] = sqrt(pow(distances[-1][0], 2) + pow(distances[-1][1], 2) + pow(distances[-1][2], 2))
-    print(sqrt(pow(distances[-1][0], 2) + pow(distances[-1][1], 2) + pow(distances[-1][2], 2)))
+        distances_xyz.append(distances_xyz[-1] + distance)
+        distances.append(sqrt(pow(distances_xyz[-1][0], 2) + pow(distances_xyz[-1][1], 2) +
+                              pow(distances_xyz[-1][2], 2)))
     return distances
 
 
