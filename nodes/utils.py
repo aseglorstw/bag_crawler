@@ -98,3 +98,8 @@ def create_array_of_binary_control_joy(time_array, saved_times):
 
 def get_date(seconds):
     return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def calculate_fps(bag):
+    video_duration = 20
+    return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration

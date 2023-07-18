@@ -28,6 +28,4 @@ def slots(msg):
     return [getattr(msg, var) for var in msg.__slots__]
 
 
-def calculate_fps(bag):
-    video_duration = 20
-    return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration
+
