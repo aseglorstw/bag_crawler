@@ -8,11 +8,7 @@ import bag_info_reader
 def main():
     path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-27-15-01-44.bag'
     bag = rosbag.Bag(path)
-    #image_reader.save_video(bag)
     topics_reader.read_lidar_topic_and_icp_with_odom(bag)
-    #topics_reader.save_topics_info(bag)
-    #topics_reader.create_graph_control_joy_and_time(bag)
-    #bag_info_reader.save_bag_info(bag)
     bag.close()
 
 

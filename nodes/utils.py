@@ -98,4 +98,3 @@ def create_array_of_binary_control_joy(time_array, saved_times):
 
 def get_date(seconds):
     return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')
-

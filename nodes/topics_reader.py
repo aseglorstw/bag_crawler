@@ -1,5 +1,6 @@
 import utils
 import graphs_creator
+import writer_to_files
 from sensor_msgs.msg import PointCloud2
 import rospy
 from sensor_msgs.point_cloud2 import read_points
@@ -52,7 +53,7 @@ def read_lidar_topic_and_icp_with_odom(bag):
         graphs_creator.create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
         graphs_creator.create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
         graphs_creator.create_graph_distance_over_time(icp, odom,  saved_times, start_of_moving, end_of_moving)
-        write_info_to_file(utils.get_distances(icp), start_of_moving, end_of_moving, speeds)
+        writer_to_files.write_bag_info(bag, utils.get_distances(icp), start_of_moving, end_of_moving, speeds)
         
 
 def read_joy_topic_and_icp(bag):
@@ -69,12 +70,4 @@ def read_joy_topic_and_icp(bag):
         control_joy = utils.create_array_of_binary_control_joy(time_array, saved_times)
     else:
         print("Topic joy not founded")
-
-
-def save_bag_info_to_file(distances_icp,  start_of_moving, end_of_moving, speeds):
-    output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/bag_info.txt"
-    speeds = np.array(speeds)
-    average_speed_icp = np.sum(speeds)/len(speeds)
-    with open(output_path, "w", encoding="utf-8") as file:
-        file.write(f"{distances_icp[-1]}\n{average_speed_icp}\n{start_of_moving}\n{end_of_moving}\n")
 
