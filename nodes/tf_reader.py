@@ -160,13 +160,11 @@ def move_coordinates_to_the_origin(coordinates):
 def get_distances(coord):
     distances_one_period = np.abs(coord[1:] - coord[:-1])
     distances = []
-    for i in range(len(distances_one_period)):
-    #     distances_x.append(distances_one_period_x[i] + distances_x[-1])
-    #     distances_y.append(distances_one_period_y[i] + distances_y[-1])
-    #     distances_z.append(distances_one_period_z[i] + distances_z[-1])
-    #     distances.append(sqrt(pow(distances_x[i + 1], 2) + pow(distances_y[i + 1], 2) + pow(distances_z[i + 1], 2)))
-        distances.append(distances[-1] + distances_one_period[i])
-    print(distances)
+    distances.append([0, 0, 0])
+    for distance in distances_one_period:
+        distances.append(distances[-1] + distance)
+        #distances[-1] = sqrt(pow(distances[-1][0], 2) + pow(distances[-1][1], 2) + pow(distances[-1][2], 2))
+    print(sqrt(pow(distances[-1][0], 2) + pow(distances[-1][1], 2) + pow(distances[-1][2], 2)))
     return distances
 
 
