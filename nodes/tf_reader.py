@@ -191,7 +191,7 @@ def get_speeds_one_period(icp, saved_times):
     distances_one_period = np.abs(icp[1:] - icp[:-1])
     saved_times = np.array(saved_times)
     times_one_period = saved_times[1:] - saved_times[:-1]
-    speeds_xyz = distances_one_period / times_one_period
+    speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
     speeds = []
     for speed in speeds_xyz:
         speeds.append(sqrt(pow(speed[0], 2) + pow(speed[1], 2) + pow(speed[2], 2)))
