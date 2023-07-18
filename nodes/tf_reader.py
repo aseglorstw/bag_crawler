@@ -18,8 +18,8 @@ def create_graphs(bag):
     odom = []
     cloud_combined = []
     saved_times = []
-    start_time = bag.get_start_time()
     first_transform_lidar = []
+    start_time = bag.get_start_time()
     for msg_number, (topic, msg, time) in enumerate(bag.read_messages(topics=['/points'])):
         time = rospy.Time.from_sec(time.to_sec())
         save_time = time.to_sec() - start_time
@@ -31,7 +31,7 @@ def create_graphs(bag):
             odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
                          transform_imu.transform.translation.z])
             saved_times.append(save_time)
-            if msg_number % 25 == 0:
+            if msg_number % 20 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_lidar = buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
