@@ -1,7 +1,7 @@
 import rosbag
-import tf_reader
-import image_reader
 import topics_reader
+import image_reader
+import info_topics_reader
 import bag_info_reader
 
 
