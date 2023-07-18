@@ -31,7 +31,7 @@ def create_graphs(bag):
             odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
                          transform_imu.transform.translation.z])
             saved_times.append(save_time)
-            if msg_number % 50 == 0:
+            if msg_number % 25 == 0:
                 msg = PointCloud2(*slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 transform_map_os_sensor = buffer.lookup_transform_full("map", time, msg.header.frame_id, time, "map",
@@ -42,13 +42,14 @@ def create_graphs(bag):
                 cloud_combined.append(transformed_vectors)
         except ExtrapolationException:
             continue
+    diff_x = icp[0][0]
+    diff_y = icp[0][1]
     icp = move_coordinates_to_the_origin(icp)
     odom = move_coordinates_to_the_origin(odom)
-    cloud_combined = move_coordinates_to_the_origin(cloud_combined)
     if len(cloud_combined) > 0:
         speeds = get_speeds_one_period(icp[:, 0], icp[:, 1], icp[:, 2], saved_times)
         start_of_moving, end_of_moving = find_start_and_end_of_moving(speeds, saved_times)
-        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom[:, 0], odom[:, 1])
+        create_graph_xy_and_point_cloud(cloud_combined, icp[:, 0], icp[:, 1], odom[:, 0], odom[:, 1], diff_x, diff_y)
         create_graph_x_over_time(icp[:, 0], odom[:, 0], saved_times)
         create_graph_y_over_time(icp[:, 1], odom[:, 1], saved_times)
         create_graph_z_over_time(icp[:, 2], odom[:, 2], saved_times)
@@ -78,7 +79,7 @@ def load_buffer(bag):
     return buffer
 
 
-def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
+def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y, diff_x, diff_y):
     output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/shared_point_cloud.png"
     fig, ax = plt.subplots()
     marker_size = 0.5
@@ -87,7 +88,7 @@ def create_graph_xy_and_point_cloud(cloud_combined, icp_x, icp_y, imu_x, imu_y):
     plt.title("XY plot of UGV's movement")
     combined_points = np.concatenate(cloud_combined, axis=1)
     colors = transform_z_coordinates_to_color(combined_points[2, :])
-    ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=combined_points[2, :], cmap='Greens')
+    ax.scatter(combined_points[0, :] - diff_x, combined_points[1, :] - diff_y, s=marker_size, c=colors, cmap='Greens')
     ax.plot(imu_x, imu_y, color='blue', label='imu_odom')
     ax.plot(icp_x, icp_y, color='red', linestyle='--', label='icp_odom')
     plt.legend()
