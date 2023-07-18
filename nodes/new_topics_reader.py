@@ -10,22 +10,20 @@ from tf2_ros import ExtrapolationException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
+import yaml
 
 
 class Reader:
 
     def __init__(self, bag):
         self.bag = bag
-        self.icp = []
-        self.odom = []
-        self.point_cloud = []
-        self.saved_times = []
         self.buffer = []
         self.start_time = bag.get_start_time()
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
         first_transform = []
+        point_cloud = []
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
             if msg_number % 20 == 0:
                 try:
@@ -40,43 +38,63 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4] - first_transform.reshape(3, 1)
-                    self.point_cloud.append(transformed_vectors)
+                    point_cloud.append(transformed_vectors)
                 except ExtrapolationException:
                     continue
+        return point_cloud
 
     def read_icp_odom(self):
+        icp = []
+        odom = []
+        saved_times = []
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
-                transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map", rospy.Duration(1))
-                self.icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
-                            transform_icp.transform.translation.z])
-                transform_imu = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom", rospy.Duration(1))
-                self.odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
-                             transform_imu.transform.translation.z])
-                self.saved_times.append(save_time)
+                transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
+                                                                  rospy.Duration(1))
+                icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
+                                 transform_icp.transform.translation.z])
+                transform_imu = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
+                                                                  rospy.Duration(1))
+                odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
+                                  transform_imu.transform.translation.z])
+                saved_times.append(save_time)
             except ExtrapolationException:
                 continue
+        return icp, odom, saved_times
 
-    def read_images_and_save_video(self, bag):
+    def read_images_and_save_video(self):
         output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/video.avi"
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        fps = self.calculate_fps(bag)
+        fps = self.calculate_fps()
         video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
-        start_time = bag.get_start_time()
         for msg_number, (topic, msg, time) in enumerate(
-                bag.read_messages(topics=['/camera_front/image_color/compressed'])):
+                self.bag.read_messages(topics=['/camera_front/image_color/compressed'])):
             time = rospy.Time.from_sec(time.to_sec())
-            time_from_start = int(time.to_sec() - start_time)
+            time_from_start = int(time.to_sec() - self.start_time)
             msg = CompressedImage(*self.slots(msg))
             np_arr = np.fromstring(msg.data, np.uint8)
             image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            current_datetime = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
-                               str(datetime.timedelta(seconds=time_from_start))
+            current_datetime = datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
+                                                                str(datetime.timedelta(seconds=time_from_start))
             cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
             video_out.write(image)
         video_out.release()
+
+
+    def read_joy_topic(self):
+        joy_control_times = []
+        joy_name = self.find_joy_topic()
+        if joy_name != -1:
+            for topic, msg, time in self.bag.read_messages(topics=[joy_name]):
+                time = rospy.Time.from_sec(time.to_sec())
+                control_time = int(time.to_sec() - self.start_time)
+                if control_time not in joy_control_times:
+                    joy_control_times.append(control_time)
+        else:
+            print("Topic joy not founded")
+
 
     def load_buffer(self):
         tf_topics = ['/tf', '/tf_static', 'points']
@@ -96,6 +114,14 @@ class Reader:
     def slots(self, msg):
         return [getattr(msg, var) for var in msg.__slots__]
 
-    def calculate_fps(self, bag):
+    def calculate_fps(self):
         video_duration = 20
-        return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration
+        return self.bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
+            video_duration
+
+    def find_joy_topic(self):
+        topics_info = self.bag.get_type_and_topic_info()[1]
+        for topic_name, topics_info in topics_info.items():
+            if "joy" in topic_name:
+                return topic_name
+        return -1
