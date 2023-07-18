@@ -7,6 +7,9 @@ from sensor_msgs.point_cloud2 import read_points
 import numpy as np
 from ros_numpy import numpify
 from tf2_ros import ExtrapolationException
+import cv2
+import datetime
+from sensor_msgs.msg import CompressedImage
 
 
 class Reader:
@@ -56,6 +59,25 @@ class Reader:
             except ExtrapolationException:
                 continue
 
+    def read_images_and_save_video(self, bag):
+        output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/video.avi"
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        fps = self.calculate_fps(bag)
+        video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
+        start_time = bag.get_start_time()
+        for msg_number, (topic, msg, time) in enumerate(
+                bag.read_messages(topics=['/camera_front/image_color/compressed'])):
+            time = rospy.Time.from_sec(time.to_sec())
+            time_from_start = int(time.to_sec() - start_time)
+            msg = CompressedImage(*self.slots(msg))
+            np_arr = np.fromstring(msg.data, np.uint8)
+            image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            current_datetime = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
+                               str(datetime.timedelta(seconds=time_from_start))
+            cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+            video_out.write(image)
+        video_out.release()
+
     def load_buffer(self):
         tf_topics = ['/tf', '/tf_static', 'points']
         self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
@@ -73,3 +95,7 @@ class Reader:
 
     def slots(self, msg):
         return [getattr(msg, var) for var in msg.__slots__]
+
+    def calculate_fps(self, bag):
+        video_duration = 20
+        return bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / video_duration
