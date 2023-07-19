@@ -70,15 +70,15 @@ class Reader:
         video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(
                 self.bag.read_messages(topics=['/camera_front/image_color/compressed'])):
-            time = rospy.Time.from_sec(time.to_sec())
-            time_from_start = int(time.to_sec() - self.start_time)
-            msg = CompressedImage(*self.slots(msg))
-            np_arr = np.fromstring(msg.data, np.uint8)
-            image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            current_datetime = datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
-                                                                str(datetime.timedelta(seconds=time_from_start))
-            cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
-            video_out.write(image)
+            if msg_number % 5 == 0:
+                time = rospy.Time.from_sec(time.to_sec())
+                time_from_start = int(time.to_sec() - self.start_time)
+                msg = CompressedImage(*self.slots(msg))
+                np_arr = np.fromstring(msg.data, np.uint8)
+                image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                current_datetime = self.get_datetime(time_from_start)
+                cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+                video_out.write(image)
         video_out.release()
 
 
@@ -116,11 +116,15 @@ class Reader:
     def calculate_fps(self):
         video_duration = 20
         return self.bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
-            video_duration
+            (video_duration * 5)
 
     def find_joy_topic(self):
         topics_info = self.bag.get_type_and_topic_info()[1]
         for topic_name, topics_info in topics_info.items():
-            if "joy" in topic_name:
+            if "cmd_vel" in topic_name:
                 return topic_name
         return -1
+
+    def get_datetime(self, time_from_start):
+        return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
+                                                                str(datetime.timedelta(seconds=time_from_start))

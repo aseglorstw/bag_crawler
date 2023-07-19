@@ -19,8 +19,9 @@ class Writer:
         with open(output_path, "w", encoding="utf-8") as file:
             file.seek(0, 2)
             file.write(f"{self.distance}\n{average_speed_icp}\n{self.start_of_moving}\n{self.end_of_moving}\n"
-                    f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n{info_dict['duration']}\n"
-                    f"{round((info_dict['size']/pow(10, 9)), 2)}\n{info_dict['messages']}\n")
+                       f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n"
+                       f"{info_dict['duration']}\n" f"{round((info_dict['size']/pow(10, 9)), 2)}\n"
+                       f"{info_dict['messages']}\n")
 
     def write_topics_info(self):
         output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/topics.txt"

@@ -40,4 +40,3 @@ class Calculater:
         for speed in speeds_xyz:
             self.speeds.append(sqrt(pow(speed[0], 2) + pow(speed[1], 2) + pow(speed[2], 2)))
         return self.speeds
-
