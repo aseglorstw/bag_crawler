@@ -3,21 +3,19 @@ import matplotlib.pyplot as plt
 
 
 class GraphsCreator:
-    def __init__(self, point_cloud, icp, odom, saved_times, joy_control_times):
-        self.point_cloud = point_cloud
+    def __init__(self,  icp, odom, saved_times):
         self.icp = np.array(icp)
         self.odom = np.array(odom)
         self.saved_times = saved_times
-        self.joy_control_times = joy_control_times
 
-    def create_graph_xy_and_point_cloud(self):
+    def create_graph_xy_and_point_cloud(self, point_cloud):
         output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/shared_point_cloud.png"
         fig, ax = plt.subplots()
         marker_size = 0.5
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("XY plot of UGV's movement")
-        combined_points = np.concatenate(self.point_cloud, axis=1)
+        combined_points = np.concatenate(point_cloud, axis=1)
         colors = self.transform_z_coordinates_to_color(combined_points[2, :])
         ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='Greens')
         self.icp = self.move_coordinates_to_the_origin(self.icp)
@@ -71,6 +69,21 @@ class GraphsCreator:
         ax.plot(self.saved_times, distances_icp, color='red', linestyle='--')
         ax.axvline(start_of_moving, color='green', linestyle=':', label='start_of_moving')
         ax.axvline(end_of_moving, color='green', linestyle='--', label='end_of_moving')
+        plt.legend()
+        plt.savefig(output_path)
+        plt.close()
+
+    def create_graph_joy_control_times_and_icp(self, joy_control_coordinates):
+        output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/joy_control_time.png"
+        fig, ax = plt.subplots()
+        plt.xlabel('X-coordinate')
+        plt.ylabel('Y-coordinate')
+        plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
+        self.icp = self.move_coordinates_to_the_origin(self.icp)
+        ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
+        for coordinates in joy_control_coordinates:
+            ax.plot(coordinates[:, 0], coordinates[:, 1], color='green')
+        ax.plot([], [], color='green', label='joy_control')
         plt.legend()
         plt.savefig(output_path)
         plt.close()
