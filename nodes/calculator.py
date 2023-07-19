@@ -40,3 +40,7 @@ class Calculater:
         for speed in speeds_xyz:
             self.speeds.append(sqrt(pow(speed[0], 2) + pow(speed[1], 2) + pow(speed[2], 2)))
         return self.speeds
+
+    def get_joy_control_times_in_saved_times(self, joy_control_times):
+        indices = np.unique(np.searchsorted(self.saved_times, joy_control_times))
+        return np.array(self.saved_times)[indices[indices < len(self.saved_times)]]

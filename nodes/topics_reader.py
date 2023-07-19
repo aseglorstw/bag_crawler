@@ -88,12 +88,12 @@ class Reader:
         if joy_name != -1:
             for topic, msg, time in self.bag.read_messages(topics=[joy_name]):
                 time = rospy.Time.from_sec(time.to_sec())
-                control_time = int(time.to_sec() - self.start_time)
+                control_time = time.to_sec() - self.start_time
                 if control_time not in joy_control_times:
                     joy_control_times.append(control_time)
         else:
             print("Topic joy not founded")
-
+        return joy_control_times
 
     def load_buffer(self):
         tf_topics = ['/tf', '/tf_static', 'points']
