@@ -50,3 +50,9 @@ class Calculater:
             control_coordinates.append((self.icp - self.icp[0])[indices[indices < len(self.saved_times)]])
         return control_coordinates
 
+
+    def get_joy_control_binary(self, joy_control_times):
+        indices = np.unique(np.searchsorted(self.saved_times, joy_control_times))
+        control_binary = np.zeros(len(self.saved_times), dtype=int)
+        control_binary[indices[indices < len(self.saved_times)]] = 1
+        return control_binary

@@ -74,7 +74,7 @@ class GraphsCreator:
         plt.close()
 
     def create_graph_joy_control_times_and_icp(self, joy_control_coordinates):
-        output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/joy_control_time.png"
+        output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/joy_control_and_icp.png"
         fig, ax = plt.subplots()
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
@@ -82,9 +82,21 @@ class GraphsCreator:
         self.icp = self.move_coordinates_to_the_origin(self.icp)
         ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
         for coordinates in joy_control_coordinates:
-            ax.plot(coordinates[:, 0], coordinates[:, 1], color='green')
-        ax.plot([], [], color='green', label='joy_control')
+            ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')
+            break
+        ax.plot([], [], color='orange', label='joy_control')
         plt.legend()
+        plt.savefig(output_path)
+        plt.close()
+
+    def create_binary_graph_joy_control_and_time(self, joy_control_binary):
+        output_path = '/home/robert/catkin_ws/src/bag_crawler/web_server/control_joy_and_time.png'
+        fig, ax = plt.subplots()
+        ax.step(self.saved_times, joy_control_binary, color='orange', where='post')
+        ax.set_xlabel('time')
+        ax.set_ylabel('control joy')
+        ax.set_title('Joystick robot control chart')
+        ax.set_yticks([0, 1])
         plt.savefig(output_path)
         plt.close()
 
@@ -95,3 +107,5 @@ class GraphsCreator:
 
     def move_coordinates_to_the_origin(self, coordinates):
         return np.array(coordinates) - coordinates[0]
+
+

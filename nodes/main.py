@@ -25,6 +25,7 @@ def main():
     # speeds = calc.get_speeds_one_period()
     # start_of_moving, end_of_moving = calc.find_start_and_end_of_moving()
     joy_control_coordinates = calc.get_joy_control_coordinates(joy_control_times)
+    joy_control_binary = calc.get_joy_control_binary(joy_control_times)
 
     creator = graphs_creator.GraphsCreator(icp, odom, saved_times)
     # creator.create_graph_x_over_time()
@@ -33,6 +34,7 @@ def main():
     # creator.create_graph_xy_and_point_cloud(point_cloud)
     # creator.create_graph_distance_over_time(distances_icp, distances_odom, start_of_moving, end_of_moving)
     creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
+    creator.create_binary_graph_joy_control_and_time(joy_control_binary)
 
     #
     # writer = writer_to_files.Writer(bag, distances_icp[-1], start_of_moving, end_of_moving, speeds)
