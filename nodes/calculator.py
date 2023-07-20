@@ -58,5 +58,4 @@ class Calculater:
         return control_binary
 
     def turn_trajectory(self, coord, matrix):
-
-
+        return np.dot(np.array(coord), matrix)
