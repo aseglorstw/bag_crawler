@@ -57,5 +57,8 @@ class Calculater:
         control_binary[indices[indices < len(self.saved_times)]] = 1
         return control_binary
 
-    def turn_trajectory(self, coord, matrix):
-        return np.dot(np.array(coord), matrix)
+    def transform_trajectory(self, coord, matrix):
+        transformed_coord = []
+        for vector in coord:
+            transformed_coord.append(np.dot(matrix, vector))
+        return np.array(transformed_coord) - transformed_coord[0]

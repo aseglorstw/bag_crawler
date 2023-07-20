@@ -18,8 +18,6 @@ class GraphsCreator:
         combined_points = np.concatenate(point_cloud, axis=1)
         colors = self.transform_z_coordinates_to_color(combined_points[2, :])
         ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='Greens')
-        self.icp = self.move_coordinates_to_the_origin(self.icp)
-        self.odom = self.move_coordinates_to_the_origin(self.odom)
         ax.plot(self.odom[:, 0], self.odom[:, 1], color='blue', label='imu_odom')
         ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
         plt.legend()
