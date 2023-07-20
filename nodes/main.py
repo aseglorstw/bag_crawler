@@ -23,7 +23,7 @@ def main():
     # distances_icp = calc.get_distances(icp)
     # distances_odom = calc.get_distances(odom)
     # speeds = calc.get_speeds_one_period()
-    # start_of_moving, end_of_moving = calc.find_start_and_end_of_moving()
+    # start_of_moving, end_of_moving = calc.get_start_and_end_of_moving()
     joy_control_coordinates = calc.get_joy_control_coordinates(joy_control_times)
     joy_control_binary = calc.get_joy_control_binary(joy_control_times)
 

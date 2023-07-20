@@ -22,7 +22,7 @@ class Calculater:
         self.distance = distances[-1]
         return distances
 
-    def find_start_and_end_of_moving(self):
+    def get_start_and_end_of_moving(self):
         start_of_moving = -1
         end_of_moving = -1
         for i in range(len(self.speeds)):
