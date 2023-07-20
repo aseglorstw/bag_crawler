@@ -18,11 +18,13 @@ class Reader:
         self.bag = bag
         self.buffer = []
         self.start_time = bag.get_start_time()
-        self.first_rotation_matrices = []
+        self.first_rotation_matrix_point_cloud = None
+        self.first_rotation_matrix_icp = None
+        self.first_rotation_matrix_odom = None
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
-        first_transform = []
+        first_transform = None
         point_cloud = []
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
             if msg_number % 20 == 0:
@@ -31,10 +33,12 @@ class Reader:
                     cloud = np.array(list(read_points(msg)))
                     transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                             "map", rospy.Duration(1))
-                    if len(first_transform) == 0:
+                    if first_transform is None:
                         first_transform = np.array([transform_map_lidar.transform.translation.x,
                                                     transform_map_lidar.transform.translation.y,
                                                     transform_map_lidar.transform.translation.z])
+                        self.first_rotation_matrix_point_cloud = \
+                            np.linalg.inv(numpify(transform_map_lidar.transform)[:3, :3])
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4] - first_transform.reshape(3, 1)
@@ -47,18 +51,23 @@ class Reader:
         icp = []
         odom = []
         saved_times = []
-        for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
+        for topic, msg, time in self.bag.read_messages(topics=['/points']):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
                 icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
-                                 transform_icp.transform.translation.z])
-                transform_imu = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
-                                                                  rospy.Duration(1))
-                odom.append([transform_imu.transform.translation.x, transform_imu.transform.translation.y,
-                                  transform_imu.transform.translation.z])
+                            transform_icp.transform.translation.z])
+                if self.first_rotation_matrix_icp is None:
+                    self.first_rotation_matrix_icp = np.linalg.inv(numpify(transform_icp.transform)[:3, :3])
+
+                transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
+                                                                   rospy.Duration(1))
+                odom.append([transform_odom.transform.translation.x, transform_odom.transform.translation.y,
+                             transform_odom.transform.translation.z])
+                if self.first_rotation_matrix_odom is None:
+                    self.first_rotation_matrix_odom = np.linalg.inv(numpify(transform_odom.transform)[:3, :3])
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
@@ -131,4 +140,4 @@ class Reader:
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
     def get_first_rotation_matrices(self):
-        return self.first_rotation_matrices[0], self.first_rotation_matrices[1], self.first_rotation_matrices[2]
+        return self.first_rotation_matrix_icp, self.first_rotation_matrix_odom, self.first_rotation_matrix_point_cloud
