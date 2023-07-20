@@ -56,3 +56,7 @@ class Calculater:
         control_binary = np.zeros(len(self.saved_times), dtype=int)
         control_binary[indices[indices < len(self.saved_times)]] = 1
         return control_binary
+
+    def turn_trajectory(self, coord, matrix):
+
+

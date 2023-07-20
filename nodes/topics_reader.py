@@ -18,6 +18,7 @@ class Reader:
         self.bag = bag
         self.buffer = []
         self.start_time = bag.get_start_time()
+        self.first_rotation_matrices = []
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
@@ -128,3 +129,6 @@ class Reader:
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
                                                                 str(datetime.timedelta(seconds=time_from_start))
+
+    def get_first_rotation_matrices(self):
+        return self.first_rotation_matrices[0], self.first_rotation_matrices[1], self.first_rotation_matrices[2]
