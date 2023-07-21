@@ -29,8 +29,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in X direction")
-        ax.plot(self.saved_times, self.odom[:, 0], color='blue')
-        ax.plot(self.saved_times, self.icp[:, 0], color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[0, :], color='blue')
+        ax.plot(self.saved_times, self.icp[0, :], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -40,8 +40,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in Y direction")
-        ax.plot(self.saved_times, self.odom[:, 1], color='blue')
-        ax.plot(self.saved_times, self.icp[:, 1], color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[1, :], color='blue')
+        ax.plot(self.saved_times, self.icp[1, :], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -51,8 +51,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in Z direction")
-        ax.plot(self.saved_times, self.odom[:, 2], color='blue')
-        ax.plot(self.saved_times, self.icp[:, 2], color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[2, :], color='blue')
+        ax.plot(self.saved_times, self.icp[2, :], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -76,7 +76,7 @@ class GraphsCreator:
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
-        ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
+        ax.plot(self.icp[0, :], self.icp[1, :], color='red', linestyle='--', label='icp_odom')
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')
             break
