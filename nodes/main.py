@@ -16,7 +16,7 @@ def main():
     reader.load_buffer()
     point_cloud = reader.read_point_cloud()
     icp, odom, saved_times = reader.read_icp_odom()
-    rotation_matrix_icp, rotation_matrix_odom, rotation_matrix_lidar = reader.get_first_rotation_matrices()
+    first_matrix_icp, first_matrix_odom, first_matrix_lidar = reader.get_first_rotation_matrices()
     #reader.read_images_and_save_video()
     # joy_control_times = reader.read_joy_topic()
 
@@ -27,9 +27,9 @@ def main():
     # start_of_moving, end_of_moving = calc.get_start_and_end_of_moving()
     # joy_control_coordinates = calc.get_joy_control_coordinates(joy_control_times)
     # joy_control_binary = calc.get_joy_control_binary(joy_control_times)
-    transformed_icp = calc.transform_trajectory(icp, rotation_matrix_icp)
-    transformed_odom = calc.transform_trajectory(odom, rotation_matrix_odom)
-    transformed_point_cloud = calc.transform_point_cloud(point_cloud, rotation_matrix_icp)
+    transformed_icp = calc.transform_trajectory(icp, first_matrix_icp)
+    transformed_odom = calc.transform_trajectory(odom, first_matrix_odom)
+    transformed_point_cloud = calc.transform_point_cloud(point_cloud, first_matrix_icp)
 
     creator = graphs_creator.GraphsCreator(transformed_icp, transformed_odom, saved_times)
     # creator.create_graph_x_over_time()

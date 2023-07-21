@@ -1,5 +1,6 @@
 import numpy as np
 from math import sqrt
+from ros_numpy import numpify
 
 
 class Calculater:
@@ -59,16 +60,15 @@ class Calculater:
 
     def transform_trajectory(self, coord, matrix):
         transformed_coord = []
+        inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
         for vector in coord:
-            transformed_coord.append(np.dot(matrix, vector))
+            transformed_coord.append(np.dot(inv_matrix, vector))
         transformed_coord = np.array(transformed_coord) - transformed_coord[0]
         return transformed_coord
 
     def transform_point_cloud(self, point_cloud, matrix):
+        inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
-        transformed_point_cloud = []
-        for idx in range(len(point_cloud[0])):
-            vector = [point_cloud[0][idx], point_cloud[1][idx], point_cloud[2][idx]]
-            transformed_point_cloud.append(np.dot(matrix, vector))
-        transformed_point_cloud = np.array(transformed_point_cloud) - transformed_point_cloud[0]
+        first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
+        transformed_point_cloud = np.dot(inv_matrix, point_cloud) - np.dot(inv_matrix, first_transform)
         return transformed_point_cloud

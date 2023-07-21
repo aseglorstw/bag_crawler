@@ -24,7 +24,6 @@ class Reader:
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
-        first_transform = None
         point_cloud = []
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
             if msg_number % 20 == 0:
@@ -34,7 +33,7 @@ class Reader:
                     transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                             "map", rospy.Duration(1))
                     if self.rotation_matrix_lidar is None:
-                        self.rotation_matrix_lidar = np.linalg.inv(numpify(transform_map_lidar.transform)[:3, :3])
+                        self.rotation_matrix_lidar = transform_map_lidar.transform
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
@@ -56,14 +55,14 @@ class Reader:
                 icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
                             transform_icp.transform.translation.z])
                 if self.rotation_matrix_icp is None:
-                    self.rotation_matrix_icp = np.linalg.inv(numpify(transform_icp.transform)[:3, :3])
+                    self.rotation_matrix_icp = transform_icp.transform
 
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                    rospy.Duration(1))
                 odom.append([transform_odom.transform.translation.x, transform_odom.transform.translation.y,
                              transform_odom.transform.translation.z])
                 if self.rotation_matrix_odom is None:
-                    self.rotation_matrix_odom = np.linalg.inv(numpify(transform_odom.transform)[:3, :3])
+                    self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
