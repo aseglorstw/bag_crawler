@@ -52,15 +52,15 @@ class Reader:
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
-                icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
-                            transform_icp.transform.translation.z])
+                icp.append([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
+                            [transform_icp.transform.translation.z]])
                 if self.rotation_matrix_icp is None:
                     self.rotation_matrix_icp = transform_icp.transform
 
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                    rospy.Duration(1))
-                odom.append([transform_odom.transform.translation.x, transform_odom.transform.translation.y,
-                             transform_odom.transform.translation.z])
+                odom.append([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                             [transform_odom.transform.translation.z]])
                 if self.rotation_matrix_odom is None:
                     self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)

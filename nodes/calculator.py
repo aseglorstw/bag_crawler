@@ -58,17 +58,15 @@ class Calculater:
         control_binary[indices[indices < len(self.saved_times)]] = 1
         return control_binary
 
-    def transform_trajectory(self, coord, matrix):
-        transformed_coord = []
+    def transform_trajectory(self, coordinates, matrix):
         inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
-        for vector in coord:
-            transformed_coord.append(np.dot(inv_matrix, vector))
-        transformed_coord = np.array(transformed_coord) - transformed_coord[0]
-        return transformed_coord
+        coordinates = np.concatenate(coordinates, axis=1)
+        transformed_coordinates = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
+        return transformed_coordinates
 
     def transform_point_cloud(self, point_cloud, matrix):
         inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
         first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
-        transformed_point_cloud = np.dot(inv_matrix, point_cloud) - np.dot(inv_matrix, first_transform)
+        transformed_point_cloud = inv_matrix @ point_cloud - inv_matrix @ first_transform
         return transformed_point_cloud
