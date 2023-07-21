@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pyvista as pv
 
 
 class GraphsCreator:
@@ -95,6 +96,16 @@ class GraphsCreator:
         ax.set_yticks([0, 1])
         plt.savefig(output_path)
         plt.close()
+
+    @staticmethod
+    def show_point_cloud(point_cloud):
+        point_cloud = np.array(point_cloud)
+        point_cloud = point_cloud.T
+        points = pv.PolyData(point_cloud)
+        plotter = pv.Plotter()
+        plotter.add_points(points, render_points_as_spheres=True, color='blue', point_size=5)
+        plotter.show_axes()
+        plotter.show()
 
     @staticmethod
     def transform_z_coordinates_to_color(coord_z):

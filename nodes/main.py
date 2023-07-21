@@ -1,15 +1,12 @@
-import numpy as np
-
 import rosbag
 import topics_reader
 import graphs_creator
-import writer_to_files
 import calculator
 
 
 def main():
-    #path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-27-15-01-44.bag'
-    path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-23-12-38-31.bag'
+    path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-27-15-01-44.bag'
+    #path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/husky_2022-09-23-12-38-31.bag'
     bag = rosbag.Bag(path)
 
     reader = topics_reader.Reader(bag)
@@ -36,6 +33,7 @@ def main():
     # creator.create_graph_y_over_time()
     # creator.create_graph_z_over_time()
     creator.create_graph_xy_and_point_cloud(transformed_point_cloud)
+    creator.show_point_cloud(transformed_point_cloud)
     # creator.create_graph_distance_over_time(distances_icp, distances_odom, start_of_moving, end_of_moving)
     # creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
     # creator.create_binary_graph_joy_control_and_time(joy_control_binary)
@@ -49,3 +47,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
