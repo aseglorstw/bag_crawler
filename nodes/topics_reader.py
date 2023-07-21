@@ -86,7 +86,6 @@ class Reader:
                 video_out.write(image)
         video_out.release()
 
-
     def read_joy_topic(self):
         joy_control_times = []
         joy_name = self.find_joy_topic()
@@ -115,7 +114,8 @@ class Reader:
         except ROSBagException:
             print('Could not read')
 
-    def slots(self, msg):
+    @staticmethod
+    def slots(msg):
         return [getattr(msg, var) for var in msg.__slots__]
 
     def calculate_fps(self):

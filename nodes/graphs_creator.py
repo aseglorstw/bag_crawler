@@ -96,7 +96,8 @@ class GraphsCreator:
         plt.savefig(output_path)
         plt.close()
 
-    def transform_z_coordinates_to_color(self, coord_z):
+    @staticmethod
+    def transform_z_coordinates_to_color(coord_z):
         coord_z += abs(np.min(coord_z))
         colors = np.log1p(coord_z)
         return colors

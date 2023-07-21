@@ -51,20 +51,22 @@ class Calculater:
             control_coordinates.append((self.icp - self.icp[0])[indices[indices < len(self.saved_times)]])
         return control_coordinates
 
-
+    @staticmethod
     def get_joy_control_binary(self, joy_control_times):
         indices = np.unique(np.searchsorted(self.saved_times, joy_control_times))
         control_binary = np.zeros(len(self.saved_times), dtype=int)
         control_binary[indices[indices < len(self.saved_times)]] = 1
         return control_binary
 
-    def transform_trajectory(self, coordinates, matrix):
+    @staticmethod
+    def transform_trajectory(coordinates, matrix):
         inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
         coordinates = np.concatenate(coordinates, axis=1)
         transformed_coordinates = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
         return transformed_coordinates
 
-    def transform_point_cloud(self, point_cloud, matrix):
+    @staticmethod
+    def transform_point_cloud(point_cloud, matrix):
         inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
         first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
