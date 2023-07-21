@@ -61,4 +61,14 @@ class Calculater:
         transformed_coord = []
         for vector in coord:
             transformed_coord.append(np.dot(matrix, vector))
-        return np.array(transformed_coord) - transformed_coord[0]
+        transformed_coord = np.array(transformed_coord) - transformed_coord[0]
+        return transformed_coord
+
+    def transform_point_cloud(self, point_cloud, matrix):
+        point_cloud = np.concatenate(point_cloud, axis=1)
+        transformed_point_cloud = []
+        for idx in range(len(point_cloud[0])):
+            vector = [point_cloud[0][idx], point_cloud[1][idx], point_cloud[2][idx]]
+            transformed_point_cloud.append(np.dot(matrix, vector))
+        transformed_point_cloud = np.array(transformed_point_cloud) - transformed_point_cloud[0]
+        return transformed_point_cloud

@@ -18,9 +18,9 @@ class Reader:
         self.bag = bag
         self.buffer = []
         self.start_time = bag.get_start_time()
-        self.first_rotation_matrix_lidar = None
-        self.first_rotation_matrix_icp = None
-        self.first_rotation_matrix_odom = None
+        self.rotation_matrix_lidar = None
+        self.rotation_matrix_icp = None
+        self.rotation_matrix_odom = None
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
@@ -33,14 +33,11 @@ class Reader:
                     cloud = np.array(list(read_points(msg)))
                     transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                             "map", rospy.Duration(1))
-                    if first_transform is None:
-                        first_transform = np.array([transform_map_lidar.transform.translation.x,
-                                                    transform_map_lidar.transform.translation.y,
-                                                    transform_map_lidar.transform.translation.z])
-                        self.first_rotation_matrix_lidar = np.linalg.inv(numpify(transform_map_lidar.transform)[:3, :3])
+                    if self.rotation_matrix_lidar is None:
+                        self.rotation_matrix_lidar = np.linalg.inv(numpify(transform_map_lidar.transform)[:3, :3])
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
-                    transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4] - first_transform.reshape(3, 1)
+                    transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                     point_cloud.append(transformed_vectors)
                 except ExtrapolationException:
                     continue
@@ -58,15 +55,15 @@ class Reader:
                                                                   rospy.Duration(1))
                 icp.append([transform_icp.transform.translation.x, transform_icp.transform.translation.y,
                             transform_icp.transform.translation.z])
-                if self.first_rotation_matrix_icp is None:
-                    self.first_rotation_matrix_icp = np.linalg.inv(numpify(transform_icp.transform)[:3, :3])
+                if self.rotation_matrix_icp is None:
+                    self.rotation_matrix_icp = np.linalg.inv(numpify(transform_icp.transform)[:3, :3])
 
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                    rospy.Duration(1))
                 odom.append([transform_odom.transform.translation.x, transform_odom.transform.translation.y,
                              transform_odom.transform.translation.z])
-                if self.first_rotation_matrix_odom is None:
-                    self.first_rotation_matrix_odom = np.linalg.inv(numpify(transform_odom.transform)[:3, :3])
+                if self.rotation_matrix_odom is None:
+                    self.rotation_matrix_odom = np.linalg.inv(numpify(transform_odom.transform)[:3, :3])
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
@@ -139,4 +136,4 @@ class Reader:
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
     def get_first_rotation_matrices(self):
-        return self.first_rotation_matrix_icp, self.first_rotation_matrix_odom, self.first_rotation_matrix_lidar
+        return self.rotation_matrix_icp, self.rotation_matrix_odom, self.rotation_matrix_lidar

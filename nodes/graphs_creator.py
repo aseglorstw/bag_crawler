@@ -15,9 +15,8 @@ class GraphsCreator:
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("XY plot of UGV's movement")
-        combined_points = np.concatenate(point_cloud, axis=1)
-        colors = self.transform_z_coordinates_to_color(combined_points[2, :])
-        ax.scatter(combined_points[0, :], combined_points[1, :], s=marker_size, c=colors, cmap='Greens')
+        colors = self.transform_z_coordinates_to_color(point_cloud[:, 2])
+        ax.scatter(point_cloud[:, 0], point_cloud[:, 1], s=marker_size, c=colors, cmap='Greens')
         ax.plot(self.odom[:, 0], self.odom[:, 1], color='blue', label='imu_odom')
         ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
         plt.legend()
@@ -30,8 +29,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in X direction")
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.odom[:, 0]), color='blue')
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.icp[:, 0]), color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[:, 0], color='blue')
+        ax.plot(self.saved_times, self.icp[:, 0], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -41,8 +40,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in Y direction")
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.odom[:, 1]), color='blue')
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.icp[:, 1]), color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[:, 1], color='blue')
+        ax.plot(self.saved_times, self.icp[:, 1], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -52,8 +51,8 @@ class GraphsCreator:
         plt.xlabel('time [s]')
         plt.ylabel('distance[m]')
         plt.title("UGV's movement in Z direction")
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.odom[:, 2]), color='blue')
-        ax.plot(self.saved_times, self.move_coordinates_to_the_origin(self.icp[:, 2]), color='red', linestyle='--')
+        ax.plot(self.saved_times, self.odom[:, 2], color='blue')
+        ax.plot(self.saved_times, self.icp[:, 2], color='red', linestyle='--')
         plt.savefig(output_path)
         plt.close()
 
@@ -77,7 +76,6 @@ class GraphsCreator:
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
-        self.icp = self.move_coordinates_to_the_origin(self.icp)
         ax.plot(self.icp[:, 0], self.icp[:, 1], color='red', linestyle='--', label='icp_odom')
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')
@@ -102,8 +100,3 @@ class GraphsCreator:
         coord_z += abs(np.min(coord_z))
         colors = np.log1p(coord_z)
         return colors
-
-    def move_coordinates_to_the_origin(self, coordinates):
-        return np.array(coordinates) - coordinates[0]
-
-
