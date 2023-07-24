@@ -80,7 +80,6 @@ class GraphsCreator:
         ax.plot(self.icp[0, :], self.icp[1, :], color='red', linestyle='--', label='icp_odom')
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')
-            break
         ax.plot([], [], color='orange', label='joy_control')
         plt.legend()
         plt.savefig(output_path)

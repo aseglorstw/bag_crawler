@@ -18,7 +18,6 @@ class Reader:
         self.bag = bag
         self.buffer = []
         self.start_time = bag.get_start_time()
-        self.rotation_matrix_lidar = None
         self.rotation_matrix_icp = None
         self.rotation_matrix_odom = None
         rospy.init_node('tf_listener')
@@ -32,8 +31,6 @@ class Reader:
                     cloud = np.array(list(read_points(msg)))
                     transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                             "map", rospy.Duration(1))
-                    if self.rotation_matrix_lidar is None:
-                        self.rotation_matrix_lidar = transform_map_lidar.transform
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
@@ -135,4 +132,4 @@ class Reader:
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
     def get_first_rotation_matrices(self):
-        return self.rotation_matrix_icp, self.rotation_matrix_odom, self.rotation_matrix_lidar
+        return self.rotation_matrix_icp, self.rotation_matrix_odom

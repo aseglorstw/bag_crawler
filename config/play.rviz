@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TF1
       Splitter Ratio: 0.5
     Tree Height: 514
   - Class: rviz/Selection
@@ -94,103 +95,103 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base_footprint:
-          Value: true
+          Value: false
         base_link:
           Value: true
         bullet:
-          Value: true
+          Value: false
         bullet_antenna:
-          Value: true
+          Value: false
         cam1_base:
-          Value: true
+          Value: false
         cam2_base:
-          Value: true
+          Value: false
         camera_0:
-          Value: true
+          Value: false
         camera_1:
-          Value: true
+          Value: false
         camera_2:
-          Value: true
+          Value: false
         camera_3:
-          Value: true
+          Value: false
         crystal:
-          Value: true
+          Value: false
         front_bumper_link:
-          Value: true
+          Value: false
         front_left_wheel_link:
-          Value: true
+          Value: false
         front_right_wheel_link:
-          Value: true
+          Value: false
         gps:
-          Value: true
+          Value: false
         imu:
-          Value: true
+          Value: false
         imu_link:
-          Value: true
+          Value: false
         inertial_link:
-          Value: true
+          Value: false
         jetson:
-          Value: true
+          Value: false
         lidar:
-          Value: true
+          Value: false
         map:
           Value: true
         mount_base:
-          Value: true
+          Value: false
         odom:
           Value: true
         os_imu:
-          Value: true
+          Value: false
         os_lidar:
-          Value: true
+          Value: false
         os_sensor:
-          Value: true
+          Value: false
         ouster_mount:
-          Value: true
+          Value: false
         ouster_mount_top:
-          Value: true
+          Value: false
         payload_frame:
-          Value: true
+          Value: false
         rear_bumper_link:
-          Value: true
+          Value: false
         rear_left_wheel_link:
-          Value: true
+          Value: false
         rear_right_corner:
-          Value: true
+          Value: false
         rear_right_wheel_link:
-          Value: true
+          Value: false
         robot_view:
-          Value: true
+          Value: false
         rs_lidar:
-          Value: true
+          Value: false
         rslidar:
-          Value: true
+          Value: false
         top_chassis_link:
-          Value: true
+          Value: false
         top_plate_front_link:
-          Value: true
+          Value: false
         top_plate_link:
-          Value: true
+          Value: false
         top_plate_rear_link:
-          Value: true
+          Value: false
         tower:
-          Value: true
+          Value: false
         tower_camera_floor:
-          Value: true
+          Value: false
         tower_cap:
-          Value: true
+          Value: false
         tower_cap_top:
-          Value: true
+          Value: false
         tower_lower_floor:
-          Value: true
+          Value: false
         tower_rear_right_corner:
-          Value: true
+          Value: false
         user_rail_link:
-          Value: true
+          Value: false
       Marker Alpha: 1
-      Marker Scale: 1
+      Marker Scale: 10
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -209,6 +210,8 @@ Visualization Manager:
               front_left_wheel_link:
                 {}
               front_right_wheel_link:
+                {}
+              gps:
                 {}
               imu_link:
                 {}
@@ -255,8 +258,7 @@ Visualization Manager:
                                 {}
                     tower_lower_floor:
                       imu:
-                        gps:
-                          {}
+                        {}
                       jetson:
                         {}
               rear_right_wheel_link:
@@ -325,6 +327,14 @@ Visualization Manager:
       Topic: /husky_velocity_controller/odom
       Unreliable: false
       Value: true
+    - Class: jsk_rviz_plugin/TFTrajectory
+      Enabled: true
+      Name: TFTrajectory
+      Value: true
+      color: 25; 255; 240
+      duration: 100
+      frame: base_link
+      line_width: 0.03999999910593033
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -352,26 +362,20 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz/ThirdPersonFollower
-      Distance: 10
+      Angle: 0.40500083565711975
+      Class: rviz/TopDownOrtho
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
-      Field of View: 0.7853981852531433
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: false
-      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7853981852531433
-      Target Frame: base_link
-      Yaw: 0.7853981852531433
+      Scale: 6.0781755447387695
+      Target Frame: map
+      X: 0
+      Y: 0
     Saved: ~
 Window Geometry:
   Displays:
