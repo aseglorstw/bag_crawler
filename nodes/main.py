@@ -20,7 +20,7 @@ def main():
     icp, odom, saved_times = reader.read_icp_odom()
     first_matrix_icp, first_matrix_odom = reader.get_first_rotation_matrices()
     #reader.read_images_and_save_video()
-    # joy_control_times = reader.read_joy_topic()
+    #joy_control_times = reader.read_joy_topic()
 
     transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
     transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)

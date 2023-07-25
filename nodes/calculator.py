@@ -13,13 +13,12 @@ def get_distances(coordinates):
 
 
 def get_start_and_end_of_moving(speeds, saved_times):
-    start_of_moving = -1
-    end_of_moving = -1
-    for i in range(len(speeds)):
-        if speeds[i] > 0.2 and start_of_moving == -1:
-            start_of_moving = saved_times[i]
-        elif speeds[i] < 0.2 or (i == len(speeds) - 1 and speeds[i] > 0.2):
-            end_of_moving = saved_times[i]
+    speeds = np.array(speeds)
+    saved_times = np.array(saved_times)
+    start_indices = np.where(speeds > 0.2)[0]
+    end_indices = np.where((speeds < 0.2) | (speeds > 0.2) & (np.arange(len(speeds)) == len(speeds) - 1))[0]
+    start_of_moving = saved_times[start_indices[0]] if len(start_indices) > 0 else -1
+    end_of_moving = saved_times[end_indices[-1]] if len(end_indices) > 0 else -1
     return start_of_moving, end_of_moving
 
 
