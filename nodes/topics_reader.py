@@ -47,21 +47,21 @@ class Reader:
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
-                icp.append([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
-                            [transform_icp.transform.translation.z]])
+                icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
+                           [transform_icp.transform.translation.z]]))
                 if self.rotation_matrix_icp is None:
                     self.rotation_matrix_icp = transform_icp.transform
 
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                    rospy.Duration(1))
-                odom.append([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                             [transform_odom.transform.translation.z]])
+                odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                            [transform_odom.transform.translation.z]]))
                 if self.rotation_matrix_odom is None:
                     self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
-        return icp, odom, saved_times
+        return np.array(icp), np.array(odom), np.array(saved_times)
 
     def read_images_and_save_video(self):
         output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/video.avi"
@@ -92,7 +92,7 @@ class Reader:
                     joy_control_times.append(control_time)
         else:
             print("Topic joy not founded")
-        return joy_control_times
+        return np.array(joy_control_times)
 
     def load_buffer(self):
         tf_topics = ['/tf', '/tf_static', 'points']

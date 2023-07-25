@@ -4,12 +4,11 @@ from ros_numpy import numpify
 
 
 def get_distances(coordinates):
-    coordinates = np.array(coordinates)
     transpose_coordinates = coordinates.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period, axis=0)), axis=0)
     distances = np.sqrt(np.sum(np.power(distances_xyz, 2), axis=1))
-    return distances.tolist()
+    return distances
 
 
 def get_start_and_end_of_moving(speeds, saved_times):
