@@ -23,7 +23,6 @@ class Reader:
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
-        point_cloud = []
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
             if msg_number % 20 == 0:
                 try:
@@ -34,10 +33,9 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    point_cloud.append(transformed_vectors)
+                    yield transformed_vectors
                 except ExtrapolationException:
                     continue
-        return point_cloud
 
     def read_icp_odom(self):
         icp = []
@@ -111,10 +109,6 @@ class Reader:
         except ROSBagException:
             print('Could not read')
 
-    @staticmethod
-    def slots(msg):
-        return [getattr(msg, var) for var in msg.__slots__]
-
     def calculate_fps(self):
         video_duration = 20
         return self.bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
@@ -133,3 +127,7 @@ class Reader:
 
     def get_first_rotation_matrices(self):
         return self.rotation_matrix_icp, self.rotation_matrix_odom
+
+    @staticmethod
+    def slots(msg):
+        return [getattr(msg, var) for var in msg.__slots__]

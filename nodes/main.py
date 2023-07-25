@@ -4,6 +4,7 @@ import graphs_creator
 import calculator
 import writer_to_files
 import os
+import timeit
 
 
 def main():
@@ -16,7 +17,7 @@ def main():
 
     reader = topics_reader.Reader(bag)
     reader.load_buffer()
-    point_cloud = reader.read_point_cloud()
+    point_cloud = list(reader.read_point_cloud())
     icp, odom, saved_times = reader.read_icp_odom()
     first_matrix_icp, first_matrix_odom = reader.get_first_rotation_matrices()
     reader.read_images_and_save_video()
@@ -37,7 +38,6 @@ def main():
     creator.create_graph_y_over_time()
     creator.create_graph_z_over_time()
     creator.create_graph_xy_and_point_cloud(transformed_point_cloud)
-    creator.show_point_cloud(transformed_point_cloud)
     creator.create_graph_distance_over_time(distances_icp, distances_odom, start_of_moving, end_of_moving)
     creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
     creator.create_binary_graph_joy_control_and_time(joy_control_binary)
@@ -50,5 +50,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-
+    execution_time = timeit.timeit(main, number=1)
+    print(f"Время выполнения программы: {execution_time:.6f} секунд")
