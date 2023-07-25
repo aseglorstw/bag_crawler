@@ -3,17 +3,13 @@ import topics_reader
 import graphs_creator
 import calculator
 import writer_to_files
-import os
 import timeit
 
 
 def main():
     path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
-    bag_file = 'husky_2022-09-27-15-01-44.bag'
-    folder = path + ".web_server_" + bag_file
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-    bag = rosbag.Bag(path + bag_file)
+    bag_file_name = 'husky_2022-09-27-15-01-44.bag'
+    bag = rosbag.Bag(path + bag_file_name)
 
     reader = topics_reader.Reader(bag)
     reader.load_buffer()
@@ -34,7 +30,8 @@ def main():
     joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times, saved_times)
     joy_control_binary = calculator.get_joy_control_binary(saved_times, joy_control_times)
 
-    creator = graphs_creator.GraphsCreator(transformed_icp, transformed_odom, saved_times)
+    creator = graphs_creator.GraphsCreator(transformed_icp, transformed_odom, saved_times, path, bag_file_name)
+
     creator.create_graph_x_over_time()
     creator.create_graph_y_over_time()
     creator.create_graph_z_over_time()
