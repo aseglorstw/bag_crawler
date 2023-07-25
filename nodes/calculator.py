@@ -12,8 +12,6 @@ def get_distances(coordinates):
 
 
 def get_start_and_end_of_moving(speeds, saved_times):
-    speeds = np.array(speeds)
-    saved_times = np.array(saved_times)
     start_indices = np.where(speeds > 0.2)[0]
     end_indices = np.where((speeds < 0.2) | (speeds > 0.2) & (np.arange(len(speeds)) == len(speeds) - 1))[0]
     start_of_moving = saved_times[start_indices[0]] if len(start_indices) > 0 else -1
@@ -31,7 +29,6 @@ def get_speeds_one_period(coordinates, saved_times):
 
 
 def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
-    coordinates = np.array(coordinates)
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
