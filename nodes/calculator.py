@@ -36,12 +36,13 @@ def get_speeds_one_period(coordinates, saved_times):
 
 
 def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
+    coordinates = np.array(coordinates)
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
     control_coordinates = []
     for indices in split_indices:
-        control_coordinates.append((coordinates - coordinates[0])[indices[indices < len(saved_times)]])
+        control_coordinates.append(coordinates.T[indices[indices < len(saved_times)]])
     return control_coordinates
 
 
