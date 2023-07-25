@@ -10,7 +10,7 @@ class Writer:
 
     def write_bag_info(self, distance, start_of_moving, end_of_moving, average_speed):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
-        with open( f"{self.folder}/bag_info.txt", "w", encoding="utf-8") as file:
+        with open(f"{self.folder}/bag_info.txt", "w", encoding="utf-8") as file:
             file.write(f"{distance}\n{average_speed}\n{start_of_moving}\n{end_of_moving}\n"
                        f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n"
                        f"{info_dict['duration']}\n" f"{round((info_dict['size']/pow(10, 9)), 2)}\n"

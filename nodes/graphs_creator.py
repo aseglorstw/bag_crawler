@@ -56,7 +56,7 @@ class GraphsCreator:
         plt.title("UGV's movement in Z direction")
         ax.plot(self.saved_times, self.odom[2, :], color='blue')
         ax.plot(self.saved_times, self.icp[2, :], color='red', linestyle='--')
-        plt.savefig(output_path = f"{self.folder}/UGVs_movement_in_Z_direction.png")
+        plt.savefig(f"{self.folder}/UGVs_movement_in_Z_direction.png")
         plt.close()
 
     def create_graph_distance_over_time(self, distances_icp, distances_odom, start_of_moving, end_of_moving):
