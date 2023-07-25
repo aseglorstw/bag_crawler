@@ -58,3 +58,7 @@ def transform_point_cloud(point_cloud, matrix):
     first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
     transformed_point_cloud = inv_matrix @ point_cloud - inv_matrix @ first_transform
     return transformed_point_cloud
+
+
+def get_average_speed(speeds):
+    return np.sum(speeds) / len(speeds)

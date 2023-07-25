@@ -5,8 +5,8 @@ import pyvista as pv
 
 class GraphsCreator:
     def __init__(self,  icp, odom, saved_times):
-        self.icp = np.array(icp)
-        self.odom = np.array(odom)
+        self.icp = icp
+        self.odom = odom
         self.saved_times = saved_times
 
     def create_graph_xy_and_point_cloud(self, point_cloud):
@@ -98,7 +98,6 @@ class GraphsCreator:
 
     @staticmethod
     def show_point_cloud(point_cloud):
-        point_cloud = np.array(point_cloud)
         point_cloud = point_cloud.T
         points = pv.PolyData(point_cloud)
         plotter = pv.Plotter()

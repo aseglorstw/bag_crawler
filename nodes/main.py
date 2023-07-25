@@ -29,6 +29,7 @@ def main():
     distances_icp = calculator.get_distances(transformed_icp)
     distances_odom = calculator.get_distances(transformed_odom)
     speeds = calculator.get_speeds_one_period(transformed_icp, saved_times)
+    average_speed = calculator.get_average_speed(speeds)
     start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times)
     joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times, saved_times)
     joy_control_binary = calculator.get_joy_control_binary(saved_times, joy_control_times)
@@ -44,7 +45,7 @@ def main():
 
     writer = writer_to_files.Writer(bag)
     writer.write_topics_info()
-    writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, speeds)
+    writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 
     bag.close()
 
