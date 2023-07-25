@@ -31,7 +31,7 @@ def main():
     joy_control_binary = calculator.get_joy_control_binary(saved_times, joy_control_times)
 
     creator = graphs_creator.GraphsCreator(transformed_icp, transformed_odom, saved_times, path, bag_file_name)
-
+    creator.create_folder()
     creator.create_graph_x_over_time()
     creator.create_graph_y_over_time()
     creator.create_graph_z_over_time()
@@ -40,7 +40,7 @@ def main():
     creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
     creator.create_binary_graph_joy_control_and_time(joy_control_binary)
 
-    writer = writer_to_files.Writer(bag)
+    writer = writer_to_files.Writer(bag, path, bag_file_name)
     writer.write_topics_info()
     writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 
