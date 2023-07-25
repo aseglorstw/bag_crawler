@@ -7,7 +7,7 @@ def get_distances(coordinates):
     transpose_coordinates = coordinates.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period, axis=0)), axis=0)
-    distances = np.sqrt(np.sum(np.power(distances_xyz, 2), axis=1))
+    distances = np.linalg.norm(distances_xyz, axis=1)
     return distances
 
 
@@ -22,15 +22,11 @@ def get_start_and_end_of_moving(speeds, saved_times):
 
 
 def get_speeds_one_period(coordinates, saved_times):
-    speeds = []
-    coordinates = np.array(coordinates)
     transpose_coordinates = coordinates.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
-    saved_times = np.array(saved_times)
     times_one_period = saved_times[1:] - saved_times[:-1]
     speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
-    for speed in speeds_xyz:
-        speeds.append(sqrt(pow(speed[0], 2) + pow(speed[1], 2) + pow(speed[2], 2)))
+    speeds = np.linalg.norm(speeds_xyz, axis=1)
     return speeds
 
 
