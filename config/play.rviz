@@ -126,6 +126,8 @@ Visualization Manager:
           Value: false
         gps:
           Value: false
+        gps_odom:
+          Value: true
         imu:
           Value: false
         imu_link:
@@ -136,8 +138,6 @@ Visualization Manager:
           Value: false
         lidar:
           Value: false
-        map:
-          Value: true
         mount_base:
           Value: false
         odom:
@@ -161,8 +161,6 @@ Visualization Manager:
         rear_right_corner:
           Value: false
         rear_right_wheel_link:
-          Value: false
-        robot_view:
           Value: false
         rs_lidar:
           Value: false
@@ -190,6 +188,10 @@ Visualization Manager:
           Value: false
         user_rail_link:
           Value: false
+        utm:
+          Value: true
+        utm_local:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 10
       Name: TF
@@ -197,83 +199,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
-                {}
-              bullet:
-                bullet_antenna:
-                  {}
-              front_bumper_link:
-                {}
-              front_left_wheel_link:
-                {}
-              front_right_wheel_link:
-                {}
-              gps:
-                {}
-              imu_link:
-                {}
-              inertial_link:
-                {}
-              mount_base:
-                cam1_base:
-                  {}
-                cam2_base:
-                  {}
-                rs_lidar:
-                  lidar:
-                    {}
-                  rslidar:
-                    {}
-              payload_frame:
-                {}
-              rear_bumper_link:
-                {}
-              rear_left_wheel_link:
-                {}
-              rear_right_corner:
-                tower_rear_right_corner:
-                  tower:
-                    tower_camera_floor:
-                      camera_0:
-                        {}
-                      camera_1:
-                        {}
-                      camera_2:
-                        {}
-                      camera_3:
-                        {}
-                    tower_cap:
-                      tower_cap_top:
-                        ouster_mount:
-                          ouster_mount_top:
-                            os_sensor:
-                              crystal:
-                                {}
-                              os_imu:
-                                {}
-                              os_lidar:
-                                {}
-                    tower_lower_floor:
-                      imu:
-                        {}
-                      jetson:
-                        {}
-              rear_right_wheel_link:
-                {}
-              top_chassis_link:
-                {}
-              top_plate_link:
-                top_plate_front_link:
-                  {}
-                top_plate_rear_link:
-                  {}
-              user_rail_link:
-                {}
-          robot_view:
-            {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -362,21 +288,47 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Angle: 0.40500083565711975
-      Class: rviz/TopDownOrtho
+      Class: rviz/ThirdPersonFollower
+      Distance: 10
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 6.0781755447387695
+      Pitch: 0.20039822161197662
       Target Frame: map
-      X: 0
-      Y: 0
-    Saved: ~
+      Yaw: 2.1903984546661377
+    Saved:
+      - Class: rviz/ThirdPersonFollower
+        Distance: 10
+        Enable Stereo Rendering:
+          Stereo Eye Separation: 0.05999999865889549
+          Stereo Focal Distance: 1
+          Swap Stereo Eyes: false
+          Value: false
+        Field of View: 0.7853981852531433
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0
+        Focal Shape Fixed Size: true
+        Focal Shape Size: 0.05000000074505806
+        Invert Z Axis: false
+        Name: ThirdPersonFollower
+        Near Clip Distance: 0.009999999776482582
+        Pitch: 0.20039822161197662
+        Target Frame: map
+        Yaw: 2.1903984546661377
 Window Geometry:
   Displays:
     collapsed: false

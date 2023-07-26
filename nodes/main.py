@@ -8,7 +8,9 @@ import timeit
 
 def main():
     path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
-    bag_file_name = 'husky_2022-09-27-15-01-44.bag'
+    #bag_file_name = 'husky_2022-09-27-15-01-44.bag'
+    #bag_file_name = 'husky_2022-09-23-12-38-31.bag'
+    bag_file_name = 'husky_2022-10-27-15-33-57.bag'
     bag = rosbag.Bag(path + bag_file_name)
 
     reader = topics_reader.Reader(bag)
