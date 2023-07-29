@@ -33,8 +33,10 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
+                    print("save point cloud")
                     yield transformed_vectors
                 except ExtrapolationException:
+                    print("not save point cloud")
                     continue
 
     def read_icp_odom(self):
@@ -59,7 +61,9 @@ class Reader:
                 if self.rotation_matrix_odom is None:
                     self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
+                print("save icp and odom")
             except ExtrapolationException:
+                print("not save icp and odom")
                 continue
         return np.array(icp), np.array(odom), np.array(saved_times)
 
@@ -100,11 +104,12 @@ class Reader:
         try:
             for topic, msg, stamp in tqdm(self.bag.read_messages(topics=tf_topics),
                                           total=self.bag.get_message_count(topic_filters=tf_topics)):
-                if topic == '/tf':
-                    for tf in msg.transforms:
+                for tf in msg.transforms:
+                    if tf.header.frame_id == 'map':
+                        print(tf)
+                    if topic == '/tf':
                         self.buffer.set_transform(tf, 'bag')
-                elif topic == '/tf_static':
-                    for tf in msg.transforms:
+                    elif topic == '/tf_static':
                         self.buffer.set_transform_static(tf, 'bag')
         except ROSBagException:
             print('Could not read')
