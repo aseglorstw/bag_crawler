@@ -28,15 +28,15 @@ class Reader:
                 try:
                     msg = PointCloud2(*self.slots(msg))
                     cloud = np.array(list(read_points(msg)))
-                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
-                                                                            "map", rospy.Duration(1))
+                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, "odom", time,
+                                                                            "map", rospy.Duration(5))
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    print("save point cloud")
+                    print("save point cloud", time)
                     yield transformed_vectors
                 except ExtrapolationException:
-                    print("not save point cloud")
+                    print("not save point cloud", time)
                     continue
 
     def read_icp_odom(self):
