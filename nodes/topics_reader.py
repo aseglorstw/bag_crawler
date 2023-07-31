@@ -14,17 +14,16 @@ from sensor_msgs.msg import CompressedImage
 
 class Reader:
 
-    def __init__(self, bag, tf_odom_to_map):
-        self.bag = bag
-        self.tf_odom_to_map = tf_odom_to_map
-        self.buffer = []
-        self.start_time = bag.get_start_time()
+    def __init__(self, bags):
+        self.bags = bags
+        self.buffer = None
+        self.start_time = bags[0].get_start_time()
         self.rotation_matrix_icp = None
         self.rotation_matrix_odom = None
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
-        for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=['/points'])):
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=['/points'])):
             if msg_number % 20 == 0:
                 try:
                     msg = PointCloud2(*self.slots(msg))
@@ -34,17 +33,15 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    print("save point cloud", time)
                     yield transformed_vectors
                 except ExtrapolationException:
-                    print("not save point cloud", time)
                     continue
 
     def read_icp_odom(self):
         icp = []
         odom = []
         saved_times = []
-        for topic, msg, time in self.bag.read_messages(topics=['/points']):
+        for topic, msg, time in self.bags[0].read_messages(topics=['/points']):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
@@ -62,9 +59,7 @@ class Reader:
                 if self.rotation_matrix_odom is None:
                     self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
-                print("save icp and odom")
             except ExtrapolationException:
-                print("not save icp and odom")
                 continue
         return np.array(icp), np.array(odom), np.array(saved_times)
 
@@ -74,7 +69,7 @@ class Reader:
         fps = self.calculate_fps()
         video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(
-                self.bag.read_messages(topics=['/camera_front/image_color/compressed'])):
+                self.bags[0].read_messages(topics=['/camera_front/image_color/compressed'])):
             if msg_number % 5 == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 time_from_start = int(time.to_sec() - self.start_time)
@@ -90,7 +85,7 @@ class Reader:
         joy_control_times = []
         joy_name = self.find_joy_topic()
         if joy_name != -1:
-            for topic, msg, time in self.bag.read_messages(topics=[joy_name]):
+            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
                 time = rospy.Time.from_sec(time.to_sec())
                 control_time = time.to_sec() - self.start_time
                 if control_time not in joy_control_times:
@@ -102,34 +97,25 @@ class Reader:
     def load_buffer(self):
         tf_topics = ['/tf', '/tf_static', 'points']
         self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
-        try:
-            for topic, msg, stamp in tqdm(self.bag.read_messages(topics=tf_topics),
-                                          total=self.bag.get_message_count(topic_filters=tf_topics)):
-                for tf in msg.transforms:
-                    if topic == '/tf':
-                        self.buffer.set_transform(tf, 'bag')
-                    elif topic == '/tf_static':
-                        self.buffer.set_transform_static(tf, 'bag')
-        except ROSBagException:
-            print('Could not read')
-        try:
-            for topic, msg, stamp in tqdm(self.tf_odom_to_map.read_messages(topics=tf_topics),
-                                          total=self.tf_odom_to_map.get_message_count(topic_filters=tf_topics)):
-                for tf in msg.transforms:
-                    if topic == '/tf':
-                        self.buffer.set_transform(tf, 'bag')
-                    elif topic == '/tf_static':
-                        self.buffer.set_transform_static(tf, 'bag')
-        except ROSBagException:
-            print('Could not read')
+        for bag in self.bags:
+            try:
+                for topic, msg, stamp in tqdm(bag.read_messages(topics=tf_topics),
+                                              total=bag.get_message_count(topic_filters=tf_topics)):
+                    for tf in msg.transforms:
+                        if topic == '/tf':
+                            self.buffer.set_transform(tf, 'bag')
+                        elif topic == '/tf_static':
+                            self.buffer.set_transform_static(tf, 'bag')
+            except ROSBagException:
+                print('Could not read')
 
     def calculate_fps(self):
         video_duration = 20
-        return self.bag.get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
+        return self.bags[0].get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
             (video_duration * 5)
 
     def find_joy_topic(self):
-        topics_info = self.bag.get_type_and_topic_info()[1]
+        topics_info = self.bags[0].get_type_and_topic_info()[1]
         for topic_name, topics_info in topics_info.items():
             if "cmd_vel" in topic_name:
                 return topic_name
