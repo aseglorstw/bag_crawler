@@ -28,7 +28,7 @@ class Reader:
                 try:
                     msg = PointCloud2(*self.slots(msg))
                     cloud = np.array(list(read_points(msg)))
-                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, "odom", time,
+                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
                                                                             "map", rospy.Duration(5))
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
