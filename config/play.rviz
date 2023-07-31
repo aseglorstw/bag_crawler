@@ -96,50 +96,16 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_footprint:
-          Value: false
         base_link:
           Value: true
-        bullet:
-          Value: false
-        bullet_antenna:
-          Value: false
-        cam1_base:
-          Value: false
-        cam2_base:
-          Value: false
-        camera_0:
-          Value: false
-        camera_1:
-          Value: false
-        camera_2:
-          Value: false
-        camera_3:
-          Value: false
-        crystal:
-          Value: false
-        front_bumper_link:
-          Value: false
         front_left_wheel_link:
           Value: false
         front_right_wheel_link:
           Value: false
-        gps:
-          Value: false
         gps_odom:
           Value: true
-        imu:
-          Value: false
-        imu_link:
-          Value: false
-        inertial_link:
-          Value: false
-        jetson:
-          Value: false
-        lidar:
-          Value: false
-        mount_base:
-          Value: false
+        map:
+          Value: true
         odom:
           Value: true
         os_imu:
@@ -148,58 +114,30 @@ Visualization Manager:
           Value: false
         os_sensor:
           Value: false
-        ouster_mount:
-          Value: false
-        ouster_mount_top:
-          Value: false
-        payload_frame:
-          Value: false
-        rear_bumper_link:
-          Value: false
         rear_left_wheel_link:
-          Value: false
-        rear_right_corner:
           Value: false
         rear_right_wheel_link:
           Value: false
-        rs_lidar:
-          Value: false
-        rslidar:
-          Value: false
-        top_chassis_link:
-          Value: false
-        top_plate_front_link:
-          Value: false
-        top_plate_link:
-          Value: false
-        top_plate_rear_link:
-          Value: false
-        tower:
-          Value: false
-        tower_camera_floor:
-          Value: false
-        tower_cap:
-          Value: false
-        tower_cap_top:
-          Value: false
-        tower_lower_floor:
-          Value: false
-        tower_rear_right_corner:
-          Value: false
-        user_rail_link:
-          Value: false
-        utm:
-          Value: true
-        utm_local:
-          Value: true
       Marker Alpha: 1
-      Marker Scale: 10
+      Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        map:
+          odom:
+            base_link:
+              front_left_wheel_link:
+                {}
+              front_right_wheel_link:
+                {}
+              gps_odom:
+                {}
+              rear_left_wheel_link:
+                {}
+              rear_right_wheel_link:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -289,7 +227,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 10
+      Distance: 17.406578063964844
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -305,9 +243,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.20039822161197662
+      Pitch: -0.11460184305906296
       Target Frame: map
-      Yaw: 2.1903984546661377
+      Yaw: 2.0403940677642822
     Saved:
       - Class: rviz/ThirdPersonFollower
         Distance: 10
