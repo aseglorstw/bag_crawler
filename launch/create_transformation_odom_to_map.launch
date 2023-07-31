@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find bag_crawler)/launch/slam.launch">
+    <arg name="cloud" value="points" />
+  </include>
+</launch>
