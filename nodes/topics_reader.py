@@ -14,8 +14,9 @@ from sensor_msgs.msg import CompressedImage
 
 class Reader:
 
-    def __init__(self, bag):
+    def __init__(self, bag, tf_odom_to_map):
         self.bag = bag
+        self.tf_odom_to_map = tf_odom_to_map
         self.buffer = []
         self.start_time = bag.get_start_time()
         self.rotation_matrix_icp = None
@@ -105,8 +106,16 @@ class Reader:
             for topic, msg, stamp in tqdm(self.bag.read_messages(topics=tf_topics),
                                           total=self.bag.get_message_count(topic_filters=tf_topics)):
                 for tf in msg.transforms:
-                    if tf.header.frame_id == 'map':
-                        print(tf)
+                    if topic == '/tf':
+                        self.buffer.set_transform(tf, 'bag')
+                    elif topic == '/tf_static':
+                        self.buffer.set_transform_static(tf, 'bag')
+        except ROSBagException:
+            print('Could not read')
+        try:
+            for topic, msg, stamp in tqdm(self.tf_odom_to_map.read_messages(topics=tf_topics),
+                                          total=self.tf_odom_to_map.get_message_count(topic_filters=tf_topics)):
+                for tf in msg.transforms:
                     if topic == '/tf':
                         self.buffer.set_transform(tf, 'bag')
                     elif topic == '/tf_static':
