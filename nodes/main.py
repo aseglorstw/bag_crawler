@@ -3,21 +3,22 @@ import topics_reader
 import graphs_creator
 import calculator
 import writer_to_files
+import slam
 import timeit
 
 
 def main():
-    path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
+    #path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
     #bag_file_name = 'husky_2022-09-27-15-01-44.bag'
     #bag_file_name = 'husky_2022-09-23-12-38-31.bag'
     #bag_file_name = 'husky_2022-10-27-15-33-57.bag'
-    bag_file_name = '2023-07-28-14-23-00.bag'
-    bag = rosbag.Bag(path + bag_file_name)
+    #bag = rosbag.Bag(path + bag_file_name)
+    slam.create_bag_with_transform_from_map("a", "B")
 
-    reader = topics_reader.Reader(bag)
-    reader.load_buffer()
-    point_cloud = list(reader.read_point_cloud())
-    icp, odom, saved_times = reader.read_icp_odom()
+    # reader = topics_reader.Reader(bag)
+    # reader.load_buffer()
+    # point_cloud = list(reader.read_point_cloud())
+    # icp, odom, saved_times = reader.read_icp_odom()
     # first_matrix_icp, first_matrix_odom = reader.get_first_rotation_matrices()
     # reader.read_images_and_save_video()
     # joy_control_times = reader.read_joy_topic()
@@ -47,7 +48,7 @@ def main():
     # writer.write_topics_info()
     # writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 
-    bag.close()
+    #bag.close()
 
 
 if __name__ == '__main__':
