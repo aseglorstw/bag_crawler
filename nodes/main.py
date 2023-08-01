@@ -1,4 +1,5 @@
 import rosbag
+import os
 from directory_scanner import Scanner
 from topics_reader import Reader
 from graphs_creator import Creator
@@ -10,23 +11,21 @@ import timeit
 def main():
     directory = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
     bag_file_name = 'husky_2022-10-27-15-33-57.bag'
-    bag = rosbag.Bag(directory + bag_file_name)
-    #bag_file_name = 'husky_2022-09-27-15-01-44.bag'
-    #bag_file_name = 'husky_2022-09-23-12-38-31.bag'
+    bag = rosbag.Bag(os.path.join(directory, bag_file_name))
 
     scanner = Scanner(directory)
     loc_file_name = scanner.find_loc_file(bag_file_name)
+
     if loc_file_name is None:
         reader = Reader([bag])
     else:
-        loc_file = rosbag.Bag(directory + loc_file_name)
+        loc_file = rosbag.Bag(os.path.join(directory, loc_file_name))
         reader = Reader([bag, loc_file])
-
     reader.load_buffer()
     point_cloud = list(reader.read_point_cloud())
     icp, odom, saved_times = reader.read_icp_odom()
     first_matrix_icp, first_matrix_odom = reader.get_first_rotation_matrices()
-    reader.read_images_and_save_video(directory + ".web_server_" + bag_file_name)
+    reader.read_images_and_save_video(os.path.join(directory, f".web_server_{bag_file_name}"))
     joy_control_times = reader.read_joy_topic()
 
     transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
