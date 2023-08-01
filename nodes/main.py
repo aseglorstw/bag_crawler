@@ -8,13 +8,13 @@ import timeit
 
 def main():
     path = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
-    bag_file_name = 'husky_2022-09-27-15-01-44.bag'
+    #bag_file_name = 'husky_2022-09-27-15-01-44.bag'
     #bag_file_name = 'husky_2022-09-23-12-38-31.bag'
-    #bag_file_name = 'husky_2022-10-27-15-33-57.bag'
+    bag_file_name = 'husky_2022-10-27-15-33-57.bag'
     bag = rosbag.Bag(path + bag_file_name)
     tf_odom_to_map = rosbag.Bag(path + "tf_odom_to_map.bag")
 
-    reader = topics_reader.Reader([bag])
+    reader = topics_reader.Reader([bag, tf_odom_to_map])
     reader.load_buffer()
     point_cloud = list(reader.read_point_cloud())
     icp, odom, saved_times = reader.read_icp_odom()
