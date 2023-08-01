@@ -10,7 +10,7 @@ import timeit
 
 def main():
     directory = '/home/robert/catkin_ws/src/bag_crawler/bagfiles/'
-    bag_file_name = 'husky_2022-10-27-15-33-57.bag'
+    bag_file_name = 'husky_2022-09-23-12-38-31.bag'
 
     bag = rosbag.Bag(os.path.join(directory, bag_file_name))
 
