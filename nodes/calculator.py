@@ -39,13 +39,6 @@ def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
     return control_coordinates
 
 
-def get_joy_control_binary(saved_times, joy_control_times):
-    indices = np.unique(np.searchsorted(saved_times, joy_control_times))
-    control_binary = np.zeros(len(saved_times), dtype=int)
-    control_binary[indices[indices < len(saved_times)]] = 1
-    return control_binary
-
-
 def transform_trajectory(coordinates, matrix):
     inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
     coordinates = np.concatenate(coordinates, axis=1)

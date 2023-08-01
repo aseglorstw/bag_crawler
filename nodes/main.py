@@ -1,9 +1,9 @@
 import rosbag
-import directory_scanner
-import topics_reader
-import graphs_creator
+from directory_scanner import Scanner
+from topics_reader import Reader
+from graphs_creator import Creator
 import calculator
-import writer_to_files
+from writer_to_files import Writer
 import timeit
 
 
@@ -14,13 +14,13 @@ def main():
     #bag_file_name = 'husky_2022-09-27-15-01-44.bag'
     #bag_file_name = 'husky_2022-09-23-12-38-31.bag'
 
-    scanner = directory_scanner.Scanner(directory)
+    scanner = Scanner(directory)
     loc_file_name = scanner.find_loc_file(bag_file_name)
     if loc_file_name is None:
-        reader = topics_reader.Reader([bag])
+        reader = Reader([bag])
     else:
         loc_file = rosbag.Bag(directory + loc_file_name)
-        reader = topics_reader.Reader([bag, loc_file])
+        reader = Reader([bag, loc_file])
 
     reader.load_buffer()
     point_cloud = list(reader.read_point_cloud())
@@ -38,9 +38,8 @@ def main():
     average_speed = calculator.get_average_speed(speeds)
     start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times)
     joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times, saved_times)
-    joy_control_binary = calculator.get_joy_control_binary(saved_times, joy_control_times)
 
-    creator = graphs_creator.GraphsCreator(transformed_icp, transformed_odom, saved_times, directory, bag_file_name)
+    creator = Creator(transformed_icp, transformed_odom, saved_times, directory, bag_file_name)
     creator.create_folder()
     creator.create_graph_x_over_time()
     creator.create_graph_y_over_time()
@@ -48,9 +47,8 @@ def main():
     creator.create_graph_xy_and_point_cloud(transformed_point_cloud)
     creator.create_graph_distance_over_time(distances_icp, distances_odom, start_of_moving, end_of_moving)
     creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
-    creator.create_binary_graph_joy_control_and_time(joy_control_binary)
 
-    writer = writer_to_files.Writer(bag, directory, bag_file_name)
+    writer = Writer(bag, directory, bag_file_name)
     writer.write_topics_info()
     writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 

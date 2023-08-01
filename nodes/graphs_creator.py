@@ -4,7 +4,7 @@ import pyvista as pv
 import os
 
 
-class GraphsCreator:
+class Creator:
     def __init__(self,  icp, odom, saved_times, directory, bag_file_name):
         self.icp = icp
         self.odom = odom
@@ -83,16 +83,6 @@ class GraphsCreator:
         ax.plot([], [], color='orange', label='joy_control')
         plt.legend()
         plt.savefig(f"{self.folder}/XY_plot_with_joystick_control_trajectory_sections.png")
-        plt.close()
-
-    def create_binary_graph_joy_control_and_time(self, joy_control_binary):
-        fig, ax = plt.subplots()
-        ax.step(self.saved_times, joy_control_binary, color='orange', where='post')
-        ax.set_xlabel('time')
-        ax.set_ylabel('control joy')
-        ax.set_title('Joystick robot control chart')
-        ax.set_yticks([0, 1])
-        plt.savefig(f"{self.folder}/joystick_robot_control_chart.png")
         plt.close()
 
     @staticmethod
