@@ -63,11 +63,10 @@ class Reader:
                 continue
         return np.array(icp), np.array(odom), np.array(saved_times)
 
-    def read_images_and_save_video(self):
-        output_path = "/home/robert/catkin_ws/src/bag_crawler/web_server/video.avi"
+    def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         fps = self.calculate_fps()
-        video_out = cv2.VideoWriter(output_path, fourcc, fps, (1920, 1200), True)
+        video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(
                 self.bags[0].read_messages(topics=['/camera_front/image_color/compressed'])):
             if msg_number % 5 == 0:
