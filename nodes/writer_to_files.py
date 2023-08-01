@@ -1,12 +1,12 @@
 import yaml
-import numpy as np
+import os
 import datetime
 
 
 class Writer:
-    def __init__(self, bag, path, bag_file_name):
+    def __init__(self, bag, folder):
         self.bag = bag
-        self.folder = path + ".web_server_" + bag_file_name
+        self.folder = folder
 
     def write_bag_info(self, distance, start_of_moving, end_of_moving, average_speed):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)

@@ -5,15 +5,11 @@ import os
 
 
 class Creator:
-    def __init__(self,  icp, odom, saved_times, directory, bag_file_name):
+    def __init__(self,  icp, odom, saved_times, folder):
         self.icp = icp
         self.odom = odom
         self.saved_times = saved_times
-        self.folder = directory + ".web_server_" + bag_file_name
-
-    def create_folder(self):
-        if not os.path.exists(self.folder):
-            os.mkdir(self.folder)
+        self.folder = folder
 
     def create_graph_xy_and_point_cloud(self, point_cloud):
         fig, ax = plt.subplots()
