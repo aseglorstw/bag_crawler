@@ -37,3 +37,4 @@ class Scanner:
     def find_web_folder(self, bag_file):
         web_folder = os.path.join(self.directory, f".web_server_{bag_file}")
         return self.path_check(web_folder)
+#aa
