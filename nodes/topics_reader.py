@@ -98,8 +98,8 @@ class Reader:
         self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
         for bag in self.bags:
             try:
-                for topic, msg, stamp in tqdm(bag.read_messages(topics=tf_topics),
-                                              total=bag.get_message_count(topic_filters=tf_topics)):
+                for topic, msg, time in tqdm(bag.read_messages(topics=tf_topics),
+                                             total=bag.get_message_count(topic_filters=tf_topics)):
                     for tf in msg.transforms:
                         if topic == '/tf':
                             self.buffer.set_transform(tf, 'bag')
