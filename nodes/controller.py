@@ -13,7 +13,7 @@ def main(directory):
     scanner = Scanner(directory)
     if not scanner.path_check(directory):
         print("This directory doesn't exist.")
-        return 1
+        sys.exit(1)
     task_list = list(scanner.create_task_list())
     for bag_file in task_list:
         bag = rosbag.Bag(os.path.join(directory, bag_file))
