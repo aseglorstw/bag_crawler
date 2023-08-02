@@ -1,14 +1,16 @@
 import pathlib
 import os
-
+import sys
 
 class Scanner:
     def __init__(self, directory):
         self.directory = directory
 
     @staticmethod
-    def path_check(path):
-        return os.path.exists(path) and os.path.isdir(path)
+    def input_check(path):
+        if not (os.path.exists(path) and os.path.isdir(path)):
+            print("This directory doesn't exist.")
+            sys.exit(1)
 
     def create_output_folder(self, bag_file):
         web_folder = os.path.join(self.directory, f".web_server_{bag_file}")
@@ -36,5 +38,4 @@ class Scanner:
 
     def find_web_folder(self, bag_file):
         web_folder = os.path.join(self.directory, f".web_server_{bag_file}")
-        return self.path_check(web_folder)
-#aa
+        return os.path.exists(web_folder) and os.path.isdir(web_folder)

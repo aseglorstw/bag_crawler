@@ -11,13 +11,13 @@ import timeit
 
 def main(directory):
     scanner = Scanner(directory)
-    if not scanner.path_check(directory):
-        print("This directory doesn't exist.")
-        sys.exit(1)
+    scanner.input_check(directory)
     task_list = list(scanner.create_task_list())
+    print(task_list)
     for bag_file in task_list:
-        bag = rosbag.Bag(os.path.join(directory, bag_file))
-
+        bag = open_bag_file(directory, bag_file)
+        if bag is None:
+            continue
         output_folder = scanner.create_output_folder(bag_file)
         loc_file_name = scanner.find_loc_file(bag_file)
         if loc_file_name is None:
@@ -55,6 +55,20 @@ def main(directory):
         writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 
         bag.close()
+
+
+def open_bag_file(directory, bag_file):
+    try:
+        bag = rosbag.Bag(os.path.join(directory, bag_file))
+        return bag
+    except rosbag.ROSBagException as e:
+        print(f"When opening the file {bag_file}, a {e} error occurred")
+
+
+def close_bag_file(bag, bag_file):
+    bag.close()
+    if not bag.is_closed():
+        print(f"Failed to close the file {bag_file}")
 
 
 if __name__ == '__main__':
