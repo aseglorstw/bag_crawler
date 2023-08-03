@@ -10,6 +10,7 @@ from tf2_ros import ExtrapolationException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
+import sys
 
 
 class Reader:
@@ -26,15 +27,15 @@ class Reader:
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
-        if topic_name is None:
-            return None
+        icp_origin = self.find_icp_origin()
+        save_interval = 20
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
-            if msg_number % 20 == 0:
+            if msg_number % save_interval == 0:
                 try:
                     msg = PointCloud2(*self.slots(msg))
                     cloud = np.array(list(read_points(msg)))
-                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
-                                                                            "map", rospy.Duration(1))
+                    transform_map_lidar = self.buffer.lookup_transform_full(icp_origin, time, msg.header.frame_id, time,
+                                                                            icp_origin, rospy.Duration(1))
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
@@ -47,28 +48,25 @@ class Reader:
         odom = []
         saved_times = []
         topic_name = self.find_topic_for_icp_and_odom()
-        if topic_name is None:
-            return icp, odom, saved_times
-        origin_icp, robot_center = self.find_transformation_from_base_link_to_map()
-        origin_odom, robot_center = self.find_transformation_from_base_link_to_odom()
+        origin_icp = self.find_icp_origin()
+        origin_odom = self.find_odom_origin()
+        robot_center = self.find_robot_center()
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
-                if origin_icp is not None and robot_center is not None:
-                    transform_icp = self.buffer.lookup_transform_full(origin_icp, time, robot_center, time, origin_icp,
-                                                                      rospy.Duration(1))
-                    icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
-                               [transform_icp.transform.translation.z]]))
-                    if self.rotation_matrix_icp is None:
-                        self.rotation_matrix_icp = transform_icp.transform
-                if origin_odom is not None and robot_center is not None:
-                    transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
-                                                                       rospy.Duration(1))
-                    odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                                [transform_odom.transform.translation.z]]))
-                    if self.rotation_matrix_odom is None:
-                        self.rotation_matrix_odom = transform_odom.transform
+                transform_icp = self.buffer.lookup_transform_full(origin_icp, time, robot_center, time, origin_icp,
+                                                                  rospy.Duration(1))
+                icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
+                           [transform_icp.transform.translation.z]]))
+                if self.rotation_matrix_icp is None:
+                    self.rotation_matrix_icp = transform_icp.transform
+                transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
+                                                                   rospy.Duration(1))
+                odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                            [transform_odom.transform.translation.z]]))
+                if self.rotation_matrix_odom is None:
+                    self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
@@ -76,14 +74,13 @@ class Reader:
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        fps = self.calculate_fps()
-        video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
+        save_interval = 5
         topic_name = self.find_camera_topic()
-        if topic_name is None:
-            return None
+        fps = self.calculate_fps(topic_name, save_interval)
+        video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(
                 self.bags[0].read_messages(topics=[topic_name])):
-            if msg_number % 5 == 0:
+            if msg_number % save_interval == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 time_from_start = int(time.to_sec() - self.start_time)
                 msg = CompressedImage(*self.slots(msg))
@@ -98,7 +95,7 @@ class Reader:
         joy_control_times = []
         topic_name = self.find_joy_topic()
         if topic_name is None:
-            return None
+            return np.array(joy_control_times)
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             control_time = time.to_sec() - self.start_time
@@ -132,28 +129,34 @@ class Reader:
             if "points" in topic_name:
                 return topic_name
         print("The topic lidar posted to was not found")
-        return None
+        sys.exit(1)
 
     def find_camera_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "image" in topic_name:
                 return topic_name
         print("The topic in which messages from the camera are posted was not found")
-        return None
+        sys.exit(1)
 
-    def find_transformation_from_base_link_to_map(self):
-        return "map", "base_link"
+    def find_icp_origin(self):
+        return "map"
 
-    def find_transformation_from_base_link_to_odom(self):
-        return "odom", "base_link"
+    def find_odom_origin(self):
+        return "odom"
+
+    def find_robot_center(self):
+        return "base_link"
 
     def find_topic_for_icp_and_odom(self):
-        return "/points"
+        for topic_name, topics_info in self.topics_info.items():
+            if "points" in topic_name:
+                return topic_name
+        print("The topic lidar posted to was not found")
+        sys.exit(1)
 
-    def calculate_fps(self):
+    def calculate_fps(self, topic_name, save_interval):
         video_duration = 20
-        return self.bags[0].get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
-            (video_duration * 5)
+        return self.topics_info[topic_name].message_count / (video_duration * save_interval)
 
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
