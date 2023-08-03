@@ -22,9 +22,12 @@ class Reader:
         self.rotation_matrix_odom = None
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
+        self.load_buffer()
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
+        if topic_name is None:
+            return None
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % 20 == 0:
                 try:
@@ -44,25 +47,28 @@ class Reader:
         odom = []
         saved_times = []
         topic_name = self.find_topic_for_icp_and_odom()
+        if topic_name is None:
+            return icp, odom, saved_times
         origin_icp, robot_center = self.find_transformation_from_base_link_to_map()
         origin_odom, robot_center = self.find_transformation_from_base_link_to_odom()
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
-                transform_icp = self.buffer.lookup_transform_full(origin_icp, time, robot_center, time, origin_icp,
-                                                                  rospy.Duration(1))
-                icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
-                           [transform_icp.transform.translation.z]]))
-                if self.rotation_matrix_icp is None:
-                    self.rotation_matrix_icp = transform_icp.transform
-
-                transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
-                                                                   rospy.Duration(1))
-                odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                            [transform_odom.transform.translation.z]]))
-                if self.rotation_matrix_odom is None:
-                    self.rotation_matrix_odom = transform_odom.transform
+                if origin_icp is not None and robot_center is not None:
+                    transform_icp = self.buffer.lookup_transform_full(origin_icp, time, robot_center, time, origin_icp,
+                                                                      rospy.Duration(1))
+                    icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
+                               [transform_icp.transform.translation.z]]))
+                    if self.rotation_matrix_icp is None:
+                        self.rotation_matrix_icp = transform_icp.transform
+                if origin_odom is not None and robot_center is not None:
+                    transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
+                                                                       rospy.Duration(1))
+                    odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                                [transform_odom.transform.translation.z]]))
+                    if self.rotation_matrix_odom is None:
+                        self.rotation_matrix_odom = transform_odom.transform
                 saved_times.append(save_time)
             except ExtrapolationException:
                 continue
@@ -73,6 +79,8 @@ class Reader:
         fps = self.calculate_fps()
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         topic_name = self.find_camera_topic()
+        if topic_name is None:
+            return None
         for msg_number, (topic, msg, time) in enumerate(
                 self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % 5 == 0:
@@ -89,14 +97,13 @@ class Reader:
     def read_joy_topic(self):
         joy_control_times = []
         topic_name = self.find_joy_topic()
-        if topic_name != -1:
-            for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
-                time = rospy.Time.from_sec(time.to_sec())
-                control_time = time.to_sec() - self.start_time
-                if control_time not in joy_control_times:
-                    joy_control_times.append(control_time)
-        else:
-            print("Topic joy not founded")
+        if topic_name is None:
+            return None
+        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+            time = rospy.Time.from_sec(time.to_sec())
+            control_time = time.to_sec() - self.start_time
+            if control_time not in joy_control_times:
+                joy_control_times.append(control_time)
         return np.array(joy_control_times)
 
     def load_buffer(self):
@@ -118,19 +125,21 @@ class Reader:
         for topic_name, topics_info in self.topics_info.items():
             if "cmd_vel" in topic_name and "joy" in topic_name:
                 return topic_name
-        return -1
+        return None
 
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "points" in topic_name:
                 return topic_name
-        return -1
+        print("The topic lidar posted to was not found")
+        return None
 
     def find_camera_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "image" in topic_name:
                 return topic_name
-        return -1
+        print("The topic in which messages from the camera are posted was not found")
+        return None
 
     def find_transformation_from_base_link_to_map(self):
         return "map", "base_link"

@@ -11,7 +11,8 @@ class DirectoryScanner:
     def input_check(path):
         if not (os.path.exists(path) and os.path.isdir(path)):
             print("This directory doesn't exist.")
-            sys.exit(1)
+            return False
+        return True
 
     def create_output_folder(self, bag_file):
         web_folder = os.path.join(self.directory, f".web_server_{bag_file}")
