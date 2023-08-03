@@ -20,10 +20,12 @@ class Reader:
         self.start_time = bags[0].get_start_time()
         self.rotation_matrix_icp = None
         self.rotation_matrix_odom = None
+        self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
 
     def read_point_cloud(self):
-        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=['/points'])):
+        topic_name = self.find_points_topic()
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % 20 == 0:
                 try:
                     msg = PointCloud2(*self.slots(msg))
@@ -41,18 +43,21 @@ class Reader:
         icp = []
         odom = []
         saved_times = []
-        for topic, msg, time in self.bags[0].read_messages(topics=['/points']):
+        topic_name = self.find_topic_for_icp_and_odom()
+        origin_icp, robot_center = self.find_transformation_from_base_link_to_map()
+        origin_odom, robot_center = self.find_transformation_from_base_link_to_odom()
+        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
-                transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
+                transform_icp = self.buffer.lookup_transform_full(origin_icp, time, robot_center, time, origin_icp,
                                                                   rospy.Duration(1))
                 icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
                            [transform_icp.transform.translation.z]]))
                 if self.rotation_matrix_icp is None:
                     self.rotation_matrix_icp = transform_icp.transform
 
-                transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
+                transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
                                                                    rospy.Duration(1))
                 odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
                             [transform_odom.transform.translation.z]]))
@@ -67,8 +72,9 @@ class Reader:
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         fps = self.calculate_fps()
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
+        topic_name = self.find_camera_topic()
         for msg_number, (topic, msg, time) in enumerate(
-                self.bags[0].read_messages(topics=['/camera_front/image_color/compressed'])):
+                self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % 5 == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 time_from_start = int(time.to_sec() - self.start_time)
@@ -82,9 +88,9 @@ class Reader:
 
     def read_joy_topic(self):
         joy_control_times = []
-        joy_name = self.find_joy_topic()
-        if joy_name != -1:
-            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
+        topic_name = self.find_joy_topic()
+        if topic_name != -1:
+            for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
                 time = rospy.Time.from_sec(time.to_sec())
                 control_time = time.to_sec() - self.start_time
                 if control_time not in joy_control_times:
@@ -109,23 +115,31 @@ class Reader:
                 print('Could not read')
 
     def find_joy_topic(self):
-        topics_info = self.bags[0].get_type_and_topic_info()[1]
-        for topic_name, topics_info in topics_info.items():
-            if "cmd_vel" in topic_name:
+        for topic_name, topics_info in self.topics_info.items():
+            if "cmd_vel" in topic_name and "joy" in topic_name:
                 return topic_name
         return -1
 
     def find_points_topic(self):
-        pass
+        for topic_name, topics_info in self.topics_info.items():
+            if "points" in topic_name:
+                return topic_name
+        return -1
 
     def find_camera_topic(self):
-        pass
+        for topic_name, topics_info in self.topics_info.items():
+            if "image" in topic_name:
+                return topic_name
+        return -1
 
     def find_transformation_from_base_link_to_map(self):
-        pass
+        return "map", "base_link"
 
     def find_transformation_from_base_link_to_odom(self):
-        pass
+        return "odom", "base_link"
+
+    def find_topic_for_icp_and_odom(self):
+        return "/points"
 
     def calculate_fps(self):
         video_duration = 20
