@@ -80,11 +80,10 @@ class Reader:
                 video_out.write(image)
         video_out.release()
 
-    def read_joy_topic(self):
+    def read_joy_topic(self, topic_name):
         joy_control_times = []
-        joy_name = self.find_joy_topic()
-        if joy_name != -1:
-            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
+        if topic_name != -1:
+            for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
                 time = rospy.Time.from_sec(time.to_sec())
                 control_time = time.to_sec() - self.start_time
                 if control_time not in joy_control_times:
@@ -112,13 +111,6 @@ class Reader:
         video_duration = 20
         return self.bags[0].get_type_and_topic_info()[1]['/camera_front/image_color/compressed'].message_count / \
             (video_duration * 5)
-
-    def find_joy_topic(self):
-        topics_info = self.bags[0].get_type_and_topic_info()[1]
-        for topic_name, topics_info in topics_info.items():
-            if "cmd_vel" in topic_name:
-                return topic_name
-        return -1
 
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \

@@ -2,7 +2,8 @@ import pathlib
 import os
 import sys
 
-class Scanner:
+
+class DirectoryScanner:
     def __init__(self, directory):
         self.directory = directory
 
