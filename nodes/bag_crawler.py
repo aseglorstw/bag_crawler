@@ -2,7 +2,6 @@ import rosbag
 import os
 import sys
 from directory_scanner import DirectoryScanner
-from bag_scanner import BagScanner
 from topics_reader import Reader
 from graphs_creator import Creator
 import calculator
@@ -26,8 +25,7 @@ def main(directory):
         else:
             loc_file = rosbag.Bag(os.path.join(directory, loc_file_name))
             reader = Reader([bag, loc_file])
-        reader.load_buffer()
-        bag_scanner = BagScanner()
+        buffer = reader.load_buffer()
         # point_cloud = list(reader.read_point_cloud())
         # icp, odom, saved_times = reader.read_icp_odom()
         # first_matrix_icp, first_matrix_odom = reader.get_first_rotation_matrices()
@@ -68,8 +66,9 @@ def open_bag_file(directory, bag_file):
 
 
 def close_bag_file(bag, bag_file):
-    bag.close()
-    if not bag.is_closed():
+    try:
+        bag.close()
+    except ValueError:
         print(f"Failed to close the file {bag_file}")
 
 

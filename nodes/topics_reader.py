@@ -80,10 +80,11 @@ class Reader:
                 video_out.write(image)
         video_out.release()
 
-    def read_joy_topic(self, topic_name):
+    def read_joy_topic(self):
         joy_control_times = []
-        if topic_name != -1:
-            for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+        joy_name = self.find_joy_topic()
+        if joy_name != -1:
+            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
                 time = rospy.Time.from_sec(time.to_sec())
                 control_time = time.to_sec() - self.start_time
                 if control_time not in joy_control_times:
@@ -106,6 +107,25 @@ class Reader:
                             self.buffer.set_transform_static(tf, 'bag')
             except ROSBagException:
                 print('Could not read')
+
+    def find_joy_topic(self):
+        topics_info = self.bags[0].get_type_and_topic_info()[1]
+        for topic_name, topics_info in topics_info.items():
+            if "cmd_vel" in topic_name:
+                return topic_name
+        return -1
+
+    def find_points_topic(self):
+        pass
+
+    def find_camera_topic(self):
+        pass
+
+    def find_transformation_from_base_link_to_map(self):
+        pass
+
+    def find_transformation_from_base_link_to_odom(self):
+        pass
 
     def calculate_fps(self):
         video_duration = 20
