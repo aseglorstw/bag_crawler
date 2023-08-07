@@ -47,13 +47,12 @@ class Reader:
         icp = []
         odom = []
         saved_times = []
-        topic_name = self.find_topic_for_icp_and_odom()
         origin_icp = self.find_icp_origin()
         origin_odom = self.find_odom_origin()
         robot_center = self.find_robot_center()
         rotation_matrix_icp = None
         rotation_matrix_odom = None
-        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+        for topic, msg, time in self.bags[0].read_messages(topics=[self.find_topic_for_icp_and_odom()]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
             try:
