@@ -25,13 +25,7 @@ class Reader:
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
-        if topic_name is None:
-            print("The topic lidar posted to was not found")
-            sys.exit(1)
         icp_origin = self.find_icp_origin()
-        if icp_origin is None:
-            print("Coordinate system for icp was not found")
-            sys.exit(1)
         save_interval = 20
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
@@ -54,21 +48,9 @@ class Reader:
         odom = []
         saved_times = []
         topic_name = self.find_topic_for_icp_and_odom()
-        if topic_name is None:
-            print("The topic lidar posted to was not found")
-            sys.exit(1)
         origin_icp = self.find_icp_origin()
-        if origin_icp is None:
-            print("Coordinate system for icp was not found")
-            sys.exit(1)
         origin_odom = self.find_odom_origin()
-        if origin_odom is None:
-            print("Coordinate system for odom was not found")
-            sys.exit(1)
         robot_center = self.find_robot_center()
-        if robot_center is None:
-            print("Robot center frame not found")
-            sys.exit(1)
         rotation_matrix_icp = None
         rotation_matrix_odom = None
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
@@ -158,7 +140,8 @@ class Reader:
         for topic_name, topics_info in self.topics_info.items():
             if "/points" in topic_name:
                 return topic_name
-        return None
+        print("The topic lidar posted to was not found")
+        sys.exit(1)
 
     def find_camera_topic(self):
         for topic_name, topics_info in self.topics_info.items():
@@ -167,19 +150,23 @@ class Reader:
         return None
 
     def find_icp_origin(self):
+       #print("Coordinate system for icp was not found")
         return "map"
 
     def find_odom_origin(self):
+        #print("Coordinate system for icp was not found")
         return "odom"
 
     def find_robot_center(self):
+        #print("Robot center frame not found")
         return "base_link"
 
     def find_topic_for_icp_and_odom(self):
         for topic_name, topics_info in self.topics_info.items():
             if "points" in topic_name:
                 return topic_name
-        return None
+        print("The topic lidar posted to was not found")
+        sys.exit(1)
 
     def calculate_fps(self, topic_name, save_interval):
         video_duration = 20
