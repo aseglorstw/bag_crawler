@@ -55,7 +55,6 @@ def main(directory):
                                                                              saved_times)
             creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
 
-
         close_bag_file(bag, bag_file)
 
 

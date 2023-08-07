@@ -150,13 +150,13 @@ class Reader:
     def find_joy_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "cmd_vel" in topic_name and "joy" in topic_name:
+                print(topic_name)
                 return topic_name
         return None
 
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "/points" in topic_name:
-                print("/points")
                 return topic_name
         return None
 
