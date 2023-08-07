@@ -15,12 +15,10 @@ import sys
 
 class Reader:
 
-    def __init__(self, bags):
-        self.bags = bags
+    def __init__(self, bag, loc_file):
+        self.bags = [bag, loc_file] if loc_file is not None else [bag]
         self.buffer = None
-        self.start_time = bags[0].get_start_time()
-        self.rotation_matrix_icp = None
-        self.rotation_matrix_odom = None
+        self.start_time = bag.get_start_time()
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
@@ -71,6 +69,8 @@ class Reader:
         if robot_center is None:
             print("Robot center frame not found")
             sys.exit(1)
+        rotation_matrix_icp = None
+        rotation_matrix_odom = None
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
@@ -79,8 +79,8 @@ class Reader:
                                                                   rospy.Duration(1))
                 icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
                            [transform_icp.transform.translation.z]]))
-                if self.rotation_matrix_icp is None:
-                    self.rotation_matrix_icp = transform_icp.transform
+                if rotation_matrix_icp is None:
+                    rotation_matrix_icp = transform_icp.transform
             except ExtrapolationException:
                 print(f"Transformation from robot center coordinate system to icp coordinate system was not found. "
                       f"Time: {int(time.to_sec() - self.start_time)}")
@@ -90,14 +90,14 @@ class Reader:
                                                                    rospy.Duration(1))
                 odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
                             [transform_odom.transform.translation.z]]))
-                if self.rotation_matrix_odom is None:
-                    self.rotation_matrix_odom = transform_odom.transform
+                if rotation_matrix_odom is None:
+                    rotation_matrix_odom = transform_odom.transform
             except ExtrapolationException:
                 print(f"Transformation from robot center coordinate system to odom coordinate system was not found. "
                       f"Time: {int(time.to_sec() - self.start_time)}")
                 continue
             saved_times.append(save_time)
-        return np.array(icp), np.array(odom), np.array(saved_times)
+        return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -188,9 +188,6 @@ class Reader:
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
                                                                 str(datetime.timedelta(seconds=time_from_start))
-
-    def get_first_rotation_matrices(self):
-        return self.rotation_matrix_icp, self.rotation_matrix_odom
 
     @staticmethod
     def slots(msg):
