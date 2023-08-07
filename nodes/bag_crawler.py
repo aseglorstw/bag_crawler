@@ -43,7 +43,18 @@ def main(directory):
         speeds = calculator.get_speeds_one_period(transformed_icp, saved_times)
         average_speed = calculator.get_average_speed(speeds)
         start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times)
-        joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times, saved_times)
+
+        creator = Creator(transformed_icp, transformed_odom, saved_times, output_folder)
+        creator.create_graph_x_over_time()
+        creator.create_graph_y_over_time()
+        creator.create_graph_z_over_time()
+        creator.create_graph_xy_and_point_cloud(transformed_point_cloud)
+        creator.create_graph_distance_over_time(distances_icp, distances_odom, start_of_moving, end_of_moving)
+        if joy_control_times is not None:
+            joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times,
+                                                                             saved_times)
+            creator.create_graph_joy_control_times_and_icp(joy_control_coordinates)
+
 
         close_bag_file(bag, bag_file)
 

@@ -47,7 +47,8 @@ class Reader:
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                     yield transformed_vectors
                 except ExtrapolationException:
-                    print("Transformation from lidar coordinate system to icp coordinate system was not found")
+                    print(f"Transformation from lidar coordinate system to icp coordinate system "
+                          f"was not found. Time: {int(time.to_sec() - self.start_time)}")
                     continue
 
     def read_icp_odom(self):
@@ -80,15 +81,22 @@ class Reader:
                            [transform_icp.transform.translation.z]]))
                 if self.rotation_matrix_icp is None:
                     self.rotation_matrix_icp = transform_icp.transform
+            except ExtrapolationException:
+                print(f"Transformation from robot center coordinate system to icp coordinate system was not found. "
+                      f"Time: {int(time.to_sec() - self.start_time)}")
+                continue
+            try:
                 transform_odom = self.buffer.lookup_transform_full(origin_odom, time, robot_center, time, origin_odom,
                                                                    rospy.Duration(1))
                 odom.append(np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
                             [transform_odom.transform.translation.z]]))
                 if self.rotation_matrix_odom is None:
                     self.rotation_matrix_odom = transform_odom.transform
-                saved_times.append(save_time)
             except ExtrapolationException:
+                print(f"Transformation from robot center coordinate system to odom coordinate system was not found. "
+                      f"Time: {int(time.to_sec() - self.start_time)}")
                 continue
+            saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times)
 
     def read_images_and_save_video(self, folder):
@@ -100,8 +108,7 @@ class Reader:
             sys.exit(1)
         fps = self.calculate_fps(topic_name, save_interval)
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
-        for msg_number, (topic, msg, time) in enumerate(
-                self.bags[0].read_messages(topics=[topic_name])):
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 time_from_start = int(time.to_sec() - self.start_time)
@@ -117,7 +124,7 @@ class Reader:
         joy_control_times = []
         topic_name = self.find_joy_topic()
         if topic_name is None:
-            return np.array(joy_control_times)
+            return None
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             control_time = time.to_sec() - self.start_time
@@ -148,7 +155,8 @@ class Reader:
 
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
-            if "points" in topic_name:
+            if "/points" in topic_name:
+                print("/points")
                 return topic_name
         return None
 
