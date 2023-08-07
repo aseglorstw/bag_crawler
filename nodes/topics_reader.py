@@ -27,7 +27,13 @@ class Reader:
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
+        if topic_name is None:
+            print("The topic lidar posted to was not found")
+            sys.exit(1)
         icp_origin = self.find_icp_origin()
+        if icp_origin is None:
+            print("Coordinate system for icp was not found")
+            sys.exit(1)
         save_interval = 20
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
@@ -41,6 +47,7 @@ class Reader:
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                     yield transformed_vectors
                 except ExtrapolationException:
+                    print("Transformation from lidar coordinate system to icp coordinate system was not found")
                     continue
 
     def read_icp_odom(self):
@@ -48,9 +55,21 @@ class Reader:
         odom = []
         saved_times = []
         topic_name = self.find_topic_for_icp_and_odom()
+        if topic_name is None:
+            print("The topic lidar posted to was not found")
+            sys.exit(1)
         origin_icp = self.find_icp_origin()
+        if origin_icp is None:
+            print("Coordinate system for icp was not found")
+            sys.exit(1)
         origin_odom = self.find_odom_origin()
+        if origin_odom is None:
+            print("Coordinate system for odom was not found")
+            sys.exit(1)
         robot_center = self.find_robot_center()
+        if robot_center is None:
+            print("Robot center frame not found")
+            sys.exit(1)
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
@@ -76,6 +95,9 @@ class Reader:
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         save_interval = 5
         topic_name = self.find_camera_topic()
+        if topic_name is None:
+            print("The topic in which messages from the camera are posted was not found")
+            sys.exit(1)
         fps = self.calculate_fps(topic_name, save_interval)
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(
@@ -128,15 +150,13 @@ class Reader:
         for topic_name, topics_info in self.topics_info.items():
             if "points" in topic_name:
                 return topic_name
-        print("The topic lidar posted to was not found")
-        sys.exit(1)
+        return None
 
     def find_camera_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "image" in topic_name:
                 return topic_name
-        print("The topic in which messages from the camera are posted was not found")
-        sys.exit(1)
+        return None
 
     def find_icp_origin(self):
         return "map"
@@ -151,8 +171,7 @@ class Reader:
         for topic_name, topics_info in self.topics_info.items():
             if "points" in topic_name:
                 return topic_name
-        print("The topic lidar posted to was not found")
-        sys.exit(1)
+        return None
 
     def calculate_fps(self, topic_name, save_interval):
         video_duration = 20
