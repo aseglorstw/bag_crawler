@@ -63,7 +63,7 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            if save_time > 500 :
+            if save_time > 500:
                 break
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
@@ -97,6 +97,7 @@ class Reader:
         topic_name = self.find_camera_topic()
         if topic_name is None:
             logger.warn("The topic in which messages from the camera are posted was not found")
+            return None
         fps = self.calculate_fps(topic_name, save_interval)
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
@@ -114,15 +115,13 @@ class Reader:
 
     def read_joy_topic(self):
         joy_control_times = []
-        joy_name = self.find_joy_topic()
-        if joy_name != -1:
-            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
-                time = rospy.Time.from_sec(time.to_sec())
-                control_time = time.to_sec() - self.start_time
-                if control_time not in joy_control_times:
-                    joy_control_times.append(control_time)
-        else:
-            print("Topic joy not founded")
+        topic_name = self.find_joy_topic()
+        if topic_name is None:
+            return None
+        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+            time = rospy.Time.from_sec(time.to_sec())
+            control_time = time.to_sec() - self.start_time
+            joy_control_times.append(control_time)
         return np.array(joy_control_times)
 
     def load_buffer(self):
@@ -145,12 +144,11 @@ class Reader:
         for topic_name, topics_info in topics_info.items():
             if "cmd_vel" in topic_name:
                 return topic_name
-        return -1
+        return None
 
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "/points" in topic_name:
-                print(topic_name)
                 return topic_name
         return None
 
