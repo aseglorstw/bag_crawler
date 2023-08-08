@@ -14,7 +14,7 @@ def get_distances(coordinates):
 
 
 def get_start_and_end_of_moving(speeds, saved_times):
-    if speeds is None or saved_times is None:
+    if speeds is None:
         return None, None
     moving = np.where(speeds > 0.2)[0]
     if len(moving) == 0:
@@ -24,10 +24,10 @@ def get_start_and_end_of_moving(speeds, saved_times):
     return start_of_moving, end_of_moving
 
 
-def get_speeds_one_period(coordinates, saved_times):
-    if coordinates is None:
+def get_speeds_one_period(coordinates_icp, coordinates_odom, saved_times):
+    if coordinates_icp is None and coordinates_odom is None:
         return None
-    transpose_coordinates = coordinates.T
+    transpose_coordinates = coordinates_icp.T if coordinates_icp is not None else coordinates_odom.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     times_one_period = saved_times[1:] - saved_times[:-1]
     speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
@@ -36,7 +36,7 @@ def get_speeds_one_period(coordinates, saved_times):
 
 
 def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
-    if coordinates is None or joy_control_times is None or saved_times is None:
+    if coordinates is None or joy_control_times is None:
         return None
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
@@ -48,7 +48,7 @@ def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
 
 
 def transform_trajectory(coordinates, matrix):
-    if len(coordinates) == 0 or matrix is None:
+    if len(coordinates) == 0:
         return None
     inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
     coordinates = np.concatenate(coordinates, axis=1)
