@@ -4,6 +4,8 @@ from ros_numpy import numpify
 
 
 def get_distances(coordinates):
+    if coordinates is None:
+        return None
     transpose_coordinates = coordinates.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period, axis=0)), axis=0)
@@ -12,6 +14,8 @@ def get_distances(coordinates):
 
 
 def get_start_and_end_of_moving(speeds, saved_times):
+    if speeds is None or saved_times is None:
+        return None, None
     moving = np.where(speeds > 0.2)[0]
     if len(moving) == 0:
         return None, None
@@ -21,6 +25,8 @@ def get_start_and_end_of_moving(speeds, saved_times):
 
 
 def get_speeds_one_period(coordinates, saved_times):
+    if coordinates is None:
+        return None
     transpose_coordinates = coordinates.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     times_one_period = saved_times[1:] - saved_times[:-1]
@@ -30,6 +36,8 @@ def get_speeds_one_period(coordinates, saved_times):
 
 
 def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
+    if coordinates is None or joy_control_times is None or saved_times is None:
+        return None
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
@@ -40,6 +48,8 @@ def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
 
 
 def transform_trajectory(coordinates, matrix):
+    if len(coordinates) == 0 or matrix is None:
+        return None
     inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
     coordinates = np.concatenate(coordinates, axis=1)
     transformed_coordinates = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
@@ -47,6 +57,8 @@ def transform_trajectory(coordinates, matrix):
 
 
 def transform_point_cloud(point_cloud, matrix):
+    if point_cloud[0] is None or matrix is None:
+        return None
     inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
     point_cloud = np.concatenate(point_cloud, axis=1)
     first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
@@ -55,4 +67,4 @@ def transform_point_cloud(point_cloud, matrix):
 
 
 def get_average_speed(speeds):
-    return np.sum(speeds) / len(speeds)
+    return np.sum(speeds) / len(speeds) if speeds is not None else None
