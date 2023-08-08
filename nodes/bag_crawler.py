@@ -24,6 +24,7 @@ def main(directory):
         loc_file = rosbag.Bag(os.path.join(directory, loc_file_name)) if loc_file_name is not None else None
         reader = Reader(bag, loc_file)
         icp, odom, saved_times, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
+
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
         transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
         distances_icp = calculator.get_distances(transformed_icp)

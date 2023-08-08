@@ -77,7 +77,6 @@ class Reader:
                 print(f"Transformation from robot center coordinate system to odom coordinate system was not found. "
                       f"Time: {int(time.to_sec() - self.start_time)}")
                 continue
-            saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
 
     def read_images_and_save_video(self, folder):
