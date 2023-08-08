@@ -31,8 +31,10 @@ class Reader:
             logger.warn("The topic lidar posted to was not found")
             return None
         save_interval = 20
-        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=['/points'])):
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
+                time = rospy.Time.from_sec(time.to_sec())
+                save_time = time.to_sec() - self.start_time
                 try:
                     msg = PointCloud2(*self.slots(msg))
                     cloud = np.array(list(read_points(msg)))
@@ -41,13 +43,11 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    time = rospy.Time.from_sec(time.to_sec())
-                    save_time = time.to_sec() - self.start_time
                     logger.info(f"Point cloud is saved. Time: {save_time}")
                     yield transformed_vectors
                 except ExtrapolationException:
-                    print(f"Transformation from lidar coordinate system to map"
-                          f"was not found. Time: {time.to_sec() - self.start_time}")
+                    logger.info(f"Transformation from lidar coordinate system to map was not found. "
+                                f"Time: {save_time}")
                     continue
 
     def read_icp_odom(self):
@@ -56,11 +56,15 @@ class Reader:
         saved_times = []
         rotation_matrix_icp = None
         rotation_matrix_odom = None
-        topic_name = self.find_topic_for_icp_and_odom()
+        topic_name = self.find_points_topic()
         if topic_name is None:
             logger.warn("The topic lidar posted to was not found")
             return None
-        for topic, msg, time in self.bags[0].read_messages(topics=['/points']):
+        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+            time = rospy.Time.from_sec(time.to_sec())
+            save_time = time.to_sec() - self.start_time
+            if save_time > 500 :
+                break
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
@@ -84,8 +88,6 @@ class Reader:
             except ExtrapolationException:
                 logger.info(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
                 continue
-            time = rospy.Time.from_sec(time.to_sec())
-            save_time = time.to_sec() - self.start_time
             saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
 
@@ -94,7 +96,7 @@ class Reader:
         save_interval = 5
         topic_name = self.find_camera_topic()
         if topic_name is None:
-            print("The topic in which messages from the camera are posted was not found")
+            logger.warn("The topic in which messages from the camera are posted was not found")
         fps = self.calculate_fps(topic_name, save_interval)
         video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
@@ -107,6 +109,7 @@ class Reader:
                 current_datetime = self.get_datetime(time_from_start)
                 cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
                 video_out.write(image)
+                logger.info(f"Image for video is saved. TIme: {time.to_sec() - self.start_time}")
         video_out.release()
 
     def read_joy_topic(self):
@@ -147,6 +150,7 @@ class Reader:
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
             if "/points" in topic_name:
+                print(topic_name)
                 return topic_name
         return None
 
@@ -155,9 +159,6 @@ class Reader:
             if "image" in topic_name:
                 return topic_name
         return None
-
-    def find_topic_for_icp_and_odom(self):
-        return "/points"
 
     def calculate_fps(self, topic_name, save_interval):
         video_duration = 20
