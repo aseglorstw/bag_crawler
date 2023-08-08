@@ -28,23 +28,26 @@ class Reader:
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
-            print("The topic lidar posted to was not found")
+            logger.warn("The topic lidar posted to was not found")
             return None
         save_interval = 20
-        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=['/points'])):
             if msg_number % save_interval == 0:
                 try:
                     msg = PointCloud2(*self.slots(msg))
                     cloud = np.array(list(read_points(msg)))
                     transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
-                                                                            "map", rospy.Duration(1))
+                                                                            "map", rospy.Duration.from_sec(0.3))
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
+                    time = rospy.Time.from_sec(time.to_sec())
+                    save_time = time.to_sec() - self.start_time
+                    logger.info(f"Point cloud is saved. Time: {save_time}")
                     yield transformed_vectors
                 except ExtrapolationException:
-                    print(f"Transformation from lidar coordinate system to icp coordinate system "
-                          f"was not found. Time: {int(time.to_sec() - self.start_time)}")
+                    print(f"Transformation from lidar coordinate system to map"
+                          f"was not found. Time: {time.to_sec() - self.start_time}")
                     continue
 
     def read_icp_odom(self):
@@ -55,11 +58,9 @@ class Reader:
         rotation_matrix_odom = None
         topic_name = self.find_topic_for_icp_and_odom()
         if topic_name is None:
-            print("The topic lidar posted to was not found")
+            logger.warn("The topic lidar posted to was not found")
             return None
-        for topic, msg, time in self.bags[0].read_messages(topics=[self.find_points_topic()]):
-            time = rospy.Time.from_sec(time.to_sec())
-            save_time = time.to_sec() - self.start_time
+        for topic, msg, time in self.bags[0].read_messages(topics=['/points']):
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
@@ -83,6 +84,8 @@ class Reader:
             except ExtrapolationException:
                 logger.info(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
                 continue
+            time = rospy.Time.from_sec(time.to_sec())
+            save_time = time.to_sec() - self.start_time
             saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
 
@@ -108,13 +111,15 @@ class Reader:
 
     def read_joy_topic(self):
         joy_control_times = []
-        topic_name = self.find_joy_topic()
-        if topic_name is None:
-            return None
-        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
-            time = rospy.Time.from_sec(time.to_sec())
-            control_time = time.to_sec() - self.start_time
-            joy_control_times.append(control_time)
+        joy_name = self.find_joy_topic()
+        if joy_name != -1:
+            for topic, msg, time in self.bags[0].read_messages(topics=[joy_name]):
+                time = rospy.Time.from_sec(time.to_sec())
+                control_time = time.to_sec() - self.start_time
+                if control_time not in joy_control_times:
+                    joy_control_times.append(control_time)
+        else:
+            print("Topic joy not founded")
         return np.array(joy_control_times)
 
     def load_buffer(self):
@@ -133,10 +138,11 @@ class Reader:
                 print('Could not read')
 
     def find_joy_topic(self):
-        for topic_name, topics_info in self.topics_info.items():
-            if "/joy_local/cmd_vel" in topic_name:
+        topics_info = self.bags[0].get_type_and_topic_info()[1]
+        for topic_name, topics_info in topics_info.items():
+            if "cmd_vel" in topic_name:
                 return topic_name
-        return None
+        return -1
 
     def find_points_topic(self):
         for topic_name, topics_info in self.topics_info.items():
