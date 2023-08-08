@@ -107,8 +107,7 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             control_time = time.to_sec() - self.start_time
-            if control_time not in joy_control_times:
-                joy_control_times.append(control_time)
+            joy_control_times.append(control_time)
         return np.array(joy_control_times)
 
     def load_buffer(self):
