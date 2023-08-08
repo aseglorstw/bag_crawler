@@ -63,8 +63,6 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            if save_time > 500:
-                break
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                   rospy.Duration(1))
@@ -94,24 +92,28 @@ class Reader:
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         save_interval = 5
-        topic_name = self.find_camera_topic()
-        if topic_name is None:
+        topic_names = list(self.find_camera_topic())
+        if topic_names[0] is None:
             logger.warn("The topic in which messages from the camera are posted was not found")
             return None
-        fps = self.calculate_fps(topic_name, save_interval)
-        video_out = cv2.VideoWriter(f"{folder}/video.avi", fourcc, fps, (1920, 1200), True)
-        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
-            if msg_number % save_interval == 0:
-                time = rospy.Time.from_sec(time.to_sec())
-                time_from_start = int(time.to_sec() - self.start_time)
-                msg = CompressedImage(*self.slots(msg))
-                np_arr = np.fromstring(msg.data, np.uint8)
-                image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-                current_datetime = self.get_datetime(time_from_start)
-                cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
-                video_out.write(image)
-                logger.info(f"Image for video is saved. TIme: {time.to_sec() - self.start_time}")
-        video_out.release()
+        for topic_name in topic_names:
+            fps = self.calculate_fps(topic_name, save_interval)
+            video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
+            print(video_name)
+            video_out = cv2.VideoWriter(video_name, fourcc, fps, (1920, 1200), True)
+            for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
+                if msg_number % save_interval == 0:
+                    time = rospy.Time.from_sec(time.to_sec())
+                    time_from_start = int(time.to_sec() - self.start_time)
+                    msg = CompressedImage(*self.slots(msg))
+                    np_arr = np.fromstring(msg.data, np.uint8)
+                    image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                    current_datetime = self.get_datetime(time_from_start)
+                    cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+                    video_out.write(image)
+                    logger.info(f"Image from topic {topic_name} for video is saved. TIme: {time.to_sec() - self.start_time}")
+            logger.info(f"Video  from topic {topic_name} is saved.")
+            video_out.release()
 
     def read_joy_topic(self):
         joy_control_times = []
@@ -142,21 +144,25 @@ class Reader:
     def find_joy_topic(self):
         topics_info = self.bags[0].get_type_and_topic_info()[1]
         for topic_name, topics_info in topics_info.items():
-            if "cmd_vel" in topic_name:
+            if "joy" in topic_name and "cmd_vel" in topic_name:
                 return topic_name
         return None
 
     def find_points_topic(self):
-        for topic_name, topics_info in self.topics_info.items():
-            if "/points" in topic_name:
+        for topic_name, topic_info in self.topics_info.items():
+            if "/points" in topic_name or "/destagerred_points" in topic_name:
                 return topic_name
         return None
 
     def find_camera_topic(self):
-        for topic_name, topics_info in self.topics_info.items():
-            if "image" in topic_name:
-                return topic_name
+        for topic_name, topic_info in self.topics_info.items():
+            if "CompressedImage" in topic_info.msg_type:
+                yield topic_name
         return None
+
+    @staticmethod
+    def create_name_for_video(topic_name):
+        return topic_name.replace('/', '_')[1:]
 
     def calculate_fps(self, topic_name, save_interval):
         video_duration = 20

@@ -7,6 +7,7 @@ import graphs_creator
 import calculator
 from writer_to_files import Writer
 import timeit
+import schedule
 
 
 def main(directory):
@@ -14,7 +15,6 @@ def main(directory):
     if not directory_scanner.input_check(directory):
         return 1
     task_list = list(directory_scanner.create_task_list())
-    print(task_list)
     for bag_file in task_list:
         bag = open_bag_file(directory, bag_file)
         if bag is None:
@@ -70,6 +70,9 @@ def close_bag_file(bag, bag_file):
 
 
 if __name__ == '__main__':
-    arg1 = sys.argv[1]
-    execution_time = timeit.timeit(lambda: main(arg1), number=1)
-    print(f"Время выполнения программы: {execution_time:.6f} секунд")
+    root = sys.argv[1]
+    # execution_time = timeit.timeit(lambda: main(arg1), number=1)
+    # print(f"Время выполнения программы: {execution_time:.6f} секунд")
+    schedule.every(10).seconds.do(lambda: main(root))
+    while True:
+        schedule.run_pending()
