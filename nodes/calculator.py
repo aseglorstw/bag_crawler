@@ -39,6 +39,7 @@ def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
     if coordinates is None or joy_control_times is None:
         return None
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
+    print(indices)
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
     control_coordinates = []

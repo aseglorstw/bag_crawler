@@ -1,3 +1,4 @@
+from logger import setup_logger
 import rospy
 import tf2_ros
 from rosbag import ROSBagException
@@ -10,6 +11,8 @@ from tf2_ros import ExtrapolationException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
+
+logger = setup_logger()
 
 
 class Reader:
@@ -64,7 +67,9 @@ class Reader:
                                      [transform_icp.transform.translation.z]]))
                 if rotation_matrix_icp is None:
                     rotation_matrix_icp = transform_icp.transform
+                logger.info(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
             except ExtrapolationException:
+                logger.warn(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
                 continue
             try:
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
@@ -74,9 +79,11 @@ class Reader:
                               [transform_odom.transform.translation.z]]))
                 if rotation_matrix_odom is None:
                     rotation_matrix_odom = transform_odom.transform
-                saved_times.append(save_time)
+                logger.info(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
             except ExtrapolationException:
+                logger.info(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
                 continue
+            saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
 
     def read_images_and_save_video(self, folder):
