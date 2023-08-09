@@ -99,7 +99,6 @@ class Reader:
         for topic_name in topic_names:
             fps = self.calculate_fps(topic_name, save_interval)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
-            print(video_name)
             video_out = cv2.VideoWriter(video_name, fourcc, fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
                 if msg_number % save_interval == 0:
