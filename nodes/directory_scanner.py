@@ -1,8 +1,5 @@
 import pathlib
 import os
-from logger import setup_logger
-
-logger = setup_logger()
 
 
 class DirectoryScanner:
@@ -28,7 +25,7 @@ class DirectoryScanner:
     @staticmethod
     def input_check(root_directory):
         if not (os.path.exists(root_directory) and os.path.isdir(root_directory)):
-            logger.error("This directory doesn't exist.")
+            print("This directory doesn't exist.")
             return False
         return True
 

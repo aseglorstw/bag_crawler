@@ -7,9 +7,6 @@ from topics_reader import Reader
 import graphs_creator
 import calculator
 from writer_to_files import Writer
-from logger import setup_logger
-
-logger = setup_logger()
 
 
 def main(root_directory):
@@ -28,7 +25,7 @@ def main(root_directory):
         path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
         loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
 
-        logger.info(f"Start processing file {path_to_bag_file}")
+        print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
         icp, odom, saved_times, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
         point_cloud = list(reader.read_point_cloud())
@@ -59,7 +56,7 @@ def main(root_directory):
         writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
 
         close_bag_file(bag, path_to_bag_file)
-        logger.info(f"Finish processing file {path_to_bag_file}")
+        print(f"Finish processing file {path_to_bag_file}")
 
 
 def open_bag_file(path_to_bag_file):

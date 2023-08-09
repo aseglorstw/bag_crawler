@@ -1,4 +1,3 @@
-from logger import setup_logger
 import rospy
 import tf2_ros
 from rosbag import ROSBagException
@@ -11,8 +10,6 @@ from tf2_ros import ExtrapolationException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
-
-logger = setup_logger()
 
 
 class Reader:
@@ -28,7 +25,7 @@ class Reader:
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
-            logger.warn("The topic lidar posted to was not found")
+            print("The topic lidar posted to was not found")
             return None
         save_interval = 20
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
@@ -43,11 +40,10 @@ class Reader:
                     matrix = numpify(transform_map_lidar.transform)
                     vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                     transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    logger.info(f"Point cloud is saved. Time: {save_time}")
+                    print(f"Point cloud is saved. Time: {save_time}")
                     yield transformed_vectors
                 except ExtrapolationException:
-                    logger.info(f"Transformation from lidar coordinate system to map was not found. "
-                                f"Time: {save_time}")
+                    print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
                     continue
 
     def read_icp_odom(self):
@@ -58,7 +54,7 @@ class Reader:
         rotation_matrix_odom = None
         topic_name = self.find_points_topic()
         if topic_name is None:
-            logger.warn("The topic lidar posted to was not found")
+            print("The topic lidar posted to was not found")
             return None
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
@@ -70,9 +66,9 @@ class Reader:
                                      [transform_icp.transform.translation.z]]))
                 if rotation_matrix_icp is None:
                     rotation_matrix_icp = transform_icp.transform
-                logger.info(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
+                print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
             except ExtrapolationException:
-                logger.warn(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
+                print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
                 continue
             try:
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
@@ -82,9 +78,9 @@ class Reader:
                               [transform_odom.transform.translation.z]]))
                 if rotation_matrix_odom is None:
                     rotation_matrix_odom = transform_odom.transform
-                logger.info(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
+                print(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
             except ExtrapolationException:
-                logger.info(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
+                print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
                 continue
             saved_times.append(save_time)
         return np.array(icp), np.array(odom), np.array(saved_times), rotation_matrix_icp, rotation_matrix_odom
@@ -94,7 +90,7 @@ class Reader:
         save_interval = 5
         topic_names = list(self.find_camera_topic())
         if topic_names[0] is None:
-            logger.warn("The topic in which messages from the camera are posted was not found")
+            print("The topic in which messages from the camera are posted was not found")
             return None
         for topic_name in topic_names:
             fps = self.calculate_fps(topic_name, save_interval)
@@ -110,8 +106,8 @@ class Reader:
                     current_datetime = self.get_datetime(time_from_start)
                     cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
                     video_out.write(image)
-                    logger.info(f"Image from topic {topic_name} for video is saved. TIme: {time.to_sec() - self.start_time}")
-            logger.info(f"Video  from topic {topic_name} is saved.")
+                    print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
+            print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
 
     def read_joy_topic(self):
