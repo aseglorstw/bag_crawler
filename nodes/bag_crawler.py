@@ -27,7 +27,7 @@ def main(root_directory):
 
         print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
-        icp, odom, saved_times, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
+        icp, odom, saved_times_icp, saved_times_odom, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
         point_cloud = list(reader.read_point_cloud())
         joy_control_times = reader.read_joy_topic()
         reader.read_images_and_save_video(output_folder)
@@ -37,16 +37,19 @@ def main(root_directory):
         transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp)
         distances_icp = calculator.get_distances(transformed_icp)
         distances_odom = calculator.get_distances(transformed_odom)
-        speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times)
+        speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp)
         average_speed = calculator.get_average_speed(speeds)
-        start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times)
+        start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp)
         joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times,
-                                                                         saved_times)
-        graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times, output_folder)
-        graphs_creator.create_graph_y_over_time(transformed_odom, transformed_icp, saved_times, output_folder)
-        graphs_creator.create_graph_z_over_time(transformed_odom, transformed_icp, saved_times, output_folder)
-        graphs_creator.create_graph_distance_over_time(distances_icp, distances_odom, saved_times, start_of_moving,
-                                                       end_of_moving, output_folder)
+                                                                         saved_times_icp)
+        graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times_odom,saved_times_icp,
+                                                output_folder)
+        graphs_creator.create_graph_y_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
+                                                output_folder)
+        graphs_creator.create_graph_z_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
+                                                output_folder)
+        graphs_creator.create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
+                                                       start_of_moving, end_of_moving, output_folder)
         graphs_creator.create_graph_xy_and_point_cloud(transformed_odom, transformed_icp, transformed_point_cloud,
                                                        output_folder)
         graphs_creator.create_graph_joy_control_times_and_icp(transformed_icp, joy_control_coordinates,

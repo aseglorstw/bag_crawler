@@ -22,54 +22,54 @@ def create_graph_xy_and_point_cloud(odom, icp, point_cloud, folder):
     plt.close()
 
 
-def create_graph_x_over_time(odom, icp, saved_times, folder):
+def create_graph_x_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in X direction")
     if odom is not None:
-        ax.plot(saved_times, odom[0, :], color='blue')
+        ax.plot(saved_times_odom, odom[0, :], color='blue')
     if icp is not None:
-        ax.plot(saved_times, icp[0, :], color='red', linestyle='--')
+        ax.plot(saved_times_icp, icp[0, :], color='red', linestyle='--')
     plt.savefig(f"{folder}/UGVs_movement_in_X_direction.png")
     plt.close()
 
 
-def create_graph_y_over_time(odom, icp, saved_times, folder):
+def create_graph_y_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Y direction")
     if odom is not None:
-        ax.plot(saved_times, odom[1, :], color='blue')
+        ax.plot(saved_times_odom, odom[1, :], color='blue')
     if icp is not None:
-        ax.plot(saved_times, icp[1, :], color='red', linestyle='--')
+        ax.plot(saved_times_icp, icp[1, :], color='red', linestyle='--')
     plt.savefig(f"{folder}/UGVs_movement_in_Y_direction.png")
     plt.close()
 
 
-def create_graph_z_over_time(odom, icp, saved_times, folder):
+def create_graph_z_over_time(odom, icp, saved_times_icp, saved_times_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
     if odom is not None:
-        ax.plot(saved_times, odom[2, :], color='blue')
+        ax.plot(saved_times_odom, odom[2, :], color='blue')
     if icp is not None:
-        ax.plot(saved_times, icp[2, :], color='red', linestyle='--')
+        ax.plot(saved_times_icp, icp[2, :], color='red', linestyle='--')
     plt.savefig(f"{folder}/UGVs_movement_in_Z_direction.png")
     plt.close()
 
 
-def create_graph_distance_over_time(distances_icp, distances_odom, saved_times, start_of_moving, end_of_moving, folder):
+def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom, start_of_moving, end_of_moving, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
     if distances_odom is not None:
-        ax.plot(saved_times, distances_odom, color='blue')
+        ax.plot(saved_times_odom, distances_odom, color='blue')
     if distances_icp is not None:
-        ax.plot(saved_times, distances_icp, color='red', linestyle='--')
+        ax.plot(saved_times_icp, distances_icp, color='red', linestyle='--')
     if start_of_moving is not None:
         ax.axvline(start_of_moving, color='green', linestyle=':', label='start_of_moving')
     if end_of_moving is not None:
