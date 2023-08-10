@@ -13,9 +13,11 @@ def create_transform_odom_to_map(path_to_bag_file, duration):
     rospy.sleep(duration)
     full_tf_name = f'{path_to_bag_file.split(".")[0]}.full_tf.bag'
     loc_file_name = f'{path_to_bag_file.split(".")[0]}_loc.bag'
-    command = (f"rosbag filter {full_tf_name} {loc_file_name} \"topic == '/tf' and "
-               "m.transforms[0].child_frame_id == 'odom' and m.transforms[0].header.frame_id == 'map'\"")
-    subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    filter_command = (f"rosbag filter {full_tf_name} {loc_file_name} \"topic == '/tf' and "
+                      "m.transforms[0].child_frame_id == 'odom' and m.transforms[0].header.frame_id == 'map'\"")
+    subprocess.run(filter_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    remove_command = f"rm {full_tf_name}"
+    subprocess.run(remove_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
 
 create_transform_odom_to_map("/home/robert/catkin_ws/src/bag_crawler/bagfiles/bag_files_husky/husky_2022-09-23-12-38-31.bag", 100)
