@@ -13,20 +13,22 @@ def get_distances(coordinates):
     return distances
 
 
-def get_start_and_end_of_moving(speeds, saved_times):
+def get_start_and_end_of_moving(speeds, saved_times_icp, saved_times_odom):
     if speeds is None:
         return None, None
     moving = np.where(speeds > 0.2)[0]
     if len(moving) == 0:
         return None, None
+    saved_times = saved_times_icp if len(saved_times_icp) > 0 else saved_times_odom
     start_of_moving = saved_times[moving[0]]
     end_of_moving = saved_times[moving[-1] + 1] if len(moving) < len(saved_times) else saved_times[moving[-1]]
     return start_of_moving, end_of_moving
 
 
-def get_speeds_one_period(icp, odom, saved_times):
+def get_speeds_one_period(icp, odom, saved_times_icp, saved_times_odom):
     if icp is None and odom is None:
         return None
+    saved_times = saved_times_icp if icp is not None else saved_times_odom
     transpose_coordinates = icp.T if icp is not None else odom.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     times_one_period = saved_times[1:] - saved_times[:-1]
@@ -59,7 +61,7 @@ def transform_trajectory(coordinates, matrix):
 
 
 def transform_point_cloud(point_cloud, matrix):
-    if point_cloud[0] is None or matrix is None:
+    if len(point_cloud) == 0 or matrix is None:
         return None
     inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
     point_cloud = np.concatenate(point_cloud, axis=1)

@@ -30,16 +30,16 @@ def main(root_directory):
         icp, odom, saved_times_icp, saved_times_odom, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
         point_cloud = list(reader.read_point_cloud())
         joy_control_times = reader.read_joy_topic()
-        reader.read_images_and_save_video(output_folder)
+        #reader.read_images_and_save_video(output_folder)
 
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
         transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
         transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp)
         distances_icp = calculator.get_distances(transformed_icp)
         distances_odom = calculator.get_distances(transformed_odom)
-        speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp)
+        speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
         average_speed = calculator.get_average_speed(speeds)
-        start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp)
+        start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp, saved_times_odom)
         joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, transformed_odom,
                                                                 joy_control_times, saved_times_icp, saved_times_odom)
         graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times_odom,saved_times_icp,
@@ -52,11 +52,13 @@ def main(root_directory):
                                                        start_of_moving, end_of_moving, output_folder)
         graphs_creator.create_graph_xy_and_point_cloud(transformed_odom, transformed_icp, transformed_point_cloud,
                                                        output_folder)
-        graphs_creator.create_graph_joy_control_times_and_icp(transformed_icp, joy_control_coordinates,
-                                                              output_folder)
+        graphs_creator.create_graph_joy_control_times_and_icp(transformed_icp, transformed_odom,
+                                                              joy_control_coordinates, output_folder)
         writer = Writer(bag, output_folder)
         writer.write_topics_info()
-        writer.write_bag_info(distances_icp[-1], distances_odom[-1], start_of_moving, end_of_moving, average_speed)
+        full_distance_icp = distances_icp[-1] if distances_icp is not None else None
+        full_distance_odom = distances_odom[-1] if distances_odom is not None else None
+        writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")

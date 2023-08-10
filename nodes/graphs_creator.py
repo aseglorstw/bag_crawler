@@ -10,8 +10,8 @@ def create_graph_xy_and_point_cloud(odom, icp, point_cloud, folder):
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
-    colors = transform_z_coordinates_to_color(point_cloud[2, :])
     if point_cloud is not None:
+        colors = transform_z_coordinates_to_color(point_cloud[2, :])
         ax.scatter(point_cloud[0, :], point_cloud[1, :], s=marker_size, c=colors, cmap='Greens')
     if odom is not None:
         ax.plot(odom[0, :], odom[1, :], color='blue', label='imu_odom')
@@ -48,7 +48,7 @@ def create_graph_y_over_time(odom, icp, saved_times_odom, saved_times_icp, folde
     plt.close()
 
 
-def create_graph_z_over_time(odom, icp, saved_times_icp, saved_times_odom, folder):
+def create_graph_z_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -79,13 +79,15 @@ def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_i
     plt.close()
 
 
-def create_graph_joy_control_times_and_icp(icp, joy_control_coordinates, folder):
+def create_graph_joy_control_times_and_icp(icp, odom,  joy_control_coordinates, folder):
     fig, ax = plt.subplots()
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
     if icp is not None:
         ax.plot(icp[0, :], icp[1, :], color='red', linestyle='--', label='icp_odom')
+    elif odom is not None:
+        ax.plot(odom[0, :], odom[1, :], color='blue', label='imu_odom')
     if joy_control_coordinates is not None:
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')

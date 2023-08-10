@@ -48,7 +48,10 @@ class Reader:
                     yield transformed_vectors
                 except ExtrapolationException:
                     print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
-                    continue
+                except LookupException as e:
+                    missing_frame = str(e).split()[0]
+                    print(f"Frame {missing_frame} doesn't exist")
+                    return None
 
     def read_icp_odom(self):
         icp = []
@@ -57,8 +60,8 @@ class Reader:
         saved_times_odom = []
         rotation_matrix_icp = None
         rotation_matrix_odom = None
-        is_map_exist = True
-        is_odom_exist = True
+        is_icp_works = True
+        is_odom_works = True
         topic_name = self.find_points_topic()
         if topic_name is None:
             print("The topic lidar posted to was not found")
@@ -66,7 +69,7 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            if is_map_exist:
+            if is_icp_works:
                 try:
                     transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
                                                                       rospy.Duration.from_sec(0.3))
@@ -78,10 +81,11 @@ class Reader:
                     print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
                 except ExtrapolationException:
                     print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
-                except LookupException:
-                    print("Frame map doesn't exist")
-                    is_map_exist = False
-            if is_odom_exist:
+                except LookupException as e:
+                    missing_frame = str(e).split()[0]
+                    print(f"Frame {missing_frame} doesn't exist")
+                    is_icp_works = False
+            if is_odom_works:
                 try:
                     transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                        rospy.Duration.from_sec(0.3))
@@ -94,10 +98,10 @@ class Reader:
                     print(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
                 except ExtrapolationException:
                     print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
-                    continue
-                except LookupException:
-                    print("Frame odom doesn't exist")
-                    is_odom_exist = False
+                except LookupException as e:
+                    missing_frame = str(e).split()[0]
+                    print(f"Frame {missing_frame} doesn't exist")
+                    is_odom_works = False
 
         return (np.array(icp), np.array(odom), np.array(saved_times_icp), np.array(saved_times_odom),
                 rotation_matrix_icp, rotation_matrix_odom)
