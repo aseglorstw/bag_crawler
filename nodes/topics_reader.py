@@ -61,7 +61,7 @@ class Reader:
             save_time = time.to_sec() - self.start_time
             try:
                 transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
-                                                                  rospy.Duration(1))
+                                                                  rospy.Duration.from_sec(0.3))
                 icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
                                      [transform_icp.transform.translation.z]]))
                 if rotation_matrix_icp is None:
@@ -72,7 +72,7 @@ class Reader:
                 continue
             try:
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
-                                                                   rospy.Duration(1))
+                                                                   rospy.Duration.from_sec(0.3))
                 odom.append(
                     np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
                               [transform_odom.transform.translation.z]]))
