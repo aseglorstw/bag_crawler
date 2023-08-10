@@ -40,8 +40,8 @@ def main(root_directory):
         speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp)
         average_speed = calculator.get_average_speed(speeds)
         start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp)
-        joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, joy_control_times,
-                                                                         saved_times_icp)
+        joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, transformed_odom,
+                                                                joy_control_times, saved_times_icp, saved_times_odom)
         graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times_odom,saved_times_icp,
                                                 output_folder)
         graphs_creator.create_graph_y_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
@@ -56,7 +56,7 @@ def main(root_directory):
                                                               output_folder)
         writer = Writer(bag, output_folder)
         writer.write_topics_info()
-        writer.write_bag_info(distances_icp[-1], start_of_moving, end_of_moving, average_speed)
+        writer.write_bag_info(distances_icp[-1], distances_odom[-1], start_of_moving, end_of_moving, average_speed)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")

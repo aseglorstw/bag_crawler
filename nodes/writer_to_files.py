@@ -8,8 +8,9 @@ class Writer:
         self.bag = bag
         self.folder = folder
 
-    def write_bag_info(self, distance, start_of_moving, end_of_moving, average_speed):
+    def write_bag_info(self, distance_icp, distance_odom, start_of_moving, end_of_moving, average_speed):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
+        distance = distance_icp if distance_icp is not None else distance_odom
         with open(f"{self.folder}/bag_info.txt", "w", encoding="utf-8") as file:
             file.write(f"{distance}\n{average_speed}\n{start_of_moving}\n{end_of_moving}\n"
                        f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n"

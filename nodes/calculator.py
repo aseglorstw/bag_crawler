@@ -24,10 +24,10 @@ def get_start_and_end_of_moving(speeds, saved_times):
     return start_of_moving, end_of_moving
 
 
-def get_speeds_one_period(coordinates_icp, coordinates_odom, saved_times):
-    if coordinates_icp is None and coordinates_odom is None:
+def get_speeds_one_period(icp, odom, saved_times):
+    if icp is None and odom is None:
         return None
-    transpose_coordinates = coordinates_icp.T if coordinates_icp is not None else coordinates_odom.T
+    transpose_coordinates = icp.T if icp is not None else odom.T
     distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
     times_one_period = saved_times[1:] - saved_times[:-1]
     speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
@@ -35,9 +35,11 @@ def get_speeds_one_period(coordinates_icp, coordinates_odom, saved_times):
     return speeds
 
 
-def get_joy_control_coordinates(coordinates, joy_control_times, saved_times):
-    if coordinates is None or joy_control_times is None:
+def get_joy_control_coordinates(icp, odom, joy_control_times, saved_times_icp, saved_times_odom):
+    if (icp is None and odom is None) or joy_control_times is None:
         return None
+    saved_times = saved_times_icp if icp is not None else saved_times_odom
+    coordinates = icp if icp is not None else odom
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
     split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
