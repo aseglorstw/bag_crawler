@@ -40,7 +40,6 @@
             is_mapping: true
             save_map_cells_on_hard_drive: false
         </rosparam>
-
         <remap from="points_in" to="$(arg cloud)"/>
         <remap from="filtered_points" to="filtered_points"/>
         <remap from="map" to="point_map"/>
