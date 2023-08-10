@@ -1,4 +1,7 @@
+import sys
+
 import rospy
+import tf2_msgs.msg
 import tf2_ros
 from rosbag import ROSBagException
 from tqdm import tqdm
@@ -7,6 +10,7 @@ from sensor_msgs.point_cloud2 import read_points
 import numpy as np
 from ros_numpy import numpify
 from tf2_ros import ExtrapolationException
+from tf2_ros import LookupException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
@@ -53,38 +57,48 @@ class Reader:
         saved_times_odom = []
         rotation_matrix_icp = None
         rotation_matrix_odom = None
+        is_map_exist = True
+        is_odom_exist = True
         topic_name = self.find_points_topic()
         if topic_name is None:
             print("The topic lidar posted to was not found")
-            return None
+            sys.exit(1)
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            try:
-                transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
-                                                                  rospy.Duration.from_sec(0.3))
-                icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
-                                     [transform_icp.transform.translation.z]]))
-                if rotation_matrix_icp is None:
-                    rotation_matrix_icp = transform_icp.transform
-                saved_times_icp.append(save_time)
-                print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
-            except ExtrapolationException:
-                print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
-                continue
-            try:
-                transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
-                                                                   rospy.Duration.from_sec(0.3))
-                odom.append(
-                    np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                              [transform_odom.transform.translation.z]]))
-                if rotation_matrix_odom is None:
-                    rotation_matrix_odom = transform_odom.transform
-                saved_times_odom.append(save_time)
-                print(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
-            except ExtrapolationException:
-                print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
-                continue
+            if is_map_exist:
+                try:
+                    transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
+                                                                      rospy.Duration.from_sec(0.3))
+                    icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
+                                         [transform_icp.transform.translation.z]]))
+                    if rotation_matrix_icp is None:
+                        rotation_matrix_icp = transform_icp.transform
+                    saved_times_icp.append(save_time)
+                    print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
+                except ExtrapolationException:
+                    print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
+                except LookupException:
+                    print("Frame map doesn't exist")
+                    is_map_exist = False
+            if is_odom_exist:
+                try:
+                    transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
+                                                                       rospy.Duration.from_sec(0.3))
+                    odom.append(
+                        np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                                  [transform_odom.transform.translation.z]]))
+                    if rotation_matrix_odom is None:
+                        rotation_matrix_odom = transform_odom.transform
+                    saved_times_odom.append(save_time)
+                    print(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
+                except ExtrapolationException:
+                    print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
+                    continue
+                except LookupException:
+                    print("Frame odom doesn't exist")
+                    is_odom_exist = False
+
         return (np.array(icp), np.array(odom), np.array(saved_times_icp), np.array(saved_times_odom),
                 rotation_matrix_icp, rotation_matrix_odom)
 
