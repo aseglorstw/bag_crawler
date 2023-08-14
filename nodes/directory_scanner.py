@@ -4,10 +4,14 @@ import os
 
 class DirectoryScanner:
     def __init__(self):
-        self.task_list = []
+        self.task_list = {}
+        self.paths_to_bag_files = []
 
     def create_task_list(self, root_directory):
         self.find_bag_files(root_directory)
+        for path_to_bag_file in self.paths_to_bag_files:
+            task_list_for_one_bag_file = self.check_web_folder(path_to_bag_file)
+            self.task_list[path_to_bag_file] = task_list_for_one_bag_file
         return self.task_list
 
     def find_bag_files(self, directory):
@@ -19,8 +23,7 @@ class DirectoryScanner:
             self.find_bag_files(child_directory)
         for file in pathlib.Path(directory).iterdir():
             if file.is_file() and file.suffix == ".bag" and not any(suffix in file.stem for suffix in stop_suffixes):
-                if not self.find_web_folder(directory, file.name):
-                    self.task_list.append(os.path.join(directory, file.name))
+                self.paths_to_bag_files.append(os.path.join(directory, file.name))
 
     @staticmethod
     def input_check(root_directory):
@@ -46,10 +49,11 @@ class DirectoryScanner:
         return None
 
     @staticmethod
-    def find_web_folder(directory, path_to_bag_file):
+    def check_web_folder(path_to_bag_file):
         task_template = {"map": False, "odom": False, "base_link": False, "slam": False, "video": False,
                          "point_cloud": False, "topics": False, "info": False}
-        web_folder = os.path.join(directory, f".web_server_{path_to_bag_file}")
+        directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
+        web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
             return task_template
         log_file = os.path.join(web_folder, "data_availability.txt")
@@ -59,4 +63,4 @@ class DirectoryScanner:
             for line in file:
                 key, value = line.split()
                 task_template[key] = True if "True" in value else "False"
-                print(key, task_template[key])
+        return task_template

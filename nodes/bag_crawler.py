@@ -15,6 +15,7 @@ def main(root_directory):
         return 1
 
     task_list = directory_scanner.create_task_list(root_directory)
+    print(task_list)
     # for path_to_bag_file in task_list:
     #
     #     bag = open_bag_file(path_to_bag_file)
