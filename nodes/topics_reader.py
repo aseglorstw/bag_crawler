@@ -22,12 +22,12 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
-        self.data_availability = {"map": True, "odom": True, "base_link": True, "images": True, "points": True}
+        self.data_availability = {"map": False, "odom": False, "base_link": False, "video": False, "point_cloud": False}
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
-            self.data_availability["points"] = False
+            self.data_availability["point_cloud"] = False
             print("The topic lidar posted to was not found")
             return None
         save_interval = 20
@@ -49,9 +49,7 @@ class Reader:
                     print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
-                    self.data_availability[missing_frame[1:-1]] = False
                     print(f"Frame {missing_frame} doesn't exist")
-                    return None
 
     def read_icp_odom(self):
         icp = []
@@ -114,7 +112,7 @@ class Reader:
         save_interval = 5
         topic_names = list(self.find_camera_topic())
         if topic_names[0] is None:
-            self.data_availability["images"] = False
+            self.data_availability["video"] = False
             print("The topic in which messages from the camera are posted was not found")
             return None
         for topic_name in topic_names:

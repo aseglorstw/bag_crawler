@@ -47,5 +47,16 @@ class DirectoryScanner:
 
     @staticmethod
     def find_web_folder(directory, path_to_bag_file):
+        task_template = {"map": False, "odom": False, "base_link": False, "slam": False, "video": False,
+                         "point_cloud": False, "topics": False, "info": False}
         web_folder = os.path.join(directory, f".web_server_{path_to_bag_file}")
-        return os.path.exists(web_folder) and os.path.isdir(web_folder)
+        if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
+            return task_template
+        log_file = os.path.join(web_folder, "data_availability.txt")
+        if not os.path.exists(log_file):
+            return task_template
+        with open(log_file, "r", encoding="utf-8") as file:
+            for line in file:
+                key, value = line.split()
+                task_template[key] = True if "True" in value else "False"
+                print(key, task_template[key])
