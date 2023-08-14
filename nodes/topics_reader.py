@@ -1,7 +1,4 @@
-import sys
-
 import rospy
-import tf2_msgs.msg
 import tf2_ros
 from rosbag import ROSBagException
 from tqdm import tqdm
@@ -25,10 +22,12 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
+        self.data_availability = {"map": True, "odom": True, "base_link": True, "images": True, "points": True}
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
+            self.data_availability["points"] = False
             print("The topic lidar posted to was not found")
             return None
         save_interval = 20
@@ -50,6 +49,7 @@ class Reader:
                     print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
+                    self.data_availability[missing_frame[1:-1]] = False
                     print(f"Frame {missing_frame} doesn't exist")
                     return None
 
@@ -65,7 +65,8 @@ class Reader:
         topic_name = self.find_points_topic()
         if topic_name is None:
             print("The topic lidar posted to was not found")
-            sys.exit(1)
+            self.data_availability["points"] = False
+            return [None] * 6
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
@@ -83,8 +84,9 @@ class Reader:
                     print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
-                    print(f"Frame {missing_frame} doesn't exist")
                     is_icp_works = False
+                    self.data_availability[missing_frame[1:-1]] = False
+                    print(f"Frame {missing_frame} doesn't exist")
             if is_odom_works:
                 try:
                     transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
@@ -100,8 +102,9 @@ class Reader:
                     print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
-                    print(f"Frame {missing_frame} doesn't exist")
                     is_odom_works = False
+                    self.data_availability[missing_frame[1:-1]] = False
+                    print(f"Frame {missing_frame} doesn't exist")
 
         return (np.array(icp), np.array(odom), np.array(saved_times_icp), np.array(saved_times_odom),
                 rotation_matrix_icp, rotation_matrix_odom)
@@ -111,6 +114,7 @@ class Reader:
         save_interval = 5
         topic_names = list(self.find_camera_topic())
         if topic_names[0] is None:
+            self.data_availability["images"] = False
             print("The topic in which messages from the camera are posted was not found")
             return None
         for topic_name in topic_names:
@@ -188,6 +192,10 @@ class Reader:
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
+    def get_data_availability(self):
+        return self.data_availability
+
     @staticmethod
     def slots(msg):
         return [getattr(msg, var) for var in msg.__slots__]
+

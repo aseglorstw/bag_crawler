@@ -26,6 +26,11 @@ class Writer:
                 frequency = topic_info.frequency
                 file.write(f"{topic_name} {msg_type} {message_count} {frequency}\n")
 
+    def write_info_on_data_availability(self, data_availability):
+        with open(f"{self.folder}/data_availability.txt", "w", encoding="utf-8") as file:
+            for key, value in data_availability.items():
+                file.write(f"{key} {value}\n")
+
     @staticmethod
     def get_date(seconds):
         return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')

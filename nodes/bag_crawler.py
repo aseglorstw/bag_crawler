@@ -30,7 +30,7 @@ def main(root_directory):
         icp, odom, saved_times_icp, saved_times_odom, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
         point_cloud = list(reader.read_point_cloud())
         joy_control_times = reader.read_joy_topic()
-        #reader.read_images_and_save_video(output_folder)
+        reader.read_images_and_save_video(output_folder)
 
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
         transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
@@ -59,7 +59,7 @@ def main(root_directory):
         full_distance_icp = distances_icp[-1] if distances_icp is not None else None
         full_distance_odom = distances_odom[-1] if distances_odom is not None else None
         writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
-
+        writer.write_info_on_data_availability(reader.get_data_availability())
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
 
