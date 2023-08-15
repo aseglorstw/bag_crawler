@@ -16,8 +16,11 @@ def main(root_directory):
         return 1
 
     task_list = directory_scanner.create_task_list(root_directory)
-    print(task_list)
     for path_to_bag_file in task_list.keys():
+
+        task_list[path_to_bag_file]["slam"] = False
+        task_list[path_to_bag_file]["video"] = True
+
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
@@ -34,9 +37,11 @@ def main(root_directory):
         if not task_list[path_to_bag_file]["video"]:
             reader.read_images_and_save_video(output_folder)
 
-        icp, odom, saved_times_icp, saved_times_odom, first_matrix_icp, first_matrix_odom = reader.read_icp_odom()
+        odom, saved_times_odom, first_matrix_odom = reader.read_odom()
+        icp, saved_times_icp, first_matrix_icp = reader.read_icp()
         point_cloud = list(reader.read_point_cloud())
         joy_control_times = reader.read_joy_topic()
+
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
         transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
         transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp)

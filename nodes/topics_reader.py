@@ -22,7 +22,7 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
-        self.data_availability = {"icp": False, "odom": True, "point_cloud": False,  "video": True, "slam": False}
+        self.data_availability = {"icp": False, "odom": False, "point_cloud": False,  "video": True, "slam": False}
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
@@ -47,40 +47,23 @@ class Reader:
                     yield transformed_vectors
                 except ExtrapolationException:
                     print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
+                    return None
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
                     print(f"Frame {missing_frame} doesn't exist")
+                    return None
 
-    def read_icp_odom(self):
-        icp = []
+    def read_odom(self):
         odom = []
-        saved_times_icp = []
         saved_times_odom = []
-        rotation_matrix_icp = None
         rotation_matrix_odom = None
-        topic_name = self.find_points_topic()
+        topic_name = self.find_odom_topic()
         if topic_name is None:
-            print("The topic lidar posted to was not found")
-            return [None] * 6
-        self.data_availability["point_cloud"] = True
+            print("The topic imu_odom was not found")
+            return [None] * 3
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            try:
-                transform_icp = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
-                                                                  rospy.Duration.from_sec(0.3))
-                icp.append(np.array([[transform_icp.transform.translation.x], [transform_icp.transform.translation.y],
-                                     [transform_icp.transform.translation.z]]))
-                if rotation_matrix_icp is None:
-                    rotation_matrix_icp = transform_icp.transform
-                saved_times_icp.append(save_time)
-                self.data_availability["icp"] = True
-                print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
-            except ExtrapolationException:
-                print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
-            except LookupException as e:
-                missing_frame = str(e).split()[0]
-                print(f"Frame {missing_frame} doesn't exist")
             try:
                 transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
                                                                    rospy.Duration.from_sec(0.3))
@@ -97,8 +80,38 @@ class Reader:
             except LookupException as e:
                 missing_frame = str(e).split()[0]
                 print(f"Frame {missing_frame} doesn't exist")
-        return (np.array(icp), np.array(odom), np.array(saved_times_icp), np.array(saved_times_odom),
-                rotation_matrix_icp, rotation_matrix_odom)
+        return np.array(odom), np.array(saved_times_odom), rotation_matrix_odom
+
+    def read_icp(self):
+        icp = []
+        saved_times_icp = []
+        rotation_matrix_icp = None
+        topic_name = self.find_icp_topic()
+        if topic_name is None:
+            print("The topic icp_odom was not found")
+            return [None] * 3
+        for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
+            time = rospy.Time.from_sec(time.to_sec())
+            save_time = time.to_sec() - self.start_time
+            try:
+                transform_odom = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
+                                                                   rospy.Duration.from_sec(0.3))
+                icp.append(
+                    np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
+                              [transform_odom.transform.translation.z]]))
+                if rotation_matrix_icp is None:
+                    rotation_matrix_icp = transform_odom.transform
+                saved_times_icp.append(save_time)
+                self.data_availability["icp"] = True
+                print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
+            except ExtrapolationException:
+                print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
+                break
+            except LookupException as e:
+                missing_frame = str(e).split()[0]
+                print(f"Frame {missing_frame} doesn't exist")
+                break
+        return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -164,6 +177,12 @@ class Reader:
             if "/points" in topic_name or "/destagerred_points" in topic_name:
                 return topic_name
         return None
+
+    def find_odom_topic(self):
+        return "/points"
+
+    def find_icp_topic(self):
+        return "/points"
 
     def find_camera_topic(self):
         for topic_name, topic_info in self.topics_info.items():
