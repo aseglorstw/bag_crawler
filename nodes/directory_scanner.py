@@ -11,7 +11,8 @@ class DirectoryScanner:
         self.find_bag_files(root_directory)
         for path_to_bag_file in self.paths_to_bag_files:
             task_list_for_one_bag_file = self.check_web_folder(path_to_bag_file)
-            self.task_list[path_to_bag_file] = task_list_for_one_bag_file
+            if self.should_process_bag_file(task_list_for_one_bag_file):
+                self.task_list[path_to_bag_file] = task_list_for_one_bag_file
         return self.task_list
 
     def find_bag_files(self, directory):
@@ -63,3 +64,7 @@ class DirectoryScanner:
                 key, value = line.split()
                 task_template[key] = True if "True" in value else False
         return task_template
+
+    def should_process_bag_file(self, task_list_for_one_bag_file):
+        return (not task_list_for_one_bag_file["icp"] or not task_list_for_one_bag_file["odom"] or
+                not task_list_for_one_bag_file["point_cloud"] or not task_list_for_one_bag_file["video"])

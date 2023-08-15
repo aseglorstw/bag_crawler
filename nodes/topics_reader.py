@@ -60,7 +60,7 @@ class Reader:
         topic_name = self.find_odom_topic()
         if topic_name is None:
             print("The topic imu_odom was not found")
-            return [None] * 3
+            return np.array(odom), np.array(saved_times_odom), rotation_matrix_odom
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
@@ -89,7 +89,7 @@ class Reader:
         topic_name = self.find_icp_topic()
         if topic_name is None:
             print("The topic icp_odom was not found")
-            return [None] * 3
+            return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time

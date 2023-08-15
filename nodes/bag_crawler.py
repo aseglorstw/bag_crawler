@@ -15,19 +15,17 @@ def main(root_directory):
     if not directory_scanner.input_check(root_directory):
         return 1
 
-    task_list = directory_scanner.create_task_list(root_directory)
-    for path_to_bag_file in task_list.keys():
-
-        task_list[path_to_bag_file]["slam"] = False
-        task_list[path_to_bag_file]["video"] = True
-
+    task_lists = directory_scanner.create_task_list(root_directory)
+    print(task_lists)
+    for path_to_bag_file in task_lists.keys():
+        task_list = task_lists[path_to_bag_file]
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
 
         output_folder = directory_scanner.create_output_folder(path_to_bag_file)
-        if task_list[path_to_bag_file]["slam"]:
-            create_transform_odom_to_map(path_to_bag_file, 100)
+        # if task_list[path_to_bag_file]["slam"]:
+        #     create_transform_odom_to_map(path_to_bag_file, 100)
         path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
         loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
 
@@ -37,9 +35,9 @@ def main(root_directory):
         if not task_list[path_to_bag_file]["video"]:
             reader.read_images_and_save_video(output_folder)
 
-        odom, saved_times_odom, first_matrix_odom = reader.read_odom()
-        icp, saved_times_icp, first_matrix_icp = reader.read_icp()
-        point_cloud = list(reader.read_point_cloud())
+        odom, saved_times_odom, first_matrix_odom = reader.read_odom() if not task_list["odom"] else [None] * 3
+        icp, saved_times_icp, first_matrix_icp = reader.read_icp() if not task_list["icp"] else [None] * 3
+        point_cloud = list(reader.read_point_cloud()) if not task_list["point_cloud"] else None
         joy_control_times = reader.read_joy_topic()
 
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
