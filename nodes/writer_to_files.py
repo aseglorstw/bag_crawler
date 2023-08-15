@@ -7,7 +7,6 @@ class Writer:
     def __init__(self, bag, folder):
         self.bag = bag
         self.folder = folder
-        self.data_availability = {"topics": False, "info": False}
 
     def write_bag_info(self, distance_icp, distance_odom, start_of_moving, end_of_moving, average_speed):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
@@ -17,7 +16,6 @@ class Writer:
                        f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n"
                        f"{info_dict['duration']}\n" f"{round((info_dict['size']/pow(10, 9)), 2)}\n"
                        f"{info_dict['messages']}\n")
-            self.data_availability["info"] = True
 
     def write_topics_info(self):
         type_info, topics_info = self.bag.get_type_and_topic_info()
@@ -27,12 +25,10 @@ class Writer:
                 message_count = topic_info.message_count
                 frequency = topic_info.frequency
                 file.write(f"{topic_name} {msg_type} {message_count} {frequency}\n")
-                self.data_availability["topics"] = True
 
     def write_info_on_data_availability(self, data_availability):
-        self.data_availability.update(data_availability)
         with open(f"{self.folder}/data_availability.txt", "w", encoding="utf-8") as file:
-            for key, value in self.data_availability.items():
+            for key, value in data_availability.items():
                 file.write(f"{key} {value}\n")
 
     @staticmethod

@@ -50,8 +50,7 @@ class DirectoryScanner:
 
     @staticmethod
     def check_web_folder(path_to_bag_file):
-        task_template = {"map": False, "odom": False, "base_link": False, "slam": False, "video": False,
-                         "point_cloud": False, "topics": False, "info": False}
+        task_template = {"icp": False, "odom": False, "point_cloud": False,  "video": False, "slam": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
@@ -62,5 +61,5 @@ class DirectoryScanner:
         with open(log_file, "r", encoding="utf-8") as file:
             for line in file:
                 key, value = line.split()
-                task_template[key] = True if "True" in value else "False"
+                task_template[key] = True if "True" in value else False
         return task_template

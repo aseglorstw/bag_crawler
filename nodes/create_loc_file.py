@@ -19,5 +19,3 @@ def create_transform_odom_to_map(path_to_bag_file, duration):
     remove_command = f"rm {full_tf_name}"
     subprocess.run(remove_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-
-create_transform_odom_to_map("/home/robert/catkin_ws/src/bag_crawler/bagfiles/bag_files_husky/husky_2022-09-23-12-38-31.bag", 100)
