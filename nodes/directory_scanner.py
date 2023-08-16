@@ -55,7 +55,7 @@ class DirectoryScanner:
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
             return task_list
-        log_file = os.path.join(web_folder, "data_availability.txt")
+        log_file = os.path.join(web_folder, ".data_availability.txt")
         if not os.path.exists(log_file):
             return task_list
         with open(log_file, "r", encoding="utf-8") as file:

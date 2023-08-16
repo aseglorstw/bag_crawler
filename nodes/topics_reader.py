@@ -69,9 +69,7 @@ class Reader:
             odom.append(np.array([[position.x], [position.y], [position.z]]))
             if rotation_matrix_odom is None:
                 quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-                matrix_4x4 = np.eye(4)
-                matrix_4x4[:3, :3] = np.eye(3)
-                rotation_matrix_odom = matrix_4x4
+                rotation_matrix_odom = quaternion.rotation_matrix
             print(f"The Coordinates from frame 'base_link' to frame 'odom' are saved. Time: {save_time}")
             saved_times_odom.append(save_time)
         return np.array(odom), np.array(saved_times_odom), rotation_matrix_odom
@@ -94,9 +92,7 @@ class Reader:
             icp.append(np.array([[position.x], [position.y], [position.z]]))
             if rotation_matrix_icp is None:
                 quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-                matrix_4x4 = np.eye(4)
-                matrix_4x4[:3, :3] = np.eye(3)
-                rotation_matrix_icp = matrix_4x4
+                rotation_matrix_icp = quaternion.rotation_matrix
                 first_transform_icp = np.array([[position.x], [position.y], [position.z]])
             print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
             saved_times_icp.append(save_time)
