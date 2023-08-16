@@ -35,7 +35,7 @@ def main(root_directory):
         transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp = process_icp(reader, task_list, output_folder)
         transformed_odom, saved_times_odom, first_matrix_odom = process_odom(reader, task_list, output_folder)
         transformed_point_cloud = process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, output_folder)
-        joy_control_times = reader.read_joy_topic()
+        joy_control_coordinates = process_joy_control_times(reader, transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
 
         distances_icp = calculator.get_distances(transformed_icp)
         distances_odom = calculator.get_distances(transformed_odom)
@@ -43,10 +43,6 @@ def main(root_directory):
         speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
         average_speed = calculator.get_average_speed(speeds)
         start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp, saved_times_odom)
-
-        joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, transformed_odom,
-                                                                         joy_control_times, saved_times_icp,
-                                                                         saved_times_odom)
 
         create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom, output_folder,
                       distances_icp, distances_odom, start_of_moving, end_of_moving, transformed_point_cloud,
@@ -93,6 +89,14 @@ def process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp
     point_cloud = list(reader.read_point_cloud())
     transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp)
     return transformed_point_cloud
+
+
+def process_joy_control_times(reader, transformed_icp, transformed_odom, saved_times_icp, saved_times_odom):
+    joy_control_times = reader.read_joy_topic()
+    joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, transformed_odom,
+                                                                     joy_control_times, saved_times_icp,
+                                                                     saved_times_odom)
+    return joy_control_coordinates
 
 
 def create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom, output_folder, distances_icp,
