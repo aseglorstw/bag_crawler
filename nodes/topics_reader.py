@@ -34,18 +34,11 @@ class Reader:
             self.data_availability["point_cloud"] = False
             return None
         save_interval = 20
-        matrix_from_base_link_to_lidar = None
+        matrix_from_base_link_to_lidar = self.get_matrix_from_lidar_to_base_link(topic_name)
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 save_time = time.to_sec() - self.start_time
-                if matrix_from_base_link_to_lidar is None:
-                    transform_base_link_lidar = self.buffer.lookup_transform_full("base_link", time,
-                                                                                  msg.header.frame_id,
-                                                                                  time,
-                                                                                  "base_link",
-                                                                                  rospy.Duration.from_sec(0.3))
-                    matrix_from_base_link_to_lidar = numpify(transform_base_link_lidar.transform)
                 msg = PointCloud2(*self.slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
@@ -213,3 +206,20 @@ class Reader:
     @staticmethod
     def slots(msg):
         return [getattr(msg, var) for var in msg.__slots__]
+
+    def get_matrix_from_lidar_to_base_link(self, topic_name):
+        for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
+            try:
+                transform_base_link_lidar = self.buffer.lookup_transform_full("base_link", time,
+                                                                              msg.header.frame_id,
+                                                                              time,
+                                                                              "base_link",
+                                                                              rospy.Duration.from_sec(0.3))
+                return numpify(transform_base_link_lidar.transform)
+            except ExtrapolationException:
+                print(f"Transformation from lidar coordinate system to base_link was not found.")
+                return None
+            except LookupException as e:
+                missing_frame = str(e).split()[0]
+                print(f"Frame {missing_frame} doesn't exist")
+                return None
