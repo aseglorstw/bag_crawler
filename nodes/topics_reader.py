@@ -23,34 +23,34 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
-        self.data_availability = {"icp": True, "odom": True, "point_cloud": False,  "video": True}
+        self.data_availability = {"icp": True, "odom": True, "point_cloud": True,  "video": True}
+        self.matrices_icp = []
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
             print("The topic lidar posted to was not found")
+            self.data_availability["point_cloud"] = False
             return None
         save_interval = 20
+        matrix_from_base_link_to_lidar = None
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
                 time = rospy.Time.from_sec(time.to_sec())
                 save_time = time.to_sec() - self.start_time
-                try:
-                    msg = PointCloud2(*self.slots(msg))
-                    cloud = np.array(list(read_points(msg)))
-                    transform_map_lidar = self.buffer.lookup_transform_full("map", time, msg.header.frame_id, time,
-                                                                            "map", rospy.Duration.from_sec(0.3))
-                    matrix = numpify(transform_map_lidar.transform)
-                    vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
-                    transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
-                    self.data_availability["point_cloud"] = True
-                    print(f"Point cloud is saved. Time: {save_time}")
-                    yield transformed_vectors
-                except ExtrapolationException:
-                    print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
-                except LookupException as e:
-                    missing_frame = str(e).split()[0]
-                    print(f"Frame {missing_frame} doesn't exist")
+                if matrix_from_base_link_to_lidar is None:
+                    transform_base_link_lidar = self.buffer.lookup_transform_full(msg.header.frame_id, time,
+                                                                                  "base_link",
+                                                                                  time,
+                                                                                  msg.header.frame_id,
+                                                                                  rospy.Duration.from_sec(0.3))
+                    matrix_from_base_link_to_lidar = numpify(transform_base_link_lidar.transform)
+                msg = PointCloud2(*self.slots(msg))
+                cloud = np.array(list(read_points(msg)))
+                vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
+                #transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
+                print(f"Point cloud is saved. Time: {save_time}")
+                yield transformed_vectors
 
     def read_odom(self):
         odom = []
@@ -77,26 +77,27 @@ class Reader:
     def read_icp(self):
         icp = []
         saved_times_icp = []
-        rotation_matrix_icp = None
+        first_rotation_matrix_icp = None
         first_transform_icp = None
         topic_name = self.find_icp_topic()
         if topic_name is None:
             print("The topic icp_odom was not found")
             self.data_availability["icp"] = False
-            return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp
+            return np.array(icp), np.array(saved_times_icp), first_rotation_matrix_icp
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
-            time = rospy.Time.from_sec(time.to_sec())
-            save_time = time.to_sec() - self.start_time
+            save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time
             position = msg.pose.pose.position
             orientation = msg.pose.pose.orientation
+            translation = msg.twist.twist.linear
+            quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+            self.add_matrix_to_matrices_icp(quaternion, translation)
             icp.append(np.array([[position.x], [position.y], [position.z]]))
-            if rotation_matrix_icp is None:
-                quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-                rotation_matrix_icp = quaternion.rotation_matrix
+            if first_rotation_matrix_icp is None:
+                first_rotation_matrix_icp = quaternion.rotation_matrix
                 first_transform_icp = np.array([[position.x], [position.y], [position.z]])
             print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
             saved_times_icp.append(save_time)
-        return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp, first_transform_icp
+        return np.array(icp), np.array(saved_times_icp), first_rotation_matrix_icp, first_transform_icp
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -124,6 +125,12 @@ class Reader:
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
 
+    def add_matrix_to_matrices_icp(self, quaternion, translation):
+        transform_matrix = np.eye(4)
+        transform_matrix[:3, :3] = quaternion.rotation_matrix
+        transform_matrix[:3, 3] = translation
+        self.matrices_icp.append(transform_matrix)
+
     def read_joy_topic(self):
         joy_control_times = []
         topic_name = self.find_joy_topic()
@@ -136,16 +143,13 @@ class Reader:
         return np.array(joy_control_times)
 
     def load_buffer(self):
-        tf_topics = ['/tf', '/tf_static', 'points']
         self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
         for bag in self.bags:
             try:
-                for topic, msg, time in tqdm(bag.read_messages(topics=tf_topics),
-                                             total=bag.get_message_count(topic_filters=tf_topics)):
+                for topic, msg, time in tqdm(bag.read_messages(topics='/tf_static'),
+                                             total=bag.get_message_count(topic_filters='/tf_static')):
                     for tf in msg.transforms:
-                        if topic == '/tf':
-                            self.buffer.set_transform(tf, 'bag')
-                        elif topic == '/tf_static':
+                        if topic == '/tf_static':
                             self.buffer.set_transform_static(tf, 'bag')
             except ROSBagException:
                 print('Could not read')

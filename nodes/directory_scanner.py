@@ -49,7 +49,8 @@ class DirectoryScanner:
                 return os.path.join(directory, file.name)
         return None
 
-    def check_web_folder(self, path_to_bag_file):
+    @staticmethod
+    def check_web_folder(path_to_bag_file):
         task_list = {"icp": False, "odom": False, "point_cloud": False,  "video": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
