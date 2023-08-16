@@ -26,8 +26,8 @@ def main(root_directory):
             continue
 
         output_folder = directory_scanner.create_output_folder(path_to_bag_file)
-        path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
-        loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
+
+        loc_file = process_loc_file(directory_scanner, path_to_bag_file)
 
         print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
@@ -63,6 +63,12 @@ def open_bag_file(path_to_bag_file):
     except Exception as e:
         print(f"When opening the file {path_to_bag_file}, a '{e}' error occurred")
         return None
+
+
+def process_loc_file(directory_scanner, path_to_bag_file):
+    path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
+    loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
+    return loc_file
 
 
 def process_icp(reader, task_list, output_folder):
