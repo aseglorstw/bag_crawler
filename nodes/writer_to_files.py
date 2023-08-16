@@ -27,7 +27,7 @@ class Writer:
                 file.write(f"{topic_name} {msg_type} {message_count} {frequency}\n")
 
     def write_info_on_data_availability(self, data_availability):
-        with open(f"{self.folder}/data_availability.txt", "w", encoding="utf-8") as file:
+        with open(f"{self.folder}/.data_availability.txt", "w", encoding="utf-8") as file:
             for key, value in data_availability.items():
                 file.write(f"{key} {value}\n")
 
@@ -35,9 +35,14 @@ class Writer:
         if odom is not None:
             np.savez(f"{self.folder}/.odom.npz", array1=odom, array2=saved_times_odom, array3=matrix_odom)
 
-    def write_icp_to_file(self, icp, saved_times_icp, matrix_icp):
+    def write_icp_to_file(self, icp, saved_times_icp, matrix_icp, first_transform_icp):
         if icp is not None:
-            np.savez(f"{self.folder}/.icp.npz", array1=icp, array2=saved_times_icp, array3=matrix_icp)
+            np.savez(f"{self.folder}/.icp.npz", array1=icp, array2=saved_times_icp, array3=matrix_icp,
+                     array4=first_transform_icp)
+
+    def write_point_cloud_to_file(self, point_cloud):
+        if point_cloud is not None:
+            np.savez(f"{self.folder}/.point_cloud.npz", array1=point_cloud)
 
     @staticmethod
     def get_date(seconds):

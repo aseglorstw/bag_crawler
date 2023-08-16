@@ -20,59 +20,41 @@ def main(root_directory):
     print(task_lists)
     for path_to_bag_file in task_lists.keys():
         task_list = task_lists[path_to_bag_file]
+
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
 
         output_folder = directory_scanner.create_output_folder(path_to_bag_file)
-        # if task_list["slam"]:
-        #     create_transform_odom_to_map(path_to_bag_file, 100)
         path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
         loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
 
         print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
 
-        # if not task_list["video"]:
-        #     reader.read_images_and_save_video(output_folder)
-
-        odom, saved_times_odom, first_matrix_odom = reader.read_odom()
-        icp, saved_times_icp, first_matrix_icp, first_transform_icp = reader.read_icp()
-        point_cloud = list(reader.read_point_cloud())
+        transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp = process_icp(reader, task_list, output_folder)
+        transformed_odom, saved_times_odom, first_matrix_odom = process_odom(reader, task_list, output_folder)
+        transformed_point_cloud = process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, output_folder)
         joy_control_times = reader.read_joy_topic()
 
-        transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
-        transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
-        transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp)
         distances_icp = calculator.get_distances(transformed_icp)
         distances_odom = calculator.get_distances(transformed_odom)
+
         speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
         average_speed = calculator.get_average_speed(speeds)
         start_of_moving, end_of_moving = calculator.get_start_and_end_of_moving(speeds, saved_times_icp, saved_times_odom)
+
         joy_control_coordinates = calculator.get_joy_control_coordinates(transformed_icp, transformed_odom,
-                                                                joy_control_times, saved_times_icp, saved_times_odom)
+                                                                         joy_control_times, saved_times_icp,
+                                                                         saved_times_odom)
 
-        graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times_odom,saved_times_icp,
-                                                output_folder)
-        graphs_creator.create_graph_y_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
-                                                output_folder)
-        graphs_creator.create_graph_z_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
-                                                output_folder)
-        graphs_creator.create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
-                                                       start_of_moving, end_of_moving, output_folder)
-        graphs_creator.create_graph_xy_and_point_cloud(transformed_odom, transformed_icp, transformed_point_cloud,
-                                                       output_folder)
-        graphs_creator.create_graph_joy_control_times_and_icp(transformed_icp, transformed_odom,
-                                                              joy_control_coordinates, output_folder)
+        create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom, output_folder,
+                      distances_icp, distances_odom, start_of_moving, end_of_moving, transformed_point_cloud,
+                      joy_control_coordinates)
 
-        writer = Writer(bag, output_folder)
-        full_distance_icp = distances_icp[-1] if distances_icp is not None else None
-        full_distance_odom = distances_odom[-1] if distances_odom is not None else None
-        writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
-        writer.write_topics_info()
-        writer.write_info_on_data_availability(reader.get_data_availability())
-        writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom)
-        writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp)
+        write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving,
+                       average_speed, reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom,
+                       first_matrix_icp, first_matrix_odom, transformed_point_cloud, first_transform_icp)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
@@ -85,6 +67,62 @@ def open_bag_file(path_to_bag_file):
     except Exception as e:
         print(f"When opening the file {path_to_bag_file}, a '{e}' error occurred")
         return None
+
+
+def process_icp(reader, task_list, output_folder):
+    if task_list["icp"]:
+        data_icp = np.load(f"{output_folder}/.icp.npz")
+        return data_icp["array1"], data_icp["array2"], data_icp["array3"], data_icp["array4"]
+    icp, saved_times_icp, first_matrix_icp, first_transform_icp = reader.read_icp()
+    transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
+    return transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp
+
+
+def process_odom(reader, task_list, output_folder):
+    if task_list["odom"]:
+        data_odom = np.load(f"{output_folder}/.odom.npz")
+        return data_odom["array1"], data_odom["array2"], data_odom["array3"]
+    odom, saved_times_odom, first_matrix_odom = reader.read_odom()
+    transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
+    return transformed_odom, saved_times_odom, first_matrix_odom
+
+
+def process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, output_folder):
+    if task_list["point_cloud"]:
+        return np.load(f"{output_folder}/.point_cloud.npz")["array1"]
+    point_cloud = list(reader.read_point_cloud())
+    transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp)
+    return transformed_point_cloud
+
+
+def create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom, output_folder, distances_icp,
+                  distances_odom, start_of_moving, end_of_moving, transformed_point_cloud, joy_control_coordinates):
+    graphs_creator.create_graph_x_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
+                                            output_folder)
+    graphs_creator.create_graph_y_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
+                                            output_folder)
+    graphs_creator.create_graph_z_over_time(transformed_odom, transformed_icp, saved_times_odom, saved_times_icp,
+                                            output_folder)
+    graphs_creator.create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
+                                                   start_of_moving, end_of_moving, output_folder)
+    graphs_creator.create_graph_xy_and_point_cloud(transformed_odom, transformed_icp, transformed_point_cloud,
+                                                   output_folder)
+    graphs_creator.create_graph_joy_control_times_and_icp(transformed_icp, transformed_odom,
+                                                          joy_control_coordinates, output_folder)
+
+
+def write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving, average_speed,
+                   reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom, first_matrix_icp,
+                   first_matrix_odom, transformed_point_cloud, first_transform_icp):
+    writer = Writer(bag, output_folder)
+    full_distance_icp = distances_icp[-1] if distances_icp is not None else None
+    full_distance_odom = distances_odom[-1] if distances_odom is not None else None
+    writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
+    writer.write_topics_info()
+    writer.write_info_on_data_availability(reader.get_data_availability())
+    writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom)
+    writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp)
+    writer.write_point_cloud_to_file(transformed_point_cloud)
 
 
 def close_bag_file(bag, path_to_bag_file):

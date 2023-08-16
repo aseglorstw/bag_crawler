@@ -23,7 +23,7 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
-        self.data_availability = {"icp": False, "odom": False, "point_cloud": False,  "video": True, "slam": False}
+        self.data_availability = {"icp": True, "odom": True, "point_cloud": False,  "video": True, "slam": False}
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
@@ -59,6 +59,7 @@ class Reader:
         topic_name = self.find_odom_topic()
         if topic_name is None:
             print("The topic imu_odom was not found")
+            self.data_availability["odom"] = False
             return np.array(odom), np.array(saved_times_odom), rotation_matrix_odom
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
@@ -83,6 +84,7 @@ class Reader:
         topic_name = self.find_icp_topic()
         if topic_name is None:
             print("The topic icp_odom was not found")
+            self.data_availability["icp"] = False
             return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
