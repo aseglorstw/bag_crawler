@@ -25,6 +25,7 @@ class Reader:
         self.load_buffer()
         self.data_availability = {"icp": True, "odom": True, "point_cloud": True,  "video": True}
         self.matrices_icp = []
+        self.saved_times_icp = []
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()
@@ -39,16 +40,17 @@ class Reader:
                 time = rospy.Time.from_sec(time.to_sec())
                 save_time = time.to_sec() - self.start_time
                 if matrix_from_base_link_to_lidar is None:
-                    transform_base_link_lidar = self.buffer.lookup_transform_full(msg.header.frame_id, time,
-                                                                                  "base_link",
-                                                                                  time,
+                    transform_base_link_lidar = self.buffer.lookup_transform_full("base_link", time,
                                                                                   msg.header.frame_id,
+                                                                                  time,
+                                                                                  "base_link",
                                                                                   rospy.Duration.from_sec(0.3))
                     matrix_from_base_link_to_lidar = numpify(transform_base_link_lidar.transform)
                 msg = PointCloud2(*self.slots(msg))
                 cloud = np.array(list(read_points(msg)))
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
-                #transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
+                matrix = self.get_matrix_from_lidar_to_static_frame(matrix_from_base_link_to_lidar, save_time)
+                transformed_vectors = matrix[:3, :3] @ vectors + matrix[:3, 3:4]
                 print(f"Point cloud is saved. Time: {save_time}")
                 yield transformed_vectors
 
@@ -88,15 +90,15 @@ class Reader:
             save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time
             position = msg.pose.pose.position
             orientation = msg.pose.pose.orientation
-            translation = msg.twist.twist.linear
             quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-            self.add_matrix_to_matrices_icp(quaternion, translation)
+            self.add_matrix_to_matrices_icp(quaternion, position)
             icp.append(np.array([[position.x], [position.y], [position.z]]))
             if first_rotation_matrix_icp is None:
                 first_rotation_matrix_icp = quaternion.rotation_matrix
                 first_transform_icp = np.array([[position.x], [position.y], [position.z]])
             print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
             saved_times_icp.append(save_time)
+        self.saved_times_icp = np.array(saved_times_icp)
         return np.array(icp), np.array(saved_times_icp), first_rotation_matrix_icp, first_transform_icp
 
     def read_images_and_save_video(self, folder):
@@ -125,11 +127,17 @@ class Reader:
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
 
-    def add_matrix_to_matrices_icp(self, quaternion, translation):
+    def add_matrix_to_matrices_icp(self, quaternion, position):
         transform_matrix = np.eye(4)
         transform_matrix[:3, :3] = quaternion.rotation_matrix
-        transform_matrix[:3, 3] = translation
+        transform_matrix[0, 3] = position.x
+        transform_matrix[1, 3] = position.y
+        transform_matrix[2, 3] = position.z
         self.matrices_icp.append(transform_matrix)
+
+    def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
+        matrix_icp = self.matrices_icp[np.unique(np.searchsorted(self.saved_times_icp, save_time))[0]]
+        return matrix_icp @ matrix_base_link_lidar
 
     def read_joy_topic(self):
         joy_control_times = []
