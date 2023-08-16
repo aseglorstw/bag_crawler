@@ -23,7 +23,7 @@ class Reader:
         self.topics_info = self.bags[0].get_type_and_topic_info()[1]
         rospy.init_node('tf_listener')
         self.load_buffer()
-        self.data_availability = {"icp": True, "odom": True, "point_cloud": False,  "video": True, "slam": False}
+        self.data_availability = {"icp": True, "odom": True, "point_cloud": False,  "video": True}
 
     def read_point_cloud(self):
         topic_name = self.find_points_topic()

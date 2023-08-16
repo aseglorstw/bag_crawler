@@ -50,7 +50,7 @@ class DirectoryScanner:
         return None
 
     def check_web_folder(self, path_to_bag_file):
-        task_list = {"icp": False, "odom": False, "point_cloud": False,  "video": False, "slam": False}
+        task_list = {"icp": False, "odom": False, "point_cloud": False,  "video": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
@@ -62,15 +62,9 @@ class DirectoryScanner:
             for line in file:
                 key, value = line.split()
                 task_list[key] = True if "True" in value else False
-            if self.should_start_slam(task_list):
-                task_list["slam"] = True
         return task_list
 
     @staticmethod
     def should_process_bag_file(task_list):
         return (not task_list["icp"] or not task_list["odom"] or
                 not task_list["point_cloud"] or not task_list["video"])
-
-    @staticmethod
-    def should_start_slam(task_list):
-        return not task_list["icp"] and not task_list["slam"]

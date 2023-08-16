@@ -7,7 +7,6 @@ from topics_reader import Reader
 import graphs_creator
 import calculator
 from writer_to_files import Writer
-from create_loc_file import create_transform_odom_to_map
 import numpy as np
 
 
