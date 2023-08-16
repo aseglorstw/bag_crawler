@@ -1,7 +1,7 @@
 import yaml
 import os
 import datetime
-
+import numpy as np
 
 class Writer:
     def __init__(self, bag, folder):
@@ -30,6 +30,14 @@ class Writer:
         with open(f"{self.folder}/data_availability.txt", "w", encoding="utf-8") as file:
             for key, value in data_availability.items():
                 file.write(f"{key} {value}\n")
+
+    def write_odom_to_file(self, odom, saved_times_odom, matrix_odom):
+        if odom is not None:
+            np.savez(f"{self.folder}/.odom.npz", array1=odom, array2=saved_times_odom, array3=matrix_odom)
+
+    def write_icp_to_file(self, icp, saved_times_icp, matrix_icp):
+        if icp is not None:
+            np.savez(f"{self.folder}/.icp.npz", array1=icp, array2=saved_times_icp, array3=matrix_icp)
 
     @staticmethod
     def get_date(seconds):

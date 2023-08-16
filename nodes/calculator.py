@@ -54,18 +54,17 @@ def get_joy_control_coordinates(icp, odom, joy_control_times, saved_times_icp, s
 def transform_trajectory(coordinates, matrix):
     if len(coordinates) == 0:
         return None
-    inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
+    inv_matrix = np.linalg.inv(matrix[:3, :3])
     coordinates = np.concatenate(coordinates, axis=1)
     transformed_coordinates = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
     return transformed_coordinates
 
 
-def transform_point_cloud(point_cloud, matrix):
+def transform_point_cloud(point_cloud, matrix, first_transform):
     if len(point_cloud) == 0 or matrix is None:
         return None
-    inv_matrix = np.linalg.inv(numpify(matrix)[:3, :3])
+    inv_matrix = np.linalg.inv(matrix[:3, :3])
     point_cloud = np.concatenate(point_cloud, axis=1)
-    first_transform = np.array([[matrix.translation.x], [matrix.translation.y], [matrix.translation.z]])
     transformed_point_cloud = inv_matrix @ point_cloud - inv_matrix @ first_transform
     return transformed_point_cloud
 

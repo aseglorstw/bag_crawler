@@ -8,6 +8,7 @@ import graphs_creator
 import calculator
 from writer_to_files import Writer
 from create_loc_file import create_transform_odom_to_map
+import numpy as np
 
 
 def main(root_directory):
@@ -24,7 +25,7 @@ def main(root_directory):
             continue
 
         output_folder = directory_scanner.create_output_folder(path_to_bag_file)
-        # if task_list[path_to_bag_file]["slam"]:
+        # if task_list["slam"]:
         #     create_transform_odom_to_map(path_to_bag_file, 100)
         path_to_loc_file = directory_scanner.find_loc_file(path_to_bag_file)
         loc_file = open_bag_file(path_to_loc_file) if path_to_loc_file is not None else None
@@ -32,17 +33,17 @@ def main(root_directory):
         print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
 
-        if not task_list[path_to_bag_file]["video"]:
-            reader.read_images_and_save_video(output_folder)
+        # if not task_list["video"]:
+        #     reader.read_images_and_save_video(output_folder)
 
-        odom, saved_times_odom, first_matrix_odom = reader.read_odom() if not task_list["odom"] else [None] * 3
-        icp, saved_times_icp, first_matrix_icp = reader.read_icp() if not task_list["icp"] else [None] * 3
-        point_cloud = list(reader.read_point_cloud()) if not task_list["point_cloud"] else None
+        odom, saved_times_odom, first_matrix_odom = reader.read_odom()
+        icp, saved_times_icp, first_matrix_icp, first_transform_icp = reader.read_icp()
+        point_cloud = list(reader.read_point_cloud())
         joy_control_times = reader.read_joy_topic()
 
         transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
         transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
-        transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp)
+        transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp)
         distances_icp = calculator.get_distances(transformed_icp)
         distances_odom = calculator.get_distances(transformed_odom)
         speeds = calculator.get_speeds_one_period(transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
@@ -70,6 +71,8 @@ def main(root_directory):
         writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
         writer.write_topics_info()
         writer.write_info_on_data_availability(reader.get_data_availability())
+        writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom)
+        writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")

@@ -11,6 +11,7 @@ from tf2_ros import LookupException
 import cv2
 import datetime
 from sensor_msgs.msg import CompressedImage
+from pyquaternion import Quaternion
 
 
 class Reader:
@@ -47,11 +48,9 @@ class Reader:
                     yield transformed_vectors
                 except ExtrapolationException:
                     print(f"Transformation from lidar coordinate system to map was not found. Time: {save_time}")
-                    return None
                 except LookupException as e:
                     missing_frame = str(e).split()[0]
                     print(f"Frame {missing_frame} doesn't exist")
-                    return None
 
     def read_odom(self):
         odom = []
@@ -64,28 +63,23 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            try:
-                transform_odom = self.buffer.lookup_transform_full("odom", time, "base_link", time, "odom",
-                                                                   rospy.Duration.from_sec(0.3))
-                odom.append(
-                    np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                              [transform_odom.transform.translation.z]]))
-                if rotation_matrix_odom is None:
-                    rotation_matrix_odom = transform_odom.transform
-                saved_times_odom.append(save_time)
-                self.data_availability["odom"] = True
-                print(f"The coordinates of the robot relative to the 'odom' frame are saved.Time: {save_time}")
-            except ExtrapolationException:
-                print(f"The coordinates of the robot relative to the 'odom' frame aren't saved.Time: {save_time}")
-            except LookupException as e:
-                missing_frame = str(e).split()[0]
-                print(f"Frame {missing_frame} doesn't exist")
+            position = msg.pose.pose.position
+            orientation = msg.pose.pose.orientation
+            odom.append(np.array([[position.x], [position.y], [position.z]]))
+            if rotation_matrix_odom is None:
+                quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+                matrix_4x4 = np.eye(4)
+                matrix_4x4[:3, :3] = np.eye(3)
+                rotation_matrix_odom = matrix_4x4
+            print(f"The Coordinates from frame 'base_link' to frame 'odom' are saved. Time: {save_time}")
+            saved_times_odom.append(save_time)
         return np.array(odom), np.array(saved_times_odom), rotation_matrix_odom
 
     def read_icp(self):
         icp = []
         saved_times_icp = []
         rotation_matrix_icp = None
+        first_transform_icp = None
         topic_name = self.find_icp_topic()
         if topic_name is None:
             print("The topic icp_odom was not found")
@@ -93,25 +87,18 @@ class Reader:
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             save_time = time.to_sec() - self.start_time
-            try:
-                transform_odom = self.buffer.lookup_transform_full("map", time, "base_link", time, "map",
-                                                                   rospy.Duration.from_sec(0.3))
-                icp.append(
-                    np.array([[transform_odom.transform.translation.x], [transform_odom.transform.translation.y],
-                              [transform_odom.transform.translation.z]]))
-                if rotation_matrix_icp is None:
-                    rotation_matrix_icp = transform_odom.transform
-                saved_times_icp.append(save_time)
-                self.data_availability["icp"] = True
-                print(f"The coordinates of the robot relative to the 'map' frame are saved.Time: {save_time}")
-            except ExtrapolationException:
-                print(f"The coordinates of the robot relative to the 'map' frame aren't saved.Time: {save_time}")
-                break
-            except LookupException as e:
-                missing_frame = str(e).split()[0]
-                print(f"Frame {missing_frame} doesn't exist")
-                break
-        return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp
+            position = msg.pose.pose.position
+            orientation = msg.pose.pose.orientation
+            icp.append(np.array([[position.x], [position.y], [position.z]]))
+            if rotation_matrix_icp is None:
+                quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+                matrix_4x4 = np.eye(4)
+                matrix_4x4[:3, :3] = np.eye(3)
+                rotation_matrix_icp = matrix_4x4
+                first_transform_icp = np.array([[position.x], [position.y], [position.z]])
+            print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
+            saved_times_icp.append(save_time)
+        return np.array(icp), np.array(saved_times_icp), rotation_matrix_icp, first_transform_icp
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -179,10 +166,16 @@ class Reader:
         return None
 
     def find_odom_topic(self):
-        return "/points"
+        for topic_name, topic_info in self.topics_info.items():
+            if "/imu_and_wheel_odom" in topic_name:
+                return topic_name
+        return None
 
     def find_icp_topic(self):
-        return "/points"
+        for topic_name, topic_info in self.topics_info.items():
+            if "/icp_odom" in topic_name:
+                return topic_name
+        return None
 
     def find_camera_topic(self):
         for topic_name, topic_info in self.topics_info.items():

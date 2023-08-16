@@ -4,16 +4,16 @@ import os
 
 class DirectoryScanner:
     def __init__(self):
-        self.task_list = {}
+        self.task_lists = {}
         self.paths_to_bag_files = []
 
     def create_task_list(self, root_directory):
         self.find_bag_files(root_directory)
         for path_to_bag_file in self.paths_to_bag_files:
-            task_list_for_one_bag_file = self.check_web_folder(path_to_bag_file)
-            if self.should_process_bag_file(task_list_for_one_bag_file):
-                self.task_list[path_to_bag_file] = task_list_for_one_bag_file
-        return self.task_list
+            task_list = self.check_web_folder(path_to_bag_file)
+            if self.should_process_bag_file(task_list):
+                self.task_lists[path_to_bag_file] = task_list
+        return self.task_lists
 
     def find_bag_files(self, directory):
         stop_suffixes = ["_loc", "params", "no_sensors"]
@@ -49,22 +49,28 @@ class DirectoryScanner:
                 return os.path.join(directory, file.name)
         return None
 
-    @staticmethod
-    def check_web_folder(path_to_bag_file):
-        task_template = {"icp": False, "odom": False, "point_cloud": False,  "video": False, "slam": False}
+    def check_web_folder(self, path_to_bag_file):
+        task_list = {"icp": False, "odom": False, "point_cloud": False,  "video": False, "slam": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
-            return task_template
+            return task_list
         log_file = os.path.join(web_folder, "data_availability.txt")
         if not os.path.exists(log_file):
-            return task_template
+            return task_list
         with open(log_file, "r", encoding="utf-8") as file:
             for line in file:
                 key, value = line.split()
-                task_template[key] = True if "True" in value else False
-        return task_template
+                task_list[key] = True if "True" in value else False
+            if self.should_start_slam(task_list):
+                task_list["slam"] = True
+        return task_list
 
-    def should_process_bag_file(self, task_list_for_one_bag_file):
-        return (not task_list_for_one_bag_file["icp"] or not task_list_for_one_bag_file["odom"] or
-                not task_list_for_one_bag_file["point_cloud"] or not task_list_for_one_bag_file["video"])
+    @staticmethod
+    def should_process_bag_file(task_list):
+        return (not task_list["icp"] or not task_list["odom"] or
+                not task_list["point_cloud"] or not task_list["video"])
+
+    @staticmethod
+    def should_start_slam(task_list):
+        return not task_list["icp"] and not task_list["slam"]
