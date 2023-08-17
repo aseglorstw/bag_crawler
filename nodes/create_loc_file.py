@@ -18,4 +18,3 @@ def create_transform_odom_to_map(path_to_bag_file, duration):
     subprocess.run(filter_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     remove_command = f"rm {full_tf_name}"
     subprocess.run(remove_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
