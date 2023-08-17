@@ -45,6 +45,8 @@ class Reader:
                 cloud = np.array(list(read_points(msg)))
                 vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
                 matrix_lidar_static_frame = self.get_matrix_from_lidar_to_static_frame(matrix_lidar_base_link, save_time)
+                if matrix_lidar_static_frame is None:
+                    continue
                 transformed_vectors = matrix_lidar_static_frame[:3, :3] @ vectors + matrix_lidar_static_frame[:3, 3:4]
                 print(f"Point cloud is saved. Time: {save_time}")
                 yield transformed_vectors
@@ -52,6 +54,7 @@ class Reader:
     def read_odom(self):
         odom = []
         first_rotation_matrix_odom = None
+        first_transform_odom = None
         topic_name = self.find_odom_topic()
         if topic_name is None:
             print("The topic imu_odom was not found")
@@ -68,11 +71,11 @@ class Reader:
                                                                self.matrices_base_link_odom)
             odom.append(np.array([[position.x], [position.y], [position.z]]))
             if first_rotation_matrix_odom is None:
-                quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
                 first_rotation_matrix_odom = quaternion.rotation_matrix
+                first_transform_odom = np.array([[position.x], [position.y], [position.z]])
             print(f"The Coordinates from frame 'base_link' to frame 'odom' are saved. Time: {save_time}")
             self.saved_times_odom.append(save_time)
-        return np.array(odom), np.array(self.saved_times_odom), first_rotation_matrix_odom
+        return np.array(odom), np.array(self.saved_times_odom), first_rotation_matrix_odom, first_transform_odom
 
     def read_icp(self):
         icp = []
@@ -82,7 +85,7 @@ class Reader:
         if topic_name is None:
             print("The topic icp_odom was not found")
             self.data_availability["icp"] = False
-            return np.array(icp), np.array(self.saved_times_icp), first_rotation_matrix_icp
+            return np.array(icp), np.array(self.saved_times_icp), first_rotation_matrix_icp, first_transform_icp
         for topic, msg, time in self.bags[0].read_messages(topics=[topic_name]):
             save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time
             position = msg.pose.pose.position
@@ -192,8 +195,14 @@ class Reader:
         return self.data_availability
 
     def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
-        matrix_icp = self.matrices_base_link_map[np.unique(np.searchsorted(self.saved_times_icp, save_time))[0]]
-        return matrix_icp @ matrix_base_link_lidar
+        index = np.unique(np.searchsorted(self.saved_times_icp, save_time))[0]
+        if 0 <= index < len(self.matrices_base_link_map) and len(self.matrices_base_link_map) > 0:
+            matrix_lidar_static_frame = self.matrices_base_link_map[index]
+        elif 0 <= index < len(self.matrices_base_link_odom) and len(self.matrices_base_link_odom) > 0:
+            matrix_lidar_static_frame = self.matrices_base_link_odom[index]
+        else:
+            return None
+        return matrix_lidar_static_frame @ matrix_base_link_lidar
 
     def get_matrix_from_lidar_to_base_link(self, topic_name):
         for msg_number, (topic, msg, time) in enumerate(self.bags[0].read_messages(topics=[topic_name])):

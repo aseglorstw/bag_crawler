@@ -31,18 +31,19 @@ class Writer:
             for key, value in data_availability.items():
                 file.write(f"{key} {value}\n")
 
-    def write_odom_to_file(self, odom, saved_times_odom, matrix_odom):
+    def write_odom_to_file(self, odom, saved_times_odom, matrix_odom, first_transform_odom):
         if odom is not None:
-            np.savez(f"{self.folder}/.odom.npz", array1=odom, array2=saved_times_odom, array3=matrix_odom)
+            np.savez(f"{self.folder}/.odom.npz", coordinates=odom, saved_times=saved_times_odom, first_matrix=matrix_odom,
+                     first_transform=first_transform_odom)
 
     def write_icp_to_file(self, icp, saved_times_icp, matrix_icp, first_transform_icp):
         if icp is not None:
-            np.savez(f"{self.folder}/.icp.npz", array1=icp, array2=saved_times_icp, array3=matrix_icp,
-                     array4=first_transform_icp)
+            np.savez(f"{self.folder}/.icp.npz", coordinates=icp, saved_times=saved_times_icp, first_matrix=matrix_icp,
+                     first_transform=first_transform_icp)
 
     def write_point_cloud_to_file(self, point_cloud):
         if point_cloud is not None:
-            np.savez(f"{self.folder}/.point_cloud.npz", array1=point_cloud)
+            np.savez(f"{self.folder}/.point_cloud.npz", point_cloud=point_cloud)
 
     @staticmethod
     def get_date(seconds):

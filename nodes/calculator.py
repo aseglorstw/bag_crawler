@@ -43,7 +43,7 @@ def get_joy_control_coordinates(icp, odom, joy_control_times, saved_times_icp, s
     saved_times = saved_times_icp if icp is not None else saved_times_odom
     coordinates = icp if icp is not None else odom
     indices = np.unique(np.searchsorted(saved_times, joy_control_times))
-    split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 1)[0], [len(indices) - 1]))
+    split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 5)[0], [len(indices) - 1]))
     split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
     control_coordinates = []
     for indices in split_indices:
@@ -60,9 +60,11 @@ def transform_trajectory(coordinates, matrix):
     return transformed_coordinates
 
 
-def transform_point_cloud(point_cloud, matrix, first_transform):
-    if len(point_cloud) == 0 or matrix is None:
+def transform_point_cloud(point_cloud, matrix_icp, first_transform_icp, matrix_odom, first_transform_odom):
+    if len(point_cloud) == 0 or (matrix_icp is None and matrix_odom is None):
         return None
+    matrix = matrix_icp if matrix_icp is not None else matrix_odom
+    first_transform = first_transform_icp if first_transform_icp is not None else first_transform_odom
     inv_matrix = np.linalg.inv(matrix[:3, :3])
     point_cloud = np.concatenate(point_cloud, axis=1)
     transformed_point_cloud = inv_matrix @ point_cloud - inv_matrix @ first_transform

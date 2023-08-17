@@ -32,8 +32,8 @@ def main(root_directory):
         reader = Reader(bag, loc_file)
 
         transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp = process_icp(reader, task_list, output_folder)
-        transformed_odom, saved_times_odom, first_matrix_odom = process_odom(reader, task_list, output_folder)
-        transformed_point_cloud = process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, output_folder)
+        transformed_odom, saved_times_odom, first_matrix_odom, first_transform_odom = process_odom(reader, task_list, output_folder)
+        transformed_point_cloud = process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, first_matrix_odom, first_transform_odom, output_folder)
         joy_control_coordinates = process_joy_control_times(reader, transformed_icp, transformed_odom, saved_times_icp, saved_times_odom)
 
         distances_icp = calculator.get_distances(transformed_icp)
@@ -49,7 +49,8 @@ def main(root_directory):
 
         write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving,
                        average_speed, reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom,
-                       first_matrix_icp, first_matrix_odom, transformed_point_cloud, first_transform_icp)
+                       first_matrix_icp, first_matrix_odom, transformed_point_cloud, first_transform_icp,
+                       first_transform_odom)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
@@ -83,16 +84,18 @@ def process_odom(reader, task_list, output_folder):
     if task_list["odom"]:
         data_odom = np.load(f"{output_folder}/.odom.npz")
         return data_odom["array1"], data_odom["array2"], data_odom["array3"]
-    odom, saved_times_odom, first_matrix_odom = reader.read_odom()
+    odom, saved_times_odom, first_matrix_odom, first_transform_odom = reader.read_odom()
     transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
-    return transformed_odom, saved_times_odom, first_matrix_odom
+    return transformed_odom, saved_times_odom, first_matrix_odom, first_transform_odom
 
 
-def process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, output_folder):
+def process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, first_matrix_odom,
+                        first_transform_odom, output_folder):
     if task_list["point_cloud"]:
         return np.load(f"{output_folder}/.point_cloud.npz")["array1"]
     point_cloud = list(reader.read_point_cloud())
-    transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp)
+    transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp,
+                                                               first_matrix_odom, first_transform_odom)
     return transformed_point_cloud
 
 
@@ -122,14 +125,14 @@ def create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_time
 
 def write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving, average_speed,
                    reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom, first_matrix_icp,
-                   first_matrix_odom, transformed_point_cloud, first_transform_icp):
+                   first_matrix_odom, transformed_point_cloud, first_transform_icp, first_transform_odom):
     writer = Writer(bag, output_folder)
     full_distance_icp = distances_icp[-1] if distances_icp is not None else None
     full_distance_odom = distances_odom[-1] if distances_odom is not None else None
     writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
     writer.write_topics_info()
     writer.write_info_on_data_availability(reader.get_data_availability())
-    writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom)
+    writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom, first_matrix_odom)
     writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp)
     writer.write_point_cloud_to_file(transformed_point_cloud)
 
