@@ -35,7 +35,7 @@ class DirectoryScanner:
         return True
 
     @staticmethod
-    def create_output_folder(path_to_bag_file):
+    def create_web_folder(path_to_bag_file):
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not os.path.exists(web_folder):
