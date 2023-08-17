@@ -1,3 +1,4 @@
+
 def read_point_cloud(self):
         topic_name = self.find_points_topic()
         if topic_name is None:
