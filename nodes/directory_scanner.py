@@ -3,6 +3,7 @@ import os
 
 
 class DirectoryScanner:
+
     def __init__(self):
         self.task_lists = {}
         self.paths_to_bag_files = []
