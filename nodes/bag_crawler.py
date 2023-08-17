@@ -31,6 +31,8 @@ def main(root_directory):
         print(f"Start processing file {path_to_bag_file}")
         reader = Reader(bag, loc_file)
 
+        if not task_list["video"]:
+            reader.read_images_and_save_video(output_folder)
         transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp = process_icp(reader, task_list, output_folder)
         transformed_odom, saved_times_odom, first_matrix_odom, first_transform_odom = process_odom(reader, task_list, output_folder)
         transformed_point_cloud = process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, first_matrix_odom, first_transform_odom, output_folder)
@@ -50,7 +52,7 @@ def main(root_directory):
         write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving,
                        average_speed, reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom,
                        first_matrix_icp, first_matrix_odom, transformed_point_cloud, first_transform_icp,
-                       first_transform_odom)
+                       first_transform_odom, task_list)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
@@ -125,16 +127,19 @@ def create_graphs(transformed_icp, transformed_odom, saved_times_icp, saved_time
 
 def write_to_files(bag, output_folder, distances_icp,  distances_odom, start_of_moving, end_of_moving, average_speed,
                    reader, transformed_odom, transformed_icp, saved_times_icp, saved_times_odom, first_matrix_icp,
-                   first_matrix_odom, transformed_point_cloud, first_transform_icp, first_transform_odom):
+                   first_matrix_odom, transformed_point_cloud, first_transform_icp, first_transform_odom, task_list):
     writer = Writer(bag, output_folder)
     full_distance_icp = distances_icp[-1] if distances_icp is not None else None
     full_distance_odom = distances_odom[-1] if distances_odom is not None else None
     writer.write_bag_info(full_distance_icp, full_distance_odom, start_of_moving, end_of_moving, average_speed)
     writer.write_topics_info()
     writer.write_info_on_data_availability(reader.get_data_availability())
-    writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom, first_matrix_odom)
-    writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp)
-    writer.write_point_cloud_to_file(transformed_point_cloud)
+    if not task_list["odom"]:
+        writer.write_odom_to_file(transformed_odom, saved_times_odom, first_matrix_odom, first_transform_odom)
+    if not task_list["icp"]:
+        writer.write_icp_to_file(transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp)
+    if not task_list["point_cloud"]:
+        writer.write_point_cloud_to_file(transformed_point_cloud)
 
 
 def close_bag_file(bag, path_to_bag_file):
