@@ -26,24 +26,38 @@ class Writer:
                 frequency = topic_info.frequency
                 file.write(f"{topic_name} {msg_type} {message_count} {frequency}\n")
 
-    def write_info_on_data_availability(self, data_availability):
+    def write_video_to_file(self, is_video):
         with open(f"{self.folder}/.data_availability.txt", "w", encoding="utf-8") as file:
-            for key, value in data_availability.items():
-                file.write(f"{key} {value}\n")
+            if is_video:
+                file.write('video True\n')
+            else:
+                file.write('video False\n')
 
-    def write_odom_to_file(self, odom, saved_times_odom, matrix_odom, first_transform_odom):
-        if odom is not None:
-            np.savez(f"{self.folder}/.odom.npz", coordinates=odom, saved_times=saved_times_odom, first_matrix=matrix_odom,
-                     first_transform=first_transform_odom)
+    def write_odom_to_file(self, odom, saved_times_odom, matrix_odom, first_transform_odom, matrices_odom):
+        with open(f"{self.folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
+            if odom is not None:
+                file.write('odom True\n')
+                np.savez(f"{self.folder}/.odom.npz", coordinates=odom, saved_times=saved_times_odom, first_matrix=matrix_odom,
+                         first_transform=first_transform_odom, matrices=matrices_odom)
+            else:
+                file.write('odom False\n')
 
-    def write_icp_to_file(self, icp, saved_times_icp, matrix_icp, first_transform_icp):
-        if icp is not None:
-            np.savez(f"{self.folder}/.icp.npz", coordinates=icp, saved_times=saved_times_icp, first_matrix=matrix_icp,
-                     first_transform=first_transform_icp)
+    def write_icp_to_file(self, icp, saved_times_icp, matrix_icp, first_transform_icp, matrices_icp):
+        with open(f"{self.folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
+            if icp is not None:
+                file.write('icp True\n')
+                np.savez(f"{self.folder}/.icp.npz", coordinates=icp, saved_times=saved_times_icp, first_matrix=matrix_icp,
+                         first_transform=first_transform_icp, matrices=matrices_icp)
+            else:
+                file.write('icp False\n')
 
     def write_point_cloud_to_file(self, point_cloud):
-        if point_cloud is not None:
-            np.savez(f"{self.folder}/.point_cloud.npz", point_cloud=point_cloud)
+        with open(f"{self.folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
+            if point_cloud is not None:
+                file.write('point_cloud True\n')
+                np.savez(f"{self.folder}/.point_cloud.npz", point_cloud=point_cloud)
+            else:
+                file.write('point_cloud False\n')
 
     @staticmethod
     def get_date(seconds):

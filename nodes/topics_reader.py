@@ -109,7 +109,7 @@ class Reader:
         if topic_names[0] is None:
             self.data_availability["video"] = False
             print("The topic in which messages from the camera are posted was not found")
-            return None
+            return False
         for topic_name in topic_names:
             fps = self.calculate_fps(topic_name, save_interval)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
@@ -127,6 +127,7 @@ class Reader:
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
+        return True
 
     def read_joy_topic(self):
         joy_control_times = []
