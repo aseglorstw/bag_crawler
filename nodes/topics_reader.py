@@ -190,16 +190,16 @@ class Reader:
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
     def get_data_availability(self):
-        if not self.data_availability["icp"] or not self.data_availability["point_cloud"]:
-            self.data_availability["slam"] = True
         return self.data_availability
 
     def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
-        index = np.unique(np.searchsorted(self.saved_times_icp, save_time))[0]
-        if 0 <= index < len(self.matrices_base_link_map) and len(self.matrices_base_link_map) > 0:
-            matrix_lidar_static_frame = self.matrices_base_link_map[index]
-        elif 0 <= index < len(self.matrices_base_link_odom) and len(self.matrices_base_link_odom) > 0:
-            matrix_lidar_static_frame = self.matrices_base_link_odom[index]
+        index_icp = np.unique(np.searchsorted(self.saved_times_icp, save_time))[0]
+        index_odom = np.unique(np.searchsorted(self.saved_times_odom, save_time))[0]
+        if 0 <= index_icp < len(self.matrices_base_link_map) and len(self.matrices_base_link_map) > 0:
+            matrix_lidar_static_frame = self.matrices_base_link_map[index_icp]
+        elif (0 <= index_odom < len(self.matrices_base_link_odom) and len(self.matrices_base_link_odom) > 0 and
+              not self.data_availability["icp"]):
+            matrix_lidar_static_frame = self.matrices_base_link_odom[index_odom]
         else:
             return None
         return matrix_lidar_static_frame @ matrix_base_link_lidar

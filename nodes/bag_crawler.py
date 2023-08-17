@@ -74,7 +74,7 @@ def process_loc_file(directory_scanner, path_to_bag_file):
 def process_icp(reader, task_list, output_folder):
     if task_list["icp"]:
         data_icp = np.load(f"{output_folder}/.icp.npz")
-        return data_icp["array1"], data_icp["array2"], data_icp["array3"], data_icp["array4"]
+        return data_icp["coordinates"], data_icp["saved_times"], data_icp["first_matrix"], data_icp["first_transform"]
     icp, saved_times_icp, first_matrix_icp, first_transform_icp = reader.read_icp()
     transformed_icp = calculator.transform_trajectory(icp, first_matrix_icp)
     return transformed_icp, saved_times_icp, first_matrix_icp, first_transform_icp
@@ -83,7 +83,7 @@ def process_icp(reader, task_list, output_folder):
 def process_odom(reader, task_list, output_folder):
     if task_list["odom"]:
         data_odom = np.load(f"{output_folder}/.odom.npz")
-        return data_odom["array1"], data_odom["array2"], data_odom["array3"]
+        return data_odom["coordinates"], data_odom["saved_times"], data_odom["first_matrix"], data_odom["first_transform"]
     odom, saved_times_odom, first_matrix_odom, first_transform_odom = reader.read_odom()
     transformed_odom = calculator.transform_trajectory(odom, first_matrix_odom)
     return transformed_odom, saved_times_odom, first_matrix_odom, first_transform_odom
@@ -92,7 +92,7 @@ def process_odom(reader, task_list, output_folder):
 def process_point_cloud(reader, task_list, first_matrix_icp, first_transform_icp, first_matrix_odom,
                         first_transform_odom, output_folder):
     if task_list["point_cloud"]:
-        return np.load(f"{output_folder}/.point_cloud.npz")["array1"]
+        return np.load(f"{output_folder}/.point_cloud.npz")["point_cloud"]
     point_cloud = list(reader.read_point_cloud())
     transformed_point_cloud = calculator.transform_point_cloud(point_cloud, first_matrix_icp, first_transform_icp,
                                                                first_matrix_odom, first_transform_odom)
