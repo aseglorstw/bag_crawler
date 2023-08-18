@@ -112,8 +112,8 @@ class PointCloudDataProcessor:
             np.savez(f"{output_folder}/.point_cloud.npz", point_cloud=self.transformed_point_cloud)
         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
             for line in lines:
-                if line.startswith('odom'):
-                    file.write(f"odom {state_point_cloud}\n")
+                if line.startswith('point_cloud'):
+                    file.write(f"point_cloud {state_point_cloud}\n")
                 else:
                     file.write(line)
 
