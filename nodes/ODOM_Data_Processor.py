@@ -52,6 +52,15 @@ class ODOMDataProcessor:
         coordinates = np.concatenate(odom, axis=1)
         self.transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
 
+    def calculate_speeds_odom(self):
+        if self.transformed_odom is None:
+            return None
+        if self.speeds is None:
+            distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+            times_one_period = self.times_odom[1:] - self.times_odom[:-1]
+            speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
+            self.speeds = np.linalg.norm(speeds_xyz, axis=1)
+
     def get_odom_topic(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
             if "/imu_and_wheel_odom" in topic_name:
@@ -70,7 +79,7 @@ class ODOMDataProcessor:
 
     def get_start_and_end_of_moving(self):
         if self.start_of_moving is None and self.end_of_moving is None:
-            self.get_speeds_odom()
+            self.calculate_speeds_odom()
             if self.speeds is None:
                 return None, None
             moving = np.where(self.speeds > 0.2)[0]
@@ -80,16 +89,6 @@ class ODOMDataProcessor:
             self.start_of_moving = saved_times[moving[0]]
             self.end_of_moving = saved_times[moving[-1] + 1] if len(moving) < len(saved_times) else saved_times[moving[-1]]
         return self.start_of_moving, self.end_of_moving
-
-    def get_speeds_odom(self):
-        if self.transformed_odom is None:
-            return None
-        if self.speeds is None:
-            distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
-            times_one_period = self.times_odom[1:] - self.times_odom[:-1]
-            speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
-            self.speeds = np.linalg.norm(speeds_xyz, axis=1)
-        return self.speeds
 
     def get_transformed_odom(self):
         return self.transformed_odom
@@ -123,12 +122,12 @@ class ODOMDataProcessor:
         state_odom = "False"
         if self.transformed_odom is not None:
             state_odom = "True"
-            np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
+            np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
                      first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
                      matrices=self.matrices_odom)
         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
             for line in lines:
-                if line.startswith('icp'):
-                    file.write(f"icp {state_odom}\n")
+                if line.startswith('odom'):
+                    file.write(f"odom {state_odom}\n")
                 else:
                     file.write(line)
