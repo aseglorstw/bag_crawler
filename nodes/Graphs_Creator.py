@@ -113,3 +113,4 @@ def transform_z_coordinates_to_color(coord_z):
     coord_z += abs(np.min(coord_z))
     colors = np.log1p(coord_z)
     return colors
+

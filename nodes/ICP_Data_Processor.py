@@ -42,7 +42,7 @@ class ICPDataProcessor:
         self.matrices_icp.append(transform_matrix)
 
     def transform_icp_trajectory(self, icp):
-        if len(icp) == 0:
+        if icp is None:
             return None
         inv_matrix = np.linalg.inv(self.first_rotation_matrix_icp[:3, :3])
         coordinates = np.concatenate(icp, axis=1)
@@ -120,4 +120,3 @@ class ICPDataProcessor:
                          matrices=self.matrices_icp)
             else:
                 file.write('icp False\n')
-

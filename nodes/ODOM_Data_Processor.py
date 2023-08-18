@@ -100,6 +100,9 @@ class ODOMDataProcessor:
     def get_first_transform_odom(self):
         return self.first_transform_odom
 
+    def get_average_speed(self):
+        return np.sum(self.speeds) / len(self.speeds) if self.speeds is not None else None
+
     def load_class_object(self, output_folder):
         object_ = np.load(f"{output_folder}/.odom.npz")
         self.transformed_odom = object_["coordinates"]
