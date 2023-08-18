@@ -12,6 +12,7 @@ class ODOMDataProcessor:
         self.first_transform_odom = None
         self.transformed_odom = None
         self.matrices_odom = []
+        self.speeds = None
 
     def read_odom_topic(self):
         odom = []
@@ -50,9 +51,39 @@ class ODOMDataProcessor:
 
     def get_odom_topic(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
-            if "/icp_odom" in topic_name:
+            if "/imu_and_wheel_odom" in topic_name:
                 return topic_name
         return None
+
+    def get_distances_odom(self):
+        if self.transformed_odom is None:
+            return None
+        transpose_coordinates = self.transformed_odom.T
+        distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
+        distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period, axis=0)), axis=0)
+        distances_odom = np.linalg.norm(distances_xyz, axis=1)
+        return distances_odom
+
+    def get_start_and_end_of_moving(self):
+        self.speeds = self.get_speeds_odom()
+        if self.speeds is None:
+            return None, None
+        moving = np.where(self.speeds > 0.2)[0]
+        if len(moving) == 0:
+            return None, None
+        saved_times = self.times_odom
+        start_of_moving = saved_times[moving[0]]
+        end_of_moving = saved_times[moving[-1] + 1] if len(moving) < len(saved_times) else saved_times[moving[-1]]
+        return start_of_moving, end_of_moving
+
+    def get_speeds_odom(self):
+        if self.transformed_odom is not None:
+            return None
+        distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+        times_one_period = self.times_odom[1:] - self.times_odom[:-1]
+        speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
+        self.speeds = np.linalg.norm(speeds_xyz, axis=1)
+        return self.speeds
 
     def get_transformed_odom(self):
         return self.transformed_odom

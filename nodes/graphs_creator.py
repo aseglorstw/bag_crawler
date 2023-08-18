@@ -61,7 +61,8 @@ def create_graph_z_over_time(odom, icp, saved_times_odom, saved_times_icp, folde
     plt.close()
 
 
-def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom, start_of_moving, end_of_moving, folder):
+def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
+                                    start_and_end_of_moving_icp, start_and_end_of_moving_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -70,10 +71,12 @@ def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_i
         ax.plot(saved_times_odom, distances_odom, color='blue')
     if distances_icp is not None:
         ax.plot(saved_times_icp, distances_icp, color='red', linestyle='--')
-    if start_of_moving is not None:
-        ax.axvline(start_of_moving, color='green', linestyle=':', label='start_of_moving')
-    if end_of_moving is not None:
-        ax.axvline(end_of_moving, color='green', linestyle='--', label='end_of_moving')
+    if start_and_end_of_moving_icp[0] is not None:
+        ax.axvline(start_and_end_of_moving_icp[0], color='green', linestyle=':', label='start_of_moving')
+        ax.axvline(start_and_end_of_moving_icp[1], color='green', linestyle='--', label='end_of_moving')
+    elif start_and_end_of_moving_odom[0] is not None:
+        ax.axvline(start_and_end_of_moving_odom[0], color='green', linestyle=':', label='start_of_moving')
+        ax.axvline(start_and_end_of_moving_odom[1], color='green', linestyle='--', label='end_of_moving')
     plt.legend()
     plt.savefig(f"{folder}/UGVs_travelled_distance_over_time.png")
     plt.close()

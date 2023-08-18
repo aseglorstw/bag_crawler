@@ -100,6 +100,10 @@ class PointCloudDataProcessor:
             return None
         return matrix_lidar_static_frame @ matrix_base_link_lidar
 
+
+    def get_transformed_point_cloud(self):
+        return self.transformed_point_cloud
+
     @staticmethod
     def slots(msg):
         return [getattr(msg, var) for var in msg.__slots__]

@@ -33,7 +33,7 @@ def main(root_directory):
         icp = process_icp(bag, task_list["icp"])
         odom = process_odom(bag, task_list["odom"])
         point_cloud = process_point_cloud(bag, icp, odom)
-
+        create_graphs(icp, odom, point_cloud, path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
@@ -73,6 +73,20 @@ def process_point_cloud(bag, icp, odom):
     bods_point_cloud = list(point_cloud.read_point_cloud())
     point_cloud.transform_point_cloud(bods_point_cloud)
     return point_cloud
+
+
+def create_graphs(icp, odom, point_cloud, output_folder):
+    graphs_creator.create_graph_x_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
+                                            icp.get_times_icp(), output_folder)
+    graphs_creator.create_graph_y_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
+                                            icp.get_times_icp(), output_folder)
+    graphs_creator.create_graph_z_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
+                                            icp.get_times_icp(), output_folder)
+    graphs_creator.create_graph_distance_over_time(icp.get_distances_icp(), odom.get_distances_odom(), icp.get_times_icp(),
+                                                   odom.get_times_odom(), icp.get_start_and_end_of_moving(),
+                                                   odom.get_start_and_end_of_moving(), output_folder)
+    graphs_creator.create_graph_xy_and_point_cloud(odom.get_transformed_odom(), icp.get_transformed_icp(),
+                                                   point_cloud.get_transformed_point_cloud(), output_folder)
 
 
 def close_bag_file(bag, path_to_bag_file):
