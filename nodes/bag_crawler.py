@@ -3,7 +3,7 @@ import sys
 import timeit
 import schedule
 from directory_scanner import DirectoryScanner
-import graphs_creator
+import Graphs_Creator
 from ICP_Data_Processor import ICPDataProcessor
 from ODOM_Data_Processor import ODOMDataProcessor
 from Point_Cloud_Data_Processor import PointCloudDataProcessor

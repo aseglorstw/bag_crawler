@@ -4,7 +4,7 @@ import timeit
 import schedule
 from directory_scanner import DirectoryScanner
 from topics_reader import Reader
-import graphs_creator
+import Graphs_Creator
 import calculator
 from writer_to_files import Writer
 import numpy as np
