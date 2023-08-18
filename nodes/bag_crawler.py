@@ -3,11 +3,7 @@ import sys
 import timeit
 import schedule
 from directory_scanner import DirectoryScanner
-from topics_reader import Reader
 import graphs_creator
-import calculator
-from writer_to_files import Writer
-import numpy as np
 from ICP_Data_Processor import ICPDataProcessor
 from ODOM_Data_Processor import ODOMDataProcessor
 from Point_Cloud_Data_Processor import PointCloudDataProcessor
@@ -15,11 +11,13 @@ from Point_Cloud_Data_Processor import PointCloudDataProcessor
 
 def main(root_directory):
     directory_scanner = DirectoryScanner()
+
     if not directory_scanner.input_check(root_directory):
         return 1
 
     task_lists = directory_scanner.create_task_list(root_directory)
     print(task_lists)
+
     for path_to_bag_file in task_lists.keys():
         task_list = task_lists[path_to_bag_file]
 
@@ -30,9 +28,9 @@ def main(root_directory):
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
 
         print(f"Start processing file {path_to_bag_file}")
-        icp = process_icp(bag, task_list["icp"])
-        odom = process_odom(bag, task_list["odom"])
-        point_cloud = process_point_cloud(bag, icp, odom)
+        icp = process_icp(bag, task_list["icp"], path_to_web_folder)
+        odom = process_odom(bag, task_list["odom"], path_to_web_folder)
+        point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         create_graphs(icp, odom, point_cloud, path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -48,31 +46,45 @@ def open_bag_file(path_to_bag_file):
         return None
 
 
-def process_icp(bag, is_isp):
+def process_icp(bag, is_isp, output_folder):
     icp = ICPDataProcessor(bag)
     if is_isp:
-        icp.load_class_object()
+        icp.load_class_object(output_folder)
         return icp
     coordinates_icp = icp.read_icp_topic()
     icp.transform_icp_trajectory(coordinates_icp)
+    icp.save_class_object(output_folder)
     return icp
 
 
-def process_odom(bag, is_odom):
+def process_odom(bag, is_odom, output_folder):
     odom = ODOMDataProcessor(bag)
     if is_odom:
-        odom.load_class_object()
+        odom.load_class_object(output_folder)
         return odom
     coordinates_odom = odom.read_odom_topic()
     odom.transform_odom_trajectory(coordinates_odom)
+    odom.save_class_object(output_folder)
     return odom
 
 
-def process_point_cloud(bag, icp, odom):
+def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
     point_cloud = PointCloudDataProcessor(bag, icp, odom)
+    if is_point_cloud:
+        point_cloud.load_class_object(output_folder)
+        return point_cloud
     bods_point_cloud = list(point_cloud.read_point_cloud())
     point_cloud.transform_point_cloud(bods_point_cloud)
+    point_cloud.save_class_object(output_folder)
     return point_cloud
+
+
+def process_video():
+    pass
+
+
+def process_joy():
+    pass
 
 
 def create_graphs(icp, odom, point_cloud, output_folder):

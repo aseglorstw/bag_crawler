@@ -100,9 +100,19 @@ class PointCloudDataProcessor:
             return None
         return matrix_lidar_static_frame @ matrix_base_link_lidar
 
-
     def get_transformed_point_cloud(self):
         return self.transformed_point_cloud
+
+    def save_class_object(self, output_folder):
+        with open(f"{output_folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
+            if self.transformed_point_cloud is not None:
+                file.write('point_cloud True\n')
+                np.savez(f"{output_folder}/.point_cloud.npz", point_cloud=self.transformed_point_cloud)
+            else:
+                file.write('point_cloud False\n')
+
+    def load_class_object(self, output_folder):
+        self.transformed_point_cloud = np.load(f"{output_folder}/.point_cloud.npz")["point_cloud"]
 
     @staticmethod
     def slots(msg):

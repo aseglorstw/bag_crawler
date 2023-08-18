@@ -19,7 +19,7 @@ class ODOMDataProcessor:
         topic_name = self.get_odom_topic()
         start_time = self.bag.get_start_time()
         if topic_name is None:
-            print("The topic icp was not found")
+            print("The topic odom was not found")
             return None
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
             save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - start_time
@@ -31,7 +31,7 @@ class ODOMDataProcessor:
             if self.first_rotation_matrix_odom is None:
                 self.first_rotation_matrix_odom = quaternion.rotation_matrix
                 self.first_transform_odom = np.array([[position.x], [position.y], [position.z]])
-            print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
+            print(f"The Coordinates from frame 'base_link' to frame 'odom' are saved. Time: {save_time}")
             self.times_odom.append(save_time)
         return odom
 
@@ -100,7 +100,21 @@ class ODOMDataProcessor:
     def get_first_transform_odom(self):
         return self.first_transform_odom
 
-    def load_class_object(self):
-        pass
+    def load_class_object(self, output_folder):
+        object_ = np.load(f"{output_folder}/.odom.npz")
+        self.transformed_odom = object_["coordinates"]
+        self.times_odom = object_["saved_times"]
+        self.first_rotation_matrix_odom = object_["first_matrix"]
+        self.first_transform_odom = object_["first_transform"]
+        self.matrices_odom = object_["matrices"]
 
+    def save_class_object(self, output_folder):
+        with open(f"{output_folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
+            if self.transformed_odom is not None:
+                file.write('odom True\n')
+                np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
+                         first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
+                         matrices=self.matrices_odom)
+            else:
+                file.write('icp False\n')
 
