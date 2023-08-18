@@ -78,7 +78,7 @@ class ICPDataProcessor:
 
     def get_start_and_end_of_moving(self):
         if self.transformed_icp is None:
-            return None
+            return None, None
         if self.start_of_moving is None:
             distances_one_period_xyz = np.abs(self.transformed_icp.T[1:] - self.transformed_icp.T[:-1])
             distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
