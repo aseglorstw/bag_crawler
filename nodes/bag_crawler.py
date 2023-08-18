@@ -7,6 +7,7 @@ import graphs_creator
 from ICP_Data_Processor import ICPDataProcessor
 from ODOM_Data_Processor import ODOMDataProcessor
 from Point_Cloud_Data_Processor import PointCloudDataProcessor
+from Video_Data_Processor import VideoDataProcessor
 
 
 def main(root_directory):
@@ -24,14 +25,15 @@ def main(root_directory):
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
+        print(f"Start processing file {path_to_bag_file}")
 
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
 
-        print(f"Start processing file {path_to_bag_file}")
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         create_graphs(icp, odom, point_cloud, path_to_web_folder)
+        process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
         print(f"Finish processing file {path_to_bag_file}")
@@ -79,8 +81,11 @@ def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
     return point_cloud
 
 
-def process_video():
-    pass
+def process_video(bag, is_video, output_folder):
+    video = VideoDataProcessor(bag)
+    if not is_video:
+        result = video.read_images_and_save_video(output_folder)
+        video.write_result_to_file(result, output_folder)
 
 
 def process_joy():
