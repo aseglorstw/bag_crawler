@@ -112,12 +112,17 @@ class ODOMDataProcessor:
         self.matrices_odom = object_["matrices"]
 
     def save_class_object(self, output_folder):
-        with open(f"{output_folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
-            if self.transformed_odom is not None:
-                file.write('odom True\n')
-                np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
-                         first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
-                         matrices=self.matrices_odom)
-            else:
-                file.write('icp False\n')
-
+        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+            lines = file.readlines()
+        state_odom = "False"
+        if self.transformed_odom is not None:
+            state_odom = "True"
+            np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
+                     first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
+                     matrices=self.matrices_odom)
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith('icp'):
+                    file.write(f"icp {state_odom}\n")
+                else:
+                    file.write(line)

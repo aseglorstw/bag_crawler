@@ -131,7 +131,7 @@ def close_bag_file(bag, path_to_bag_file):
 if __name__ == '__main__':
     root = sys.argv[1]
     execution_time = timeit.timeit(lambda: main(root), number=1)
-    print(f"Время выполнения программы: {execution_time:.6f} секунд")
+    print(f"program execution time: {execution_time:.6f} seconds")
     # schedule.every(10).seconds.do(lambda: main(root))
     # while True:
     #     schedule.run_pending()

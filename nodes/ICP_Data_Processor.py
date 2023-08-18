@@ -112,11 +112,17 @@ class ICPDataProcessor:
         self.matrices_icp = object_["matrices"]
 
     def save_class_object(self, output_folder):
-        with open(f"{output_folder}/.data_availability.txt", 'a', encoding="utf-8") as file:
-            if self.transformed_icp is not None:
-                file.write('icp True\n')
-                np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, saved_times=self.times_icp,
-                         first_matrix=self.first_rotation_matrix_icp, first_transform=self.first_transform_icp,
-                         matrices=self.matrices_icp)
-            else:
-                file.write('icp False\n')
+        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+            lines = file.readlines()
+        state_icp = "False"
+        if self.transformed_icp is not None:
+            state_icp = "True"
+            np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, saved_times=self.times_icp,
+                     first_matrix=self.first_rotation_matrix_icp, first_transform=self.first_transform_icp,
+                     matrices=self.matrices_icp)
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith('icp'):
+                    file.write(f"icp {state_icp}\n")
+                else:
+                    file.write(line)
