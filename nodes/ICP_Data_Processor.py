@@ -82,11 +82,9 @@ class ICPDataProcessor:
         if self.start_of_moving is None:
             distances_one_period_xyz = np.abs(self.transformed_icp.T[1:] - self.transformed_icp.T[:-1])
             distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
-            for idx in range(len(distances_one_period)):
-                if distances_one_period[idx] > 0.002 and self.start_of_moving is None:
-                    self.start_of_moving = self.times_icp[idx]
-                elif distances_one_period[idx] > 0.002:
-                    self.end_of_moving = self.times_icp[idx]
+            moving_indexes = np.where(distances_one_period > 0.002)[0]
+            self.start_of_moving = self.times_icp[moving_indexes[0]]
+            self.end_of_moving = self.times_icp[moving_indexes[-1]]
         return self.start_of_moving, self.end_of_moving
 
     def get_times_icp(self):
