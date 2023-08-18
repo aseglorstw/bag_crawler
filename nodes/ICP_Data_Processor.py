@@ -1,7 +1,6 @@
 import numpy as np
 import rospy
 from pyquaternion import Quaternion
-import os
 
 
 class ICPDataProcessor:
@@ -117,15 +116,15 @@ class ICPDataProcessor:
             np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, saved_times=self.times_icp,
                      first_matrix=self.first_rotation_matrix_icp, first_transform=self.first_transform_icp,
                      matrices=self.matrices_icp)
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('icp'):
-                        file.write(f"icp {state_icp}\n")
-                    else:
-                        file.write(line)
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+        with open(f"{output_folder}/.data_availability.txt", 'w+', encoding="utf-8") as file:
+            lines = file.readlines()
+        is_icp_in_file = False
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith('icp'):
+                    file.write(f"icp {state_icp}\n")
+                    is_icp_in_file = True
+                else:
+                    file.write(line)
+            if not is_icp_in_file:
                 file.write(f"icp {state_icp}\n")

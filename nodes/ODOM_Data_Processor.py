@@ -116,7 +116,7 @@ class ODOMDataProcessor:
             np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
                      first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
                      matrices=self.matrices_odom)
-        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+        with open(f"{output_folder}/.data_availability.txt", 'w+', encoding="utf-8") as file:
             lines = file.readlines()
         is_odom_in_file = False
         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:

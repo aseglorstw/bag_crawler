@@ -108,7 +108,7 @@ class PointCloudDataProcessor:
         if self.transformed_point_cloud is not None:
             state_point_cloud = "True"
             np.savez(f"{output_folder}/.point_cloud.npz", point_cloud=self.transformed_point_cloud)
-        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+        with open(f"{output_folder}/.data_availability.txt", 'w+', encoding="utf-8") as file:
             lines = file.readlines()
         is_point_cloud_in_file = False
         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
