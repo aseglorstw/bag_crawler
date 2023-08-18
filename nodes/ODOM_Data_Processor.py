@@ -77,7 +77,7 @@ class ODOMDataProcessor:
         return start_of_moving, end_of_moving
 
     def get_speeds_odom(self):
-        if self.transformed_odom is not None:
+        if self.transformed_odom is None:
             return None
         distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
         times_one_period = self.times_odom[1:] - self.times_odom[:-1]
