@@ -12,7 +12,6 @@ class ODOMDataProcessor:
         self.first_rotation_matrix_odom = None
         self.first_transform_odom = None
         self.transformed_odom = None
-        self.speeds = None
         self.distances_odom = None
         self.start_of_moving = None
         self.end_of_moving = None
@@ -46,20 +45,11 @@ class ODOMDataProcessor:
         self.matrices_odom.append(transform_matrix)
 
     def transform_odom_trajectory(self, odom):
-        if len(odom) == 0:
+        if odom is None:
             return None
         inv_matrix = np.linalg.inv(self.first_rotation_matrix_odom[:3, :3])
         coordinates = np.concatenate(odom, axis=1)
         self.transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
-
-    def calculate_speeds_odom(self):
-        if self.transformed_odom is None:
-            return None
-        if self.speeds is None:
-            distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
-            times_one_period = self.times_odom[1:] - self.times_odom[:-1]
-            speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
-            self.speeds = np.linalg.norm(speeds_xyz, axis=1)
 
     def get_odom_topic(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
@@ -71,23 +61,22 @@ class ODOMDataProcessor:
         if self.transformed_odom is None:
             return None
         if self.distances_odom is None:
-            transpose_coordinates = self.transformed_odom.T
-            distances_one_period = np.abs(transpose_coordinates[1:] - transpose_coordinates[:-1])
-            distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period, axis=0)), axis=0)
+            distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+            distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
             self.distances_odom = np.linalg.norm(distances_xyz, axis=1)
         return self.distances_odom
 
     def get_start_and_end_of_moving(self):
-        if self.start_of_moving is None and self.end_of_moving is None:
-            self.calculate_speeds_odom()
-            if self.speeds is None:
-                return None, None
-            moving = np.where(self.speeds > 0.2)[0]
-            if len(moving) == 0:
-                return None, None
-            saved_times = self.times_odom
-            self.start_of_moving = saved_times[moving[0]]
-            self.end_of_moving = saved_times[moving[-1] + 1] if len(moving) < len(saved_times) else saved_times[moving[-1]]
+        if self.transformed_odom is None:
+            return None
+        if self.start_of_moving is None:
+            distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+            distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
+            for idx in range(len(distances_one_period)):
+                if distances_one_period[idx] > 0.002 and self.start_of_moving is None:
+                    self.start_of_moving = self.times_odom[idx]
+                elif distances_one_period[idx] > 0.002:
+                    self.end_of_moving = self.times_odom[idx]
         return self.start_of_moving, self.end_of_moving
 
     def get_transformed_odom(self):
@@ -106,7 +95,13 @@ class ODOMDataProcessor:
         return self.first_transform_odom
 
     def get_average_speed(self):
-        return np.sum(self.speeds) / len(self.speeds) if self.speeds is not None else None
+        if self.transformed_odom is None:
+            return None
+        distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+        times_one_period = self.times_odom[1:] - self.times_odom[:-1]
+        speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
+        speeds = np.linalg.norm(speeds_xyz, axis=1)
+        return np.sum(speeds) / len(speeds) if speeds is not None else None
 
     def load_class_object(self, output_folder):
         object_ = np.load(f"{output_folder}/.odom.npz")
@@ -117,17 +112,21 @@ class ODOMDataProcessor:
         self.matrices_odom = object_["matrices"]
 
     def save_class_object(self, output_folder):
-        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-            lines = file.readlines()
         state_odom = "False"
         if self.transformed_odom is not None:
             state_odom = "True"
             np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
                      first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
                      matrices=self.matrices_odom)
+        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+            lines = file.readlines()
+        is_odom_in_file = False
         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
             for line in lines:
                 if line.startswith('odom'):
                     file.write(f"odom {state_odom}\n")
+                    is_odom_in_file = True
                 else:
                     file.write(line)
+            if not is_odom_in_file:
+                file.write(f"odom {state_odom}\n")
