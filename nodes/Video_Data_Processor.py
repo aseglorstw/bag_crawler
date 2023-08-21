@@ -3,6 +3,7 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import CompressedImage
 import datetime
+import os
 
 
 class VideoDataProcessor:
@@ -18,7 +19,6 @@ class VideoDataProcessor:
             return False
         for topic_name in topic_names:
             save_interval = self.calculate_save_interval(topic_name)
-            print(save_interval)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, fourcc, 60, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
@@ -43,7 +43,8 @@ class VideoDataProcessor:
         return None
 
     def calculate_save_interval(self, topic_name):
-        return int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 1200)
+        save_interval = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 1200)
+        return save_interval if save_interval > 0 else 1
 
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
@@ -51,20 +52,24 @@ class VideoDataProcessor:
 
     @staticmethod
     def write_result_to_file(result, output_folder):
-        with open(f"{output_folder}/.data_availability.txt", 'w+', encoding="utf-8") as file:
-            lines = file.readlines()
         is_video_in_file = False
         state_video = "False"
         if result:
             state_video = "True"
-        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-            for line in lines:
-                if line.startswith('video'):
+        if os.path.exists(f"{output_folder}/.data_availability.txt"):
+            with open(f"{output_folder}/.data_availability.txt", 'r+', encoding="utf-8") as file:
+                lines = file.readlines()
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                for line in lines:
+                    if line.startswith('video'):
+                        file.write(f"video {state_video}\n")
+                        is_video_in_file = True
+                    else:
+                        file.write(line)
+                if not is_video_in_file:
                     file.write(f"video {state_video}\n")
-                    is_video_in_file = True
-                else:
-                    file.write(line)
-            if not is_video_in_file:
+        else:
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
                 file.write(f"video {state_video}\n")
 
     @staticmethod

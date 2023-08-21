@@ -10,11 +10,12 @@ from Point_Cloud_Data_Processor import PointCloudDataProcessor
 from Video_Data_Processor import VideoDataProcessor
 from JOY_Data_Processor import JOYDataProcessor
 from Writer_Info_To_Files import WriterInfo
+import logging
 
 
 def main(root_directory):
-    directory_scanner = DirectoryScanner()
 
+    directory_scanner = DirectoryScanner()
     if not directory_scanner.input_check(root_directory):
         return 1
 
@@ -27,10 +28,12 @@ def main(root_directory):
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
-        print(f"Start processing file {path_to_bag_file}")
 
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
 
+        setup_logger(path_to_web_folder)
+
+        logging.info(f"Start processing file {path_to_bag_file}")
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
@@ -40,7 +43,11 @@ def main(root_directory):
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
-        print(f"Finish processing file {path_to_bag_file}")
+        logging.info(f"Finish processing file {path_to_bag_file}")
+
+
+def setup_logger(root_directory):
+    logging.basicConfig(filename=f'{root_directory}/.logger.log', level=logging.INFO)
 
 
 def open_bag_file(path_to_bag_file):
