@@ -1,16 +1,12 @@
-import rosbag
-import sys
-import timeit
-import schedule
-from Directory_Scanner import DirectoryScanner
+import rosbag, sys, timeit, schedule
 import Graphs_Creator
+from Directory_Scanner import DirectoryScanner
 from ICP_Data_Processor import ICPDataProcessor
 from ODOM_Data_Processor import ODOMDataProcessor
 from Point_Cloud_Data_Processor import PointCloudDataProcessor
 from Video_Data_Processor import VideoDataProcessor
 from JOY_Data_Processor import JOYDataProcessor
 from Writer_Info_To_Files import WriterInfo
-import logging
 
 
 def main(root_directory):
@@ -33,7 +29,6 @@ def main(root_directory):
 
         setup_logger(path_to_web_folder)
 
-        logging.info(f"Start processing file {path_to_bag_file}")
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
@@ -43,11 +38,6 @@ def main(root_directory):
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
-        logging.info(f"Finish processing file {path_to_bag_file}")
-
-
-def setup_logger(root_directory):
-    logging.basicConfig(filename=f'{root_directory}/.logger.log', level=logging.INFO)
 
 
 def open_bag_file(path_to_bag_file):
