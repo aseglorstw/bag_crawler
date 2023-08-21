@@ -12,15 +12,15 @@ class VideoDataProcessor:
 
     def read_images_and_save_video(self, folder):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        save_interval = 5
         topic_names = list(self.find_camera_topic())
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            fps = self.calculate_fps(topic_name, save_interval)
+            save_interval = self.calculate_save_interval(topic_name)
+            print(save_interval)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
-            video_out = cv2.VideoWriter(video_name, fourcc, fps, (1920, 1200), True)
+            video_out = cv2.VideoWriter(video_name, fourcc, 60, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number % save_interval == 0:
                     time = rospy.Time.from_sec(time.to_sec())
@@ -42,9 +42,8 @@ class VideoDataProcessor:
                 yield topic_name
         return None
 
-    def calculate_fps(self, topic_name, save_interval):
-        video_duration = 20
-        return self.bag.get_type_and_topic_info()[1][topic_name].message_count / (video_duration * save_interval)
+    def calculate_save_interval(self, topic_name):
+        return int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 1200)
 
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
@@ -52,11 +51,21 @@ class VideoDataProcessor:
 
     @staticmethod
     def write_result_to_file(result, output_folder):
-        with open(f"{output_folder}/.data_availability.txt", "a", encoding="utf-8") as file:
-            if result:
-                file.write('video True\n')
-            else:
-                file.write('video False\n')
+        with open(f"{output_folder}/.data_availability.txt", 'w+', encoding="utf-8") as file:
+            lines = file.readlines()
+        is_video_in_file = False
+        state_video = "False"
+        if result:
+            state_video = "True"
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith('video'):
+                    file.write(f"video {state_video}\n")
+                    is_video_in_file = True
+                else:
+                    file.write(line)
+            if not is_video_in_file:
+                file.write(f"video {state_video}\n")
 
     @staticmethod
     def create_name_for_video(topic_name):
