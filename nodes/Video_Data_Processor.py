@@ -57,7 +57,7 @@ class VideoDataProcessor:
         if result:
             state_video = "True"
         if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r+', encoding="utf-8") as file:
+            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
                 lines = file.readlines()
             with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
                 for line in lines:

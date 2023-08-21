@@ -119,7 +119,7 @@ class ICPDataProcessor:
                      matrices=self.matrices_icp)
         is_icp_in_file = False
         if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r+', encoding="utf-8") as file:
+            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
                 lines = file.readlines()
             with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
                 for line in lines:
