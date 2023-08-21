@@ -2,6 +2,7 @@ import numpy as np
 import rospy
 from pyquaternion import Quaternion
 import os
+from ODOM_Topics import odom_topics
 
 
 class ODOMDataProcessor:
@@ -54,7 +55,7 @@ class ODOMDataProcessor:
 
     def get_odom_topic(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
-            if "/imu_and_wheel_odom" in topic_name:
+            if topic_name in odom_topics:
                 return topic_name
         return None
 

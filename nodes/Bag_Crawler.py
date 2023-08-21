@@ -10,8 +10,8 @@ from Writer_Info_To_Files import WriterInfo
 
 
 def main(root_directory):
-
     directory_scanner = DirectoryScanner()
+
     if not directory_scanner.input_check(root_directory):
         return 1
 
@@ -26,8 +26,6 @@ def main(root_directory):
             continue
 
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
-
-        setup_logger(path_to_web_folder)
 
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
