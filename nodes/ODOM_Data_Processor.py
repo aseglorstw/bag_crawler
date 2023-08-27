@@ -57,6 +57,12 @@ class ODOMDataProcessor:
                 yield topic_name
         return None
 
+    def get_all_transformed_coordinates(self):
+        all_transformed_coordinates = dict()
+        for odom_topic in self.odom_topics:
+            all_transformed_coordinates[odom_topic.get_topic_name()] = odom_topic.get_transformed_odom()
+        return all_transformed_coordinates
+
     def get_all_distances(self):
         all_distances = dict()
         for odom_topic in self.odom_topics:
@@ -68,7 +74,7 @@ class ODOMDataProcessor:
                 distances_one_period_xyz = np.abs(transformed_odom.T[1:] - transformed_odom.T[:-1])
                 distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
                 distances = np.linalg.norm(distances_xyz, axis=1)
-            all_distances[odom_topic.get_topic_name] = distances
+            all_distances[odom_topic.get_topic_name()] = distances
         return all_distances
 
     def get_all_starts_and_ends_of_moving(self):
@@ -85,7 +91,7 @@ class ODOMDataProcessor:
                 times = odom_topic.get_times()
                 start_of_moving = times[moving_indexes[0]]
                 end_of_moving = times[moving_indexes[-1]]
-            all_starts_and_ends_of_moving[odom_topic.get_topic_name] = (start_of_moving, end_of_moving)
+            all_starts_and_ends_of_moving[odom_topic.get_topic_name()] = (start_of_moving, end_of_moving)
         return all_starts_and_ends_of_moving
 
     def get_all_average_speeds(self):

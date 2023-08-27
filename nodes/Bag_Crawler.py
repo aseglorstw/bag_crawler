@@ -33,8 +33,8 @@ def main(root_directory):
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
-        # joy = process_joy(bag, icp, odom)
-        # create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
+        joy = process_joy(bag, icp, odom)
+        create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
         # write_info_to_files(bag, icp, odom, path_to_web_folder)
         # process_video(bag, task_list["video"], path_to_web_folder)
 
@@ -98,18 +98,18 @@ def process_joy(bag, icp, odom):
 
 
 def create_graphs(icp, odom, point_cloud, joy, output_folder):
-    Graphs_Creator.create_graph_x_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_y_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_z_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(), odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), odom.get_distances_odom(), icp.get_times_icp(),
-                                                   odom.get_times_odom(), icp.get_start_and_end_of_moving(),
-                                                   odom.get_start_and_end_of_moving(), output_folder)
-    Graphs_Creator.create_graph_xy_and_point_cloud(odom.get_transformed_odom(), icp.get_transformed_icp(),
+    Graphs_Creator.create_graph_x_over_time(odom.get_all_transformed_coordinates(), icp.get_transformed_icp(),
+                                            odom.get_all_times(), icp.get_times_icp(), output_folder)
+    Graphs_Creator.create_graph_y_over_time(odom.get_all_transformed_coordinates(), icp.get_transformed_icp(),
+                                            odom.get_all_times(), icp.get_times_icp(), output_folder)
+    Graphs_Creator.create_graph_z_over_time(odom.get_all_transformed_coordinates(), icp.get_transformed_icp(),
+                                            odom.get_all_times(), icp.get_times_icp(), output_folder)
+    Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), odom.get_all_distances(), icp.get_times_icp(),
+                                                   odom.get_all_times(), icp.get_start_and_end_of_moving(),
+                                                   odom.get_all_starts_and_ends_of_moving(), output_folder)
+    Graphs_Creator.create_graph_xy_and_point_cloud(odom.get_all_transformed_coordinates(), icp.get_transformed_icp(),
                                                    point_cloud.get_transformed_point_cloud(), output_folder)
-    Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(), odom.get_transformed_odom(),
+    Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(), odom.get_all_transformed_coordinates(),
                                                           joy.get_joy_control_coordinates(), output_folder)
 
 

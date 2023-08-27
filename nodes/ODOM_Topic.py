@@ -22,6 +22,7 @@ class ODOMTopic:
 
     def set_topic_name(self, topic_name):
         self.topic_name = topic_name
+        print(topic_name)
 
     def set_times(self, times):
         self.times = times
