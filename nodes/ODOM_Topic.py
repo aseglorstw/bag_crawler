@@ -43,3 +43,21 @@ class ODOMTopic:
 
     def get_topic_name(self):
         return self.topic_name
+
+    def get_transformed_odom(self):
+        return self.transformed_odom
+
+    def get_distances(self):
+        return self.distances
+
+    def get_start_and_end_of_moving(self):
+        return self.start_of_moving, self.end_of_moving
+
+    def get_transform_matrices(self):
+        return self.transform_matrices
+
+    def get_times(self):
+        return self.times
+
+    def get_first_transform(self):
+        return self.first_transform
