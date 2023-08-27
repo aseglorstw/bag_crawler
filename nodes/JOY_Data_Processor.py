@@ -25,7 +25,6 @@ class JOYDataProcessor:
     def create_joy_control_coordinates(self, joy_control_times):
         icp = self.icp.get_transformed_icp()
         all_transformed_coordinates = self.odom.get_all_transformed_coordinates()
-        print(all_transformed_coordinates.keys())
         odom = all_transformed_coordinates["/imu_and_wheel_odom"]
         saved_times_icp = self.icp.get_times_icp()
         all_times_odom = self.odom.get_all_times()

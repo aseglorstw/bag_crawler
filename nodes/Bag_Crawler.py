@@ -35,7 +35,7 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom)
         create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
-        # write_info_to_files(bag, icp, odom, path_to_web_folder)
+        write_info_to_files(bag, icp, odom, path_to_web_folder)
         # process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)

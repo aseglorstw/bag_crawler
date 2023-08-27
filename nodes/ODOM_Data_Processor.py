@@ -145,6 +145,7 @@ class ODOMDataProcessor:
                 odom_topic.set_first_rotation_matrix(object_["first_rotation_matrix"])
                 odom_topic.set_first_transform(object_["first_transform"])
                 odom_topic.set_transform_matrices(object_["matrices"])
+                odom_topic.set_topic_name(file.name.replace('.', '/').replace('/npz', ''))
                 self.odom_topics.append(odom_topic)
 
     def save_class_object(self, output_folder):
