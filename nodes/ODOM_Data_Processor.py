@@ -3,6 +3,7 @@ import rospy
 from pyquaternion import Quaternion
 import os
 from ODOM_Topic import ODOMTopic
+import pathlib
 
 
 class ODOMDataProcessor:
@@ -128,39 +129,43 @@ class ODOMDataProcessor:
             all_transform_matrices[odom_topic.get_topic_name()] = odom_topic.get_transform_matrices()
         return all_transform_matrices
 
+    def load_class_object(self, output_folder):
+        for file in pathlib.Path(output_folder).iterdir():
+            if "npz" in file.name and "icp" not in file.name and "point_cloud" not in file.name:
+                object_ = np.load(f"{output_folder}/{file.name}")
+                odom_topic = ODOMTopic()
+                odom_topic.set_transformed_odom(object_["coordinates"])
+                odom_topic.set_times(object_["saved_times"])
+                odom_topic.set_first_rotation_matrix(object_["first_rotation_matrix"])
+                odom_topic.set_first_transform(object_["first_transform"])
+                odom_topic.set_transform_matrices(object_["matrices"])
+                self.odom_topics.append(odom_topic)
 
-
-    # def load_class_object(self, output_folder):
-    #     object_ = np.load(f"{output_folder}/.odom.npz")
-    #     self.transformed_odom = object_["coordinates"]
-    #     self.times_odom = object_["saved_times"]
-    #     self.first_rotation_matrix_odom = object_["first_matrix"]
-    #     self.first_transform_odom = object_["first_transform"]
-    #     self.matrices_odom = object_["matrices"]
-
-    # def save_class_object(self, output_folder):
-    #     state_odom = "False"
-    #     if self.transformed_odom is not None:
-    #         state_odom = "True"
-    #         np.savez(f"{output_folder}/.odom.npz", coordinates=self.transformed_odom, saved_times=self.times_odom,
-    #                  first_matrix=self.first_rotation_matrix_odom, first_transform=self.first_transform_odom,
-    #                  matrices=self.matrices_odom)
-    #     is_odom_in_file = False
-    #     if os.path.exists(f"{output_folder}/.data_availability.txt"):
-    #         with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-    #             lines = file.readlines()
-    #         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-    #             for line in lines:
-    #                 if line.startswith('odom'):
-    #                     file.write(f"odom {state_odom}\n")
-    #                     is_odom_in_file = True
-    #                 else:
-    #                     file.write(line)
-    #             if not is_odom_in_file:
-    #                 file.write(f"odom {state_odom}\n")
-    #     else:
-    #         with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-    #             file.write(f"odom {state_odom}\n")
+    def save_class_object(self, output_folder):
+        state_odom = "False"
+        for odom_topic in self.odom_topics:
+            transformed_odom = odom_topic.get_transformed_odom()
+            if transformed_odom is not None:
+                state_odom = "True"
+                np.savez(f"{output_folder}/.{odom_topic.get_topic_name().replace('/', '_')[1:]}.npz", coordinates=transformed_odom,
+                         saved_times=odom_topic.get_times(), first_rotation_matrix=odom_topic.get_first_rotation_matrix(),
+                         first_transform=odom_topic.get_first_transform(), matrices=odom_topic.get_transform_matrices())
+        is_odom_in_file = False
+        if os.path.exists(f"{output_folder}/.data_availability.txt"):
+            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+                lines = file.readlines()
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                for line in lines:
+                    if line.startswith('odom'):
+                        file.write(f"odom {state_odom}\n")
+                        is_odom_in_file = True
+                    else:
+                        file.write(line)
+                if not is_odom_in_file:
+                    file.write(f"odom {state_odom}\n")
+        else:
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                file.write(f"odom {state_odom}\n")
 
     @staticmethod
     def create_transform_matrix(rotation_matrix, translation):
