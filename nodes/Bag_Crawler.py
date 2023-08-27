@@ -27,13 +27,13 @@ def main(root_directory):
 
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
 
-        icp = process_icp(bag, task_list["icp"], path_to_web_folder)
+        #icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
-        point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
-        joy = process_joy(bag, icp, odom)
-        create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
-        write_info_to_files(bag, icp, odom, path_to_web_folder)
-        process_video(bag, task_list["video"], path_to_web_folder)
+        # point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
+        # joy = process_joy(bag, icp, odom)
+        # create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
+        # write_info_to_files(bag, icp, odom, path_to_web_folder)
+        # process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
 
@@ -60,12 +60,12 @@ def process_icp(bag, is_isp, output_folder):
 
 def process_odom(bag, is_odom, output_folder):
     odom = ODOMDataProcessor(bag)
-    if is_odom:
-        odom.load_class_object(output_folder)
-        return odom
-    coordinates_odom = odom.read_odom_topic()
-    odom.transform_odom_trajectory(coordinates_odom)
-    odom.save_class_object(output_folder)
+    # if is_odom:
+    #     odom.load_class_object(output_folder)
+    #     return odom
+    odom.read_odom_topics()
+    # odom.transform_odom_trajectory(coordinates_odom)
+    # odom.save_class_object(output_folder)
     return odom
 
 

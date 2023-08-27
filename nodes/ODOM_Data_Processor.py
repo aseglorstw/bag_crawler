@@ -2,49 +2,42 @@ import numpy as np
 import rospy
 from pyquaternion import Quaternion
 import os
-from ODOM_Topics import odom_topics
+from ODOM_Topic import ODOMTopic
 
 
 class ODOMDataProcessor:
 
     def __init__(self, bag):
         self.bag = bag
-        self.times_odom = []
-        self.matrices_odom = []
-        self.first_rotation_matrix_odom = None
-        self.first_transform_odom = None
-        self.transformed_odom = None
-        self.distances_odom = None
-        self.start_of_moving = None
-        self.end_of_moving = None
+        self.odom_topics = []
 
-    def read_odom_topic(self):
-        odom = []
-        topic_name = self.get_odom_topic()
+    def read_odom_topics(self):
+        topic_names = list(self.get_odom_topics())
+        print(topic_names)
         start_time = self.bag.get_start_time()
-        if topic_name is None:
+        if topic_names is None:
             print("The topic odom was not found")
             return None
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - start_time
-            position = msg.pose.pose.position
-            orientation = msg.pose.pose.orientation
-            quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-            self.add_matrix_to_matrices_odom(quaternion.rotation_matrix, [position.x, position.y, position.z])
-            odom.append(np.array([[position.x], [position.y], [position.z]]))
-            if self.first_rotation_matrix_odom is None:
-                self.first_rotation_matrix_odom = quaternion.rotation_matrix
-                self.first_transform_odom = np.array([[position.x], [position.y], [position.z]])
-            print(f"The Coordinates from frame 'base_link' to frame 'odom' are saved. Time: {save_time}")
-            self.times_odom.append(save_time)
-        self.times_odom = np.array(self.times_odom)
-        return odom
-
-    def add_matrix_to_matrices_odom(self, rotation_matrix, translation):
-        transform_matrix = np.eye(4)
-        transform_matrix[:3, :3] = rotation_matrix
-        transform_matrix[:3, 3] = translation
-        self.matrices_odom.append(transform_matrix)
+        for topic_name in topic_names:
+            odom_topic = ODOMTopic()
+            odom_topic.set_topic_name(topic_name)
+            times = []
+            odom = []
+            for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+                save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - start_time
+                position = msg.pose.pose.position
+                orientation = msg.pose.pose.orientation
+                quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+                odom_topic.add_matrix_to_matrices(quaternion.rotation_matrix, [position.x, position.y, position.z])
+                odom.append(np.array([[position.x], [position.y], [position.z]]))
+                if odom_topic.get_first_rotation_matrix() is None:
+                    odom_topic.set_first_rotation_matrix(quaternion.rotation_matrix)
+                    odom_topic.set_first_transform(np.array([[position.x], [position.y], [position.z]]))
+                print(f"The Coordinates from topic {topic_name} are saved. Time: {save_time}")
+                times.append(save_time)
+            odom_topic.set_odom(odom)
+            odom_topic.set_times(np.array(times))
+            self.odom_topics.append(odom_topic)
 
     def transform_odom_trajectory(self, odom):
         if odom is None:
@@ -53,10 +46,10 @@ class ODOMDataProcessor:
         coordinates = np.concatenate(odom, axis=1)
         self.transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
 
-    def get_odom_topic(self):
+    def get_odom_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
-            if topic_name in odom_topics:
-                return topic_name
+            if "Odometry" in topic_info.msg_type:
+                yield topic_name
         return None
 
     def get_distances_odom(self):
