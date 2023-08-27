@@ -23,12 +23,13 @@ class ODOMDataProcessor:
             odom_topic.set_topic_name(topic_name)
             times = []
             odom = []
+            transform_matrices = []
             for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
                 save_time = rospy.Time.from_sec(time.to_sec()).to_sec() - start_time
                 position = msg.pose.pose.position
                 orientation = msg.pose.pose.orientation
                 quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
-                odom_topic.add_matrix_to_matrices(quaternion.rotation_matrix, [position.x, position.y, position.z])
+                transform_matrices.append(self.create_transform_matrix(quaternion.rotation_matrix, [position.x, position.y, position.z]))
                 odom.append(np.array([[position.x], [position.y], [position.z]]))
                 if odom_topic.get_first_rotation_matrix() is None:
                     odom_topic.set_first_rotation_matrix(quaternion.rotation_matrix)
@@ -37,14 +38,17 @@ class ODOMDataProcessor:
                 times.append(save_time)
             odom_topic.set_odom(odom)
             odom_topic.set_times(np.array(times))
+            odom_topic.set_transform_matrices(transform_matrices)
             self.odom_topics.append(odom_topic)
 
-    def transform_odom_trajectory(self, odom):
-        if odom is None:
-            return None
-        inv_matrix = np.linalg.inv(self.first_rotation_matrix_odom[:3, :3])
-        coordinates = np.concatenate(odom, axis=1)
-        self.transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
+    def transform_odom_trajectory(self):
+        for odom_topic in self.odom_topics:
+            odom = odom_topic.get_odom()
+            if odom is None:
+                return None
+            inv_matrix = np.linalg.inv(odom_topic.get_first_rotation_matrix()[:3, :3])
+            coordinates = np.concatenate(odom, axis=1)
+            odom_topic.set_transformed_odom(inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1))
 
     def get_odom_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
@@ -127,3 +131,10 @@ class ODOMDataProcessor:
         else:
             with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
                 file.write(f"odom {state_odom}\n")
+
+    @staticmethod
+    def create_transform_matrix(rotation_matrix, translation):
+        transform_matrix = np.eye(4)
+        transform_matrix[:3, :3] = rotation_matrix
+        transform_matrix[:3, 3] = translation
+        return transform_matrix

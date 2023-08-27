@@ -12,16 +12,13 @@ class ODOMTopic:
         self.odom = []
         self.transformed_odom = []
         self.times = []
-        self.matrices = []
-
-    def add_matrix_to_matrices(self, rotation_matrix, translation):
-        transform_matrix = np.eye(4)
-        transform_matrix[:3, :3] = rotation_matrix
-        transform_matrix[:3, 3] = translation
-        self.matrices.append(transform_matrix)
+        self.transform_matrices = []
 
     def set_odom(self, odom):
-        self.odom = odom
+        self.odom = np.array(odom)
+
+    def set_transformed_odom(self, transformed_odom):
+        self.transformed_odom = transformed_odom
 
     def set_topic_name(self, topic_name):
         self.topic_name = topic_name
@@ -35,5 +32,14 @@ class ODOMTopic:
     def set_first_transform(self, first_transform):
         self.first_transform = first_transform
 
+    def set_transform_matrices(self, transform_matrices):
+        self.transform_matrices = transform_matrices
+
     def get_first_rotation_matrix(self):
         return self.first_rotation_matrix
+
+    def get_odom(self):
+        return self.odom
+
+    def get_topic_name(self):
+        return self.topic_name

@@ -64,7 +64,7 @@ def process_odom(bag, is_odom, output_folder):
     #     odom.load_class_object(output_folder)
     #     return odom
     odom.read_odom_topics()
-    # odom.transform_odom_trajectory(coordinates_odom)
+    odom.transform_odom_trajectory()
     # odom.save_class_object(output_folder)
     return odom
 
