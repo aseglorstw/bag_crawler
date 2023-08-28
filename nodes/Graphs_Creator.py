@@ -4,13 +4,12 @@ import pyvista as pv
 import os
 
 
-def create_graph_xy_and_point_cloud(odom_coordinates, icp, point_cloud, folder):
+def create_graph_xy_and_point_cloud(odom, icp, point_cloud, folder):
     fig, ax = plt.subplots()
     marker_size = 0.5
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
-    odom = odom_coordinates["/imu_and_wheel_odom"]
     if point_cloud is not None:
         colors = transform_z_coordinates_to_color(point_cloud[2, :])
         ax.scatter(point_cloud[0, :], point_cloud[1, :], s=marker_size, c=colors, cmap='Greens')
@@ -23,13 +22,11 @@ def create_graph_xy_and_point_cloud(odom_coordinates, icp, point_cloud, folder):
     plt.close()
 
 
-def create_graph_x_over_time(odom_coordinates, icp, all_times_odom, saved_times_icp, folder):
+def create_graph_x_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in X direction")
-    odom = odom_coordinates["/imu_and_wheel_odom"]
-    saved_times_odom = all_times_odom["/imu_and_wheel_odom"]
     if odom is not None:
         ax.plot(saved_times_odom, odom[0, :], color='blue')
     if icp is not None:
@@ -38,13 +35,11 @@ def create_graph_x_over_time(odom_coordinates, icp, all_times_odom, saved_times_
     plt.close()
 
 
-def create_graph_y_over_time(odom_coordinates, icp, all_times_odom, saved_times_icp, folder):
+def create_graph_y_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Y direction")
-    odom = odom_coordinates["/imu_and_wheel_odom"]
-    saved_times_odom = all_times_odom["/imu_and_wheel_odom"]
     if odom is not None:
         ax.plot(saved_times_odom, odom[1, :], color='blue')
     if icp is not None:
@@ -53,13 +48,11 @@ def create_graph_y_over_time(odom_coordinates, icp, all_times_odom, saved_times_
     plt.close()
 
 
-def create_graph_z_over_time(odom_coordinates, icp, all_times_odom, saved_times_icp, folder):
+def create_graph_z_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
-    odom = odom_coordinates["/imu_and_wheel_odom"]
-    saved_times_odom = all_times_odom["/imu_and_wheel_odom"]
     if odom is not None:
         ax.plot(saved_times_odom, odom[2, :], color='blue')
     if icp is not None:
@@ -68,15 +61,12 @@ def create_graph_z_over_time(odom_coordinates, icp, all_times_odom, saved_times_
     plt.close()
 
 
-def create_graph_distance_over_time(distances_icp, all_distances_odom, saved_times_icp, all_times_odom,
-                                    start_and_end_of_moving_icp, all_starts_and_ends_of_moving_odom, folder):
+def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
+                                    start_and_end_of_moving_icp, start_and_end_of_moving_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
-    distances_odom = all_distances_odom["/imu_and_wheel_odom"]
-    saved_times_odom = all_times_odom["/imu_and_wheel_odom"]
-    start_and_end_of_moving_odom = all_starts_and_ends_of_moving_odom["/imu_and_wheel_odom"]
     if distances_odom is not None:
         ax.plot(saved_times_odom, distances_odom, color='blue')
     if distances_icp is not None:
@@ -92,12 +82,11 @@ def create_graph_distance_over_time(distances_icp, all_distances_odom, saved_tim
     plt.close()
 
 
-def create_graph_joy_control_times_and_icp(icp, odom_coordinates,  joy_control_coordinates, folder):
+def create_graph_joy_control_times_and_icp(icp, odom,  joy_control_coordinates, folder):
     fig, ax = plt.subplots()
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
-    odom = odom_coordinates["/imu_and_wheel_odom"]
     if icp is not None:
         ax.plot(icp[0, :], icp[1, :], color='red', linestyle='--', label='icp_odom')
     elif odom is not None:
@@ -124,4 +113,3 @@ def transform_z_coordinates_to_color(coord_z):
     coord_z += abs(np.min(coord_z))
     colors = np.log1p(coord_z)
     return colors
-

@@ -24,7 +24,7 @@ class JOYDataProcessor:
 
     def create_joy_control_coordinates(self, joy_control_times):
         icp = self.icp.get_transformed_icp()
-        odom = self.odom.get_transformed_odoom()
+        odom = self.odom.get_transformed_odom()
         times_icp = self.icp.get_times_icp()
         times_odom = self.odom.get_times_odom()
         if (icp is None and odom is None) or joy_control_times is None:
@@ -47,4 +47,3 @@ class JOYDataProcessor:
 
     def get_joy_control_coordinates(self):
         return self.joy_control_coordinates
-

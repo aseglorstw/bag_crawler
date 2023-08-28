@@ -63,7 +63,7 @@ class ODOMDataProcessor:
             all_transformed_coordinates[odom_topic.get_topic_name()] = odom_topic.get_transformed_odom()
         return all_transformed_coordinates["/imu_and_wheel_odom"]
 
-    def get_distances(self):
+    def get_distances_odom(self):
         all_distances = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -77,7 +77,7 @@ class ODOMDataProcessor:
             all_distances[odom_topic.get_topic_name()] = distances
         return all_distances["/imu_and_wheel_odom"]
 
-    def get_start_and_end_of_moving(self):
+    def get_start_and_end_of_moving_odom(self):
         all_starts_and_ends_of_moving = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -94,7 +94,7 @@ class ODOMDataProcessor:
             all_starts_and_ends_of_moving[odom_topic.get_topic_name()] = (start_of_moving, end_of_moving)
         return all_starts_and_ends_of_moving["/imu_and_wheel_odom"]
 
-    def get_average_speeds(self):
+    def get_average_speed_odom(self):
         all_average_speeds = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -108,7 +108,7 @@ class ODOMDataProcessor:
             all_average_speeds[odom_topic.get_topic_name()] = np.sum(speeds) / len(speeds) if speeds is not None else None
         return all_average_speeds["/imu_and_wheel_odom"]
 
-    def get_first__matrix_odom(self):
+    def get_first_matrix_odom(self):
         first_rotation_matrices = dict()
         for odom_topic in self.odom_topics:
             first_rotation_matrices[odom_topic.get_topic_name()] = odom_topic.get_first_rotation_matrix()
@@ -141,10 +141,10 @@ class ODOMDataProcessor:
                 object_ = np.load(f"{output_folder}/{file.name}")
                 odom_topic = ODOMTopic()
                 odom_topic.set_transformed_odom(object_["coordinates"])
-                odom_topic.set_times(object_["saved_times"])
+                odom_topic.set_times(object_["times"])
                 odom_topic.set_first_rotation_matrix(object_["first_rotation_matrix"])
                 odom_topic.set_first_transform(object_["first_transform"])
-                odom_topic.set_transform_matrices(object_["matrices"])
+                odom_topic.set_transform_matrices(object_["transform_matrices"])
                 odom_topic.set_topic_name(file.name.replace('.', '/').replace('/npz', ''))
                 self.odom_topics.append(odom_topic)
 

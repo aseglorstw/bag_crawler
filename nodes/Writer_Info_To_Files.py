@@ -15,15 +15,12 @@ class WriterInfo:
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
         distances_icp = self.icp.get_distances_icp()
         distance_icp = distances_icp[-1] if distances_icp is not None else None
-        all_distances_odom = self.odom.get_all_distances()
-        distances_odom = all_distances_odom["/imu_and_wheel_odom"]
+        distances_odom = self.odom.get_distances_odom()
         distance_odom = distances_odom[-1] if distances_odom is not None else None
-        average_speed_icp = self.icp.get_average_speed()
-        all_average_speed_odom = self.odom.get_all_average_speeds()
-        average_speed_odom = all_average_speed_odom["/imu_and_wheel_odom"]
-        start_and_end_of_moving_icp = self.icp.get_start_and_end_of_moving()
-        all_starts_and_ends_of_moving_odom = self.odom.get_all_starts_and_ends_of_moving()
-        start_and_end_of_moving_odom = all_starts_and_ends_of_moving_odom["/imu_and_wheel_odom"]
+        average_speed_icp = self.icp.get_average_speed_icp()
+        average_speed_odom = self.odom.get_average_speed_odom()
+        start_and_end_of_moving_icp = self.icp.get_start_and_end_of_moving_icp()
+        start_and_end_of_moving_odom = self.odom.get_start_and_end_of_moving_odom()
         start_of_moving = start_and_end_of_moving_icp[0] if start_and_end_of_moving_icp[0] is not None else start_and_end_of_moving_odom[0]
         end_of_moving = start_and_end_of_moving_icp[1] if start_and_end_of_moving_icp[1] is not None else start_and_end_of_moving_odom[1]
         average_speed = average_speed_icp if average_speed_icp is not None else average_speed_odom

@@ -67,7 +67,7 @@ class ICPDataProcessor:
             self.distances = np.linalg.norm(distances_xyz, axis=1)
         return self.distances
 
-    def get_average_speed(self):
+    def get_average_speed_icp(self):
         if self.transformed_icp is None:
             return None
         distances_one_period = np.abs(self.transformed_icp.T[1:] - self.transformed_icp.T[:-1])
@@ -76,7 +76,7 @@ class ICPDataProcessor:
         speeds = np.linalg.norm(speeds_xyz, axis=1)
         return np.sum(speeds) / len(speeds) if speeds is not None else None
 
-    def get_start_and_end_of_moving(self):
+    def get_start_and_end_of_moving_icp(self):
         if self.transformed_icp is None:
             return None, None
         if self.start_of_moving is None:
@@ -105,18 +105,18 @@ class ICPDataProcessor:
     def load_class_object(self, output_folder):
         object_ = np.load(f"{output_folder}/.icp.npz")
         self.transformed_icp = object_["coordinates"]
-        self.times = object_["saved_times"]
+        self.times = object_["times"]
         self.first_rotation_matrix = object_["first_matrix"]
         self.first_transform = object_["first_transform"]
-        self.transform_matrices = object_["matrices"]
+        self.transform_matrices = object_["transform_matrices"]
 
     def save_class_object(self, output_folder):
         state_icp = "False"
         if self.transformed_icp is not None:
             state_icp = "True"
-            np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, saved_times=self.times,
+            np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, times=self.times,
                      first_matrix=self.first_rotation_matrix, first_transform=self.first_transform,
-                     matrices=self.transform_matrices)
+                     transform_matrices=self.transform_matrices)
         is_icp_in_file = False
         if os.path.exists(f"{output_folder}/.data_availability.txt"):
             with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
