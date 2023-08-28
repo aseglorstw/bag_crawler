@@ -57,7 +57,7 @@ class ODOMDataProcessor:
                 yield topic_name
         return None
 
-    def get_transformed_coordinates(self):
+    def get_transformed_odom(self):
         all_transformed_coordinates = dict()
         for odom_topic in self.odom_topics:
             all_transformed_coordinates[odom_topic.get_topic_name()] = odom_topic.get_transformed_odom()

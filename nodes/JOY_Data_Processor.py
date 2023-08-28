@@ -24,14 +24,12 @@ class JOYDataProcessor:
 
     def create_joy_control_coordinates(self, joy_control_times):
         icp = self.icp.get_transformed_icp()
-        all_transformed_coordinates = self.odom.get_all_transformed_coordinates()
-        odom = all_transformed_coordinates["/imu_and_wheel_odom"]
-        saved_times_icp = self.icp.get_times_icp()
-        all_times_odom = self.odom.get_all_times()
-        saved_times_odom = all_times_odom["/imu_and_wheel_odom"]
+        odom = self.odom.get_transformed_odoom()
+        times_icp = self.icp.get_times_icp()
+        times_odom = self.odom.get_times_odom()
         if (icp is None and odom is None) or joy_control_times is None:
             return None
-        saved_times = saved_times_icp if icp is not None else saved_times_odom
+        saved_times = times_icp if icp is not None else times_odom
         coordinates = icp if icp is not None else odom
         indices = np.unique(np.searchsorted(saved_times, joy_control_times))
         split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 5)[0], [len(indices) - 1]))
