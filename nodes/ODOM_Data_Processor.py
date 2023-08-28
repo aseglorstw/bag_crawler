@@ -14,7 +14,6 @@ class ODOMDataProcessor:
 
     def read_odom_topics(self):
         topic_names = list(self.get_odom_topics())
-        print(topic_names)
         start_time = self.bag.get_start_time()
         if topic_names is None:
             print("The topic odom was not found")
