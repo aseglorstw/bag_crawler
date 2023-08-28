@@ -93,13 +93,13 @@ class ICPDataProcessor:
     def get_transformed_icp(self):
         return self.transformed_icp
 
-    def get_first_rotation_matrix_icp(self):
+    def get_first_matrix_icp(self):
         return self.first_rotation_matrix
 
     def get_first_transform_icp(self):
         return self.first_transform
 
-    def get_matrices_icp(self):
+    def get_transform_matrices_icp(self):
         return self.transform_matrices
 
     def load_class_object(self, output_folder):

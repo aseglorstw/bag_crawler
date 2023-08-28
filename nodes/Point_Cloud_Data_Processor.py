@@ -25,6 +25,7 @@ class PointCloudDataProcessor:
             print("The topic lidar posted to was not found")
             return None
         save_interval = 20
+        pc_save_frequency = 200
         matrix_lidar_base_link = self.get_matrix_from_lidar_to_base_link(topic_name)
         start_time = self.bag.get_start_time()
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
@@ -33,7 +34,8 @@ class PointCloudDataProcessor:
                 save_time = time.to_sec() - start_time
                 msg = PointCloud2(*self.slots(msg))
                 cloud = np.array(list(read_points(msg)))
-                vectors = np.array([cloud[::200, 0], cloud[::200, 1], cloud[::200, 2]])
+                vectors = np.array([cloud[::pc_save_frequency, 0], cloud[::pc_save_frequency, 1],
+                                    cloud[::pc_save_frequency, 2]])
                 matrix_lidar_static_frame = self.get_matrix_from_lidar_to_static_frame(matrix_lidar_base_link, save_time)
                 if matrix_lidar_static_frame is None:
                     continue
@@ -42,15 +44,13 @@ class PointCloudDataProcessor:
                 yield transformed_vectors
 
     def transform_point_cloud(self, point_cloud):
-        all_first_rotation_matrices = self.odom.get_all_first_rotation_matrices()
-        first_rotation_matrix_icp = self.icp.get_first_rotation_matrix_icp()
-        first_rotation_matrix_odom = all_first_rotation_matrices["/imu_and_wheel_odom"]
-        if len(point_cloud) == 0 or (first_rotation_matrix_odom is None and first_rotation_matrix_icp is None):
+        first_matrix_icp = self.icp.get_first_matrix_icp()
+        first_matrix_odom = self.odom.get_first_matrix_odom()
+        if len(point_cloud) == 0 or (first_matrix_odom is None and first_matrix_icp is None):
             return None
-        first_matrix = first_rotation_matrix_icp if first_rotation_matrix_icp is not None else first_rotation_matrix_odom
-        all_first_transforms = self.odom.get_all_first_transforms()
+        first_matrix = first_matrix_icp if first_matrix_icp is not None else first_matrix_odom
         first_transform_icp = self.icp.get_first_transform_icp()
-        first_transform_odom = all_first_transforms["/imu_and_wheel_odom"]
+        first_transform_odom = self.odom.get_first_transform_odom()
         first_transform = first_transform_icp if first_transform_icp is not None else first_transform_odom
         inv_matrix = np.linalg.inv(first_matrix[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
@@ -91,12 +91,10 @@ class PointCloudDataProcessor:
         return None
 
     def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
-        all_times = self.odom.get_all_times()
         index_icp = np.unique(np.searchsorted(self.icp.get_times_icp(), save_time))[0]
-        index_odom = np.unique(np.searchsorted(all_times["/imu_and_wheel_odom"], save_time))[0]
-        all_matrices = self.odom.get_all_transform_matrices()
-        matrices_icp = self.icp.get_matrices_icp()
-        matrices_odom = all_matrices["/imu_and_wheel_odom"]
+        index_odom = np.unique(np.searchsorted(self.odom.get_times_odom(), save_time))[0]
+        matrices_icp = self.icp.get_transform_matrices_icp()
+        matrices_odom = self.odom.get_transform_matrices_odom()
         if 0 <= index_icp < len(matrices_icp) and len(matrices_icp) > 0:
             matrix_lidar_static_frame = matrices_icp[index_icp]
         elif len(matrices_icp) <= index_odom < len(matrices_odom) and len(matrices_odom) > 0:

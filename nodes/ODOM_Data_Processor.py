@@ -57,13 +57,13 @@ class ODOMDataProcessor:
                 yield topic_name
         return None
 
-    def get_all_transformed_coordinates(self):
+    def get_transformed_coordinates(self):
         all_transformed_coordinates = dict()
         for odom_topic in self.odom_topics:
             all_transformed_coordinates[odom_topic.get_topic_name()] = odom_topic.get_transformed_odom()
-        return all_transformed_coordinates
+        return all_transformed_coordinates["/imu_and_wheel_odom"]
 
-    def get_all_distances(self):
+    def get_distances(self):
         all_distances = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -75,9 +75,9 @@ class ODOMDataProcessor:
                 distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
                 distances = np.linalg.norm(distances_xyz, axis=1)
             all_distances[odom_topic.get_topic_name()] = distances
-        return all_distances
+        return all_distances["/imu_and_wheel_odom"]
 
-    def get_all_starts_and_ends_of_moving(self):
+    def get_start_and_end_of_moving(self):
         all_starts_and_ends_of_moving = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -92,9 +92,9 @@ class ODOMDataProcessor:
                 start_of_moving = times[moving_indexes[0]]
                 end_of_moving = times[moving_indexes[-1]]
             all_starts_and_ends_of_moving[odom_topic.get_topic_name()] = (start_of_moving, end_of_moving)
-        return all_starts_and_ends_of_moving
+        return all_starts_and_ends_of_moving["/imu_and_wheel_odom"]
 
-    def get_all_average_speeds(self):
+    def get_average_speeds(self):
         all_average_speeds = dict()
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
@@ -106,34 +106,34 @@ class ODOMDataProcessor:
             speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
             speeds = np.linalg.norm(speeds_xyz, axis=1)
             all_average_speeds[odom_topic.get_topic_name()] = np.sum(speeds) / len(speeds) if speeds is not None else None
-        return all_average_speeds
+        return all_average_speeds["/imu_and_wheel_odom"]
 
-    def get_all_first_rotation_matrices(self):
+    def get_first__matrix_odom(self):
         first_rotation_matrices = dict()
         for odom_topic in self.odom_topics:
             first_rotation_matrices[odom_topic.get_topic_name()] = odom_topic.get_first_rotation_matrix()
-        return first_rotation_matrices
+        return first_rotation_matrices["/imu_and_wheel_odom"]
 
     def get_odom_topics_objects(self):
         return self.odom_topics
 
-    def get_all_first_transforms(self):
+    def get_first_transform_odom(self):
         all_first_transforms = dict()
         for odom_topic in self.odom_topics:
             all_first_transforms[odom_topic.get_topic_name()] = odom_topic.get_first_transform()
-        return all_first_transforms
+        return all_first_transforms["/imu_and_wheel_odom"]
 
-    def get_all_times(self):
+    def get_times_odom(self):
         all_times = dict()
         for odom_topic in self.odom_topics:
             all_times[odom_topic.get_topic_name()] = odom_topic.get_times()
-        return all_times
+        return all_times["/imu_and_wheel_odom"]
 
-    def get_all_transform_matrices(self):
+    def get_transform_matrices_odom(self):
         all_transform_matrices = dict()
         for odom_topic in self.odom_topics:
             all_transform_matrices[odom_topic.get_topic_name()] = odom_topic.get_transform_matrices()
-        return all_transform_matrices
+        return all_transform_matrices["/imu_and_wheel_odom"]
 
     def load_class_object(self, output_folder):
         for file in pathlib.Path(output_folder).iterdir():
