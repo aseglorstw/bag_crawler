@@ -48,7 +48,8 @@ class ODOMDataProcessor:
                 return None
             inv_matrix = np.linalg.inv(odom_topic.get_first_rotation_matrix()[:3, :3])
             coordinates = np.concatenate(odom, axis=1)
-            odom_topic.set_transformed_odom(inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1))
+            odom_topic.set_transformed_odom(inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0],
+                                                                                      axis=1))
 
     def get_odom_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
@@ -153,9 +154,11 @@ class ODOMDataProcessor:
             transformed_odom = odom_topic.get_transformed_odom()
             if transformed_odom is not None:
                 state_odom = "True"
-                np.savez(f"{output_folder}/.{odom_topic.get_topic_name().replace('/', '_')[1:]}.npz", coordinates=transformed_odom,
-                         saved_times=odom_topic.get_times(), first_rotation_matrix=odom_topic.get_first_rotation_matrix(),
-                         first_transform=odom_topic.get_first_transform(), matrices=odom_topic.get_transform_matrices())
+                np.savez(f"{output_folder}/.{self.get_name_for_npz_file(odom_topic.get_topic_name())}.npz",
+                         coordinates=transformed_odom, times=odom_topic.get_times(),
+                         first_rotation_matrix=odom_topic.get_first_rotation_matrix(),
+                         first_transform=odom_topic.get_first_transform(),
+                         transform_matrices=odom_topic.get_transform_matrices())
         is_odom_in_file = False
         if os.path.exists(f"{output_folder}/.data_availability.txt"):
             with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
@@ -179,3 +182,7 @@ class ODOMDataProcessor:
         transform_matrix[:3, :3] = rotation_matrix
         transform_matrix[:3, 3] = translation
         return transform_matrix
+
+    @staticmethod
+    def get_name_for_npz_file(topic_name):
+        return topic_name.replace('/', '_')[1:]
