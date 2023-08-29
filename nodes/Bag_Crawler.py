@@ -17,8 +17,10 @@ def main(root_directory):
 
     task_lists = directory_scanner.create_task_list(root_directory)
     print(task_lists)
+
     for path_to_bag_file in task_lists.keys():
         task_list = task_lists[path_to_bag_file]
+
         bag = open_bag_file(path_to_bag_file)
         if bag is None:
             continue
@@ -50,8 +52,8 @@ def process_icp(bag, is_isp, output_folder):
     if is_isp:
         icp.load_class_object(output_folder)
         return icp
-    icp.read_icp_topic()
-    icp.transform_icp_trajectory()
+    coord_icp = icp.read_icp_topic()
+    icp.transform_icp_trajectory(coord_icp)
     icp.save_class_object(output_folder)
     return icp
 
@@ -61,13 +63,11 @@ def process_odom(bag, is_odom, output_folder):
     if is_odom:
         odom.load_class_object(output_folder)
         odom.find_selected_topic()
-        print(odom.get_name_of_selected_topic())
         return odom
     odom.read_odom_topics()
     odom.transform_trajectory()
     odom.find_selected_topic()
     odom.save_class_object(output_folder)
-    print(odom.get_name_of_selected_topic())
     return odom
 
 
@@ -106,14 +106,14 @@ def create_graphs(icp, odom, point_cloud, joy, output_folder):
     Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), icp.get_times_icp(),
                                                    icp.get_start_and_end_of_moving_icp(),
                                                    odom.get_start_and_end_of_moving_odom_from_selected_topic(),
-                                                   odom.get_odom_topics_objects(), odom.get_name_of_selected_topic(),
-                                                   output_folder)
+                                                   odom.get_odom_topics_objects(), output_folder)
     Graphs_Creator.create_graph_xy_and_point_cloud(icp.get_transformed_icp(), odom.get_odom_topics_objects(),
                                                    point_cloud.get_transformed_point_cloud(), output_folder)
     Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(),
                                                           odom.get_transformed_odom_from_selected_topic(),
                                                           joy.get_joy_control_coordinates(),
-                                                          odom.get_name_of_selected_topic(), output_folder)
+                                                          odom.get_name_of_selected_topic(), joy.get_joy_topic(),
+                                                          output_folder)
 
 
 def write_info_to_files(bag, icp, odom, output_folder):

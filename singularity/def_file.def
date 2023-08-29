@@ -1,10 +1,81 @@
 Bootstrap: docker
-From: ubuntu:20.04
+From: ros:noetic-perception
 
 %post
+    export XDG_CACHE_HOME=/tmp/singularity-cache # pip cache
+
+    # Install Apt packages
+    packages="
+    gcc
+    g++
+    bridge-utils
+    build-essential
+    htop
+    net-tools
+    screen
+    sshpass
+    tmux
+    vim
+    wget
+    curl
+    git
+    python3-pip
+    python3-catkin-tools
+    python3-pcl
+    ros-noetic-ros-numpy
+    ros-noetic-rviz
+    ros-noetic-tf-conversions
+    "
     apt-get update
-    apt-get install -y python3
-%runscript
-    echo "aa"
-%files
-    /home/robert/catkin_ws/src/bag_crawler
+    apt-get install -y ${packages}
+
+    # Install Python packages
+    python_pkgs="
+    iopath
+    fvcore
+    tensorboard
+    torch==1.10.0
+    dgp==0.0.91
+    matplotlib==3.4.3
+    open3d==0.10.0.0
+    opencv_python==4.5.4.58
+    pandas==1.3.4
+    Pillow==9.0.1
+    requests==2.26.0
+    scipy==1.7.2
+    setuptools==58.0.4
+    tifffile==2021.11.2
+    tqdm==4.62.3
+    scikit-image==0.19.3
+    "
+    pip install ${python_pkgs}
+    pip install git+https://github.com/facebookresearch/pytorch3d.git@stable
+    pip install git+https://github.com/autonomousvision/kitti360Scripts.git
+    ln -s /usr/bin/python3 /usr/bin/python
+
+    # Setup ROS workspace
+    ws=/opt/ros/depthcorr_ws/
+    mkdir -p "${ws}/src/"
+    cd "${ws}/src/"
+    git clone https://github.com/tpet/data.git
+    git clone https://github.com/RuslanAgishev/depth_correction.git
+    cd $ws && wstool init src ${ws}/src/depth_correction/dependencies.rosinstall
+
+    # build libnabo
+    cd "${ws}/src/"
+    git clone https://github.com/ethz-asl/libnabo
+    nabo_build=$ws/src/libnabo/build/
+    mkdir -p $nabo_build && cd $nabo_build && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo $ws/src/libnabo/
+    cd $nabo_build && make && make install
+
+    # build libpointmatcher
+    cd "${ws}/src/"
+    git clone https://github.com/ethz-asl/libpointmatcher
+    lpm_build=$ws/src/libpointmacher_ros/build/
+    mkdir -p $lpm_build && cd $lpm_build && cmake $ws/src/libpointmatcher/
+    cd $lpm_build && make && make install
+
+    # build ROS workspace
+    cd "${ws}/" && catkin config --extend /opt/ros/noetic
+    cd "${ws}/" && catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+    cd "${ws}/" && catkin build
