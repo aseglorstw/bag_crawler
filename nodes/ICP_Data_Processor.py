@@ -7,6 +7,7 @@ import os
 class ICPDataProcessor:
     def __init__(self, bag):
         self.bag = bag
+        self.icp = None
         self.times = []
         self.transform_matrices = []
         self.first_rotation_matrix = None
@@ -17,7 +18,6 @@ class ICPDataProcessor:
         self.end_of_moving = None
 
     def read_icp_topic(self):
-        icp = []
         topic_name = self.get_icp_topic()
         start_time = self.bag.get_start_time()
         if topic_name is None:
@@ -29,14 +29,13 @@ class ICPDataProcessor:
             orientation = msg.pose.pose.orientation
             quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
             self.add_transform_matrix(quaternion.rotation_matrix, [position.x, position.y, position.z])
-            icp.append(np.array([[position.x], [position.y], [position.z]]))
+            self.icp.append(np.array([[position.x], [position.y], [position.z]]))
             if self.first_rotation_matrix is None:
                 self.first_rotation_matrix = quaternion.rotation_matrix
                 self.first_transform = np.array([[position.x], [position.y], [position.z]])
             print(f"The Coordinates from topic /icp_odom. Time: {save_time}")
             self.times.append(save_time)
         self.times = np.array(self.times)
-        return icp
 
     def add_transform_matrix(self, rotation_matrix, translation):
         transform_matrix = np.eye(4)
@@ -44,11 +43,11 @@ class ICPDataProcessor:
         transform_matrix[:3, 3] = translation
         self.transform_matrices.append(transform_matrix)
 
-    def transform_icp_trajectory(self, icp):
-        if icp is None:
+    def transform_icp_trajectory(self):
+        if self.icp is None:
             return None
         inv_matrix = np.linalg.inv(self.first_rotation_matrix[:3, :3])
-        coordinates = np.concatenate(icp, axis=1)
+        coordinates = np.concatenate(self.icp, axis=1)
         self.transformed_icp = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
 
     def get_icp_topic(self):

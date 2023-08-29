@@ -50,8 +50,8 @@ def process_icp(bag, is_isp, output_folder):
     if is_isp:
         icp.load_class_object(output_folder)
         return icp
-    coordinates_icp = icp.read_icp_topic()
-    icp.transform_icp_trajectory(coordinates_icp)
+    icp.read_icp_topic()
+    icp.transform_icp_trajectory()
     icp.save_class_object(output_folder)
     return icp
 
