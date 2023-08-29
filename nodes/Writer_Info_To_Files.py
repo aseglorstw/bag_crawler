@@ -15,12 +15,12 @@ class WriterInfo:
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
         distances_icp = self.icp.get_distances_icp()
         distance_icp = distances_icp[-1] if distances_icp is not None else None
-        distances_odom = self.odom.get_distances_odom()
+        distances_odom = self.odom.get_distances_odom_from_selected_topic()
         distance_odom = distances_odom[-1] if distances_odom is not None else None
         average_speed_icp = self.icp.get_average_speed_icp()
-        average_speed_odom = self.odom.get_average_speed_odom()
+        average_speed_odom = self.odom.get_average_speed_odom_from_selected_topic()
         start_and_end_of_moving_icp = self.icp.get_start_and_end_of_moving_icp()
-        start_and_end_of_moving_odom = self.odom.get_start_and_end_of_moving_odom()
+        start_and_end_of_moving_odom = self.odom.get_start_and_end_of_moving_odom_from_selected_topic()
         start_of_moving = start_and_end_of_moving_icp[0] if start_and_end_of_moving_icp[0] is not None else start_and_end_of_moving_odom[0]
         end_of_moving = start_and_end_of_moving_icp[1] if start_and_end_of_moving_icp[1] is not None else start_and_end_of_moving_odom[1]
         average_speed = average_speed_icp if average_speed_icp is not None else average_speed_odom

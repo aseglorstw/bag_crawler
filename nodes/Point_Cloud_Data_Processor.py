@@ -45,12 +45,12 @@ class PointCloudDataProcessor:
 
     def transform_point_cloud(self, point_cloud):
         first_matrix_icp = self.icp.get_first_matrix_icp()
-        first_matrix_odom = self.odom.get_first_matrix_odom()
+        first_matrix_odom = self.odom.get_first_matrix_odom_from_selected_topic()
         if len(point_cloud) == 0 or (first_matrix_odom is None and first_matrix_icp is None):
             return None
         first_matrix = first_matrix_icp if first_matrix_icp is not None else first_matrix_odom
         first_transform_icp = self.icp.get_first_transform_icp()
-        first_transform_odom = self.odom.get_first_transform_odom()
+        first_transform_odom = self.odom.get_first_transform_odom_from_selected_topic()
         first_transform = first_transform_icp if first_transform_icp is not None else first_transform_odom
         inv_matrix = np.linalg.inv(first_matrix[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
@@ -92,9 +92,9 @@ class PointCloudDataProcessor:
 
     def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
         index_icp = np.unique(np.searchsorted(self.icp.get_times_icp(), save_time))[0]
-        index_odom = np.unique(np.searchsorted(self.odom.get_times_odom(), save_time))[0]
+        index_odom = np.unique(np.searchsorted(self.odom.get_times_odom_from_selected_topic(), save_time))[0]
         matrices_icp = self.icp.get_transform_matrices_icp()
-        matrices_odom = self.odom.get_transform_matrices_odom()
+        matrices_odom = self.odom.get_transform_matrices_odom_from_selected_topic()
         if 0 <= index_icp < len(matrices_icp) and len(matrices_icp) > 0:
             matrix_lidar_static_frame = matrices_icp[index_icp]
         elif len(matrices_icp) <= index_odom < len(matrices_odom) and len(matrices_odom) > 0:

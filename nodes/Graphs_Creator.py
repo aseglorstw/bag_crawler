@@ -4,7 +4,7 @@ import pyvista as pv
 import os
 
 
-def create_graph_xy_and_point_cloud(odom, icp, point_cloud, folder):
+def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder):
     fig, ax = plt.subplots()
     marker_size = 0.5
     plt.xlabel('X-coordinate')
@@ -12,85 +12,111 @@ def create_graph_xy_and_point_cloud(odom, icp, point_cloud, folder):
     plt.title("XY plot of UGV's movement")
     if point_cloud is not None:
         colors = transform_z_coordinates_to_color(point_cloud[2, :])
-        ax.scatter(point_cloud[0, :], point_cloud[1, :], s=marker_size, c=colors, cmap='Greens')
-    if odom is not None:
-        ax.plot(odom[0, :], odom[1, :], color='blue', label='imu_odom')
-    if icp is not None:
-        ax.plot(icp[0, :], icp[1, :], color='red', linestyle='--', label='icp_odom')
+        ax.scatter(point_cloud[0, :], point_cloud[1, :], s=marker_size, c=colors, cmap='Greens', label="point_cloud")
+    colors_odom = ['blue', 'cyan', 'magenta', 'yellow', 'black']
+    for idx, odom in enumerate(objects_odom):
+        coord_odom = odom.get_transformed_odom()
+        if colors_odom is not None:
+            color = colors_odom[idx % len(colors_odom)]
+            ax.plot(coord_odom[0, :], coord_odom[1, :], color=color, label=odom.get_topic_name())
+    if coord_icp is not None:
+        ax.plot(coord_icp[0, :], coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
     plt.savefig(f"{folder}/XY_plot_of_UGVs_movement.png")
     plt.close()
 
 
-def create_graph_x_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
+def create_graph_x_over_time(coord_icp, times_icp, objects_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in X direction")
-    if odom is not None:
-        ax.plot(saved_times_odom, odom[0, :], color='blue')
-    if icp is not None:
-        ax.plot(saved_times_icp, icp[0, :], color='red', linestyle='--')
+    colors_odom = ['blue', 'cyan', 'magenta', 'yellow', 'black']
+    for idx, odom in enumerate(objects_odom):
+        coord_odom = odom.get_transformed_odom()
+        if odom is not None:
+            color = colors_odom[idx % len(colors_odom)]
+            ax.plot(odom.get_times(), coord_odom[0, :], color=color, label=odom.get_topic_name())
+    if coord_icp is not None:
+        ax.plot(times_icp, coord_icp[0, :], color='red', linestyle='--', label='/icp_odom')
+    plt.legend()
     plt.savefig(f"{folder}/UGVs_movement_in_X_direction.png")
     plt.close()
 
 
-def create_graph_y_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
+def create_graph_y_over_time(coord_icp, times_icp, objects_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Y direction")
-    if odom is not None:
-        ax.plot(saved_times_odom, odom[1, :], color='blue')
-    if icp is not None:
-        ax.plot(saved_times_icp, icp[1, :], color='red', linestyle='--')
+    colors_odom = ['blue', 'cyan', 'magenta', 'yellow', 'black']
+    for idx, odom in enumerate(objects_odom):
+        coord_odom = odom.get_transformed_odom()
+        if odom is not None:
+            color = colors_odom[idx % len(colors_odom)]
+            ax.plot(odom.get_times(), coord_odom[1, :], color=color, label=odom.get_topic_name())
+    if coord_icp is not None:
+        ax.plot(times_icp, coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
+    plt.legend()
     plt.savefig(f"{folder}/UGVs_movement_in_Y_direction.png")
     plt.close()
 
 
-def create_graph_z_over_time(odom, icp, saved_times_odom, saved_times_icp, folder):
+def create_graph_z_over_time(coord_icp, times_icp, objects_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's movement in Z direction")
-    if odom is not None:
-        ax.plot(saved_times_odom, odom[2, :], color='blue')
-    if icp is not None:
-        ax.plot(saved_times_icp, icp[2, :], color='red', linestyle='--')
+    colors_odom = ['blue', 'cyan', 'magenta', 'yellow', 'black']
+    for idx, odom in enumerate(objects_odom):
+        coord_odom = odom.get_transformed_odom()
+        if odom is not None:
+            color = colors_odom[idx % len(colors_odom)]
+            ax.plot(odom.get_times(), coord_odom[2, :], color=color, label=odom.get_topic_name())
+    if coord_icp is not None:
+        ax.plot(times_icp, coord_icp[2, :], color='red', linestyle='--', label='/icp_odom')
+    plt.legend()
     plt.savefig(f"{folder}/UGVs_movement_in_Z_direction.png")
     plt.close()
 
 
-def create_graph_distance_over_time(distances_icp, distances_odom, saved_times_icp, saved_times_odom,
-                                    start_and_end_of_moving_icp, start_and_end_of_moving_odom, folder):
+def create_graph_distance_over_time(distances_icp, saved_times_icp, start_and_end_of_moving_icp,
+                                    start_and_end_of_moving_odom, objects_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
     plt.title("UGV's travelled distance over time")
-    if distances_odom is not None:
-        ax.plot(saved_times_odom, distances_odom, color='blue')
+    colors_odom = ['blue', 'cyan', 'magenta', 'yellow', 'black']
+    for idx, odom in enumerate(objects_odom):
+        distances_odom = odom.get_distances()
+        if distances_odom is not None:
+            color = colors_odom[idx % len(colors_odom)]
+            ax.plot(odom.get_times(), distances_odom, color=color, label=odom.get_topic_name())
     if distances_icp is not None:
-        ax.plot(saved_times_icp, distances_icp, color='red', linestyle='--')
+        ax.plot(saved_times_icp, distances_icp, color='red', linestyle='--', label='/icp_odom')
     if start_and_end_of_moving_icp[0] is not None:
         ax.axvline(start_and_end_of_moving_icp[0], color='green', linestyle=':', label='start_of_moving')
         ax.axvline(start_and_end_of_moving_icp[1], color='green', linestyle='--', label='end_of_moving')
     elif start_and_end_of_moving_odom[0] is not None:
         ax.axvline(start_and_end_of_moving_odom[0], color='green', linestyle=':', label='start_of_moving')
         ax.axvline(start_and_end_of_moving_odom[1], color='green', linestyle='--', label='end_of_moving')
+
     plt.legend()
     plt.savefig(f"{folder}/UGVs_travelled_distance_over_time.png")
     plt.close()
 
 
-def create_graph_joy_control_times_and_icp(icp, odom,  joy_control_coordinates, folder):
+def create_graph_joy_control_times_and_icp(coord_icp, coord_odom,  joy_control_coordinates, topic_name_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement along with joystick control trajectory sections")
-    if icp is not None:
-        ax.plot(icp[0, :], icp[1, :], color='red', linestyle='--', label='icp_odom')
-    elif odom is not None:
-        ax.plot(odom[0, :], odom[1, :], color='blue', label='imu_odom')
+    if coord_icp is not None:
+        ax.plot(coord_icp[0, :], coord_icp[1, :], color='red', linestyle='--', label='icp_odom')
+    elif coord_odom is not None:
+        ax.plot(coord_odom[0, :], coord_odom[1, :], color='blue', label=topic_name_odom)
+    else:
+        pass
     if joy_control_coordinates is not None:
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')

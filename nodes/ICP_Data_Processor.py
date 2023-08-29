@@ -33,7 +33,7 @@ class ICPDataProcessor:
             if self.first_rotation_matrix is None:
                 self.first_rotation_matrix = quaternion.rotation_matrix
                 self.first_transform = np.array([[position.x], [position.y], [position.z]])
-            print(f"The Coordinates from frame 'base_link' to frame 'map' are saved. Time: {save_time}")
+            print(f"The Coordinates from topic /icp_odom. Time: {save_time}")
             self.times.append(save_time)
         self.times = np.array(self.times)
         return icp

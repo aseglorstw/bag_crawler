@@ -65,10 +65,14 @@ def process_odom(bag, is_odom, output_folder):
     odom = ODOMDataProcessor(bag)
     if is_odom:
         odom.load_class_object(output_folder)
+        odom.find_selected_topic()
+        print(odom.get_name_of_selected_topic())
         return odom
     odom.read_odom_topics()
     odom.transform_trajectory()
+    odom.find_selected_topic()
     odom.save_class_object(output_folder)
+    print(odom.get_name_of_selected_topic())
     return odom
 
 
@@ -98,23 +102,22 @@ def process_joy(bag, icp, odom):
 
 
 def create_graphs(icp, odom, point_cloud, joy, output_folder):
-    Graphs_Creator.create_graph_x_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(),
-                                            odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_y_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(),
-                                            odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_z_over_time(odom.get_transformed_odom(), icp.get_transformed_icp(),
-                                            odom.get_times_odom(),
-                                            icp.get_times_icp(), output_folder)
-    Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), odom.get_distances_odom(),
-                                                   icp.get_times_icp(),
-                                                   odom.get_times_odom(), icp.get_start_and_end_of_moving_icp(),
-                                                   odom.get_start_and_end_of_moving_odom(), output_folder)
-    Graphs_Creator.create_graph_xy_and_point_cloud(odom.get_transformed_odom(), icp.get_transformed_icp(),
+    Graphs_Creator.create_graph_x_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
+                                            odom.get_odom_topics_objects(), output_folder)
+    Graphs_Creator.create_graph_y_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
+                                            odom.get_odom_topics_objects(), output_folder)
+    Graphs_Creator.create_graph_z_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
+                                            odom.get_odom_topics_objects(), output_folder)
+    Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), icp.get_times_icp(),
+                                                   icp.get_start_and_end_of_moving_icp(),
+                                                   odom.get_start_and_end_of_moving_odom_from_selected_topic,
+                                                   odom.get_odom_topics_objects(), output_folder)
+    Graphs_Creator.create_graph_xy_and_point_cloud(icp.get_transformed_icp(), odom.get_odom_topics_objects(),
                                                    point_cloud.get_transformed_point_cloud(), output_folder)
-    Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(), odom.get_transformed_odom(),
-                                                          joy.get_joy_control_coordinates(), output_folder)
+    Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(),
+                                                          odom.get_transformed_odom_from_selected_topic(),
+                                                          joy.get_joy_control_coordinates(),
+                                                          odom.get_name_of_selected_topic, output_folder)
 
 
 def write_info_to_files(bag, icp, odom, output_folder):

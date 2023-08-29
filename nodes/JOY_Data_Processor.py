@@ -24,9 +24,9 @@ class JOYDataProcessor:
 
     def create_joy_control_coordinates(self, joy_control_times):
         icp = self.icp.get_transformed_icp()
-        odom = self.odom.get_transformed_odom()
+        odom = self.odom.get_transformed_odom_from_selected_topic()
         times_icp = self.icp.get_times_icp()
-        times_odom = self.odom.get_times_odom()
+        times_odom = self.odom.get_times_odom_from_selected_topic()
         if (icp is None and odom is None) or joy_control_times is None:
             return None
         saved_times = times_icp if icp is not None else times_odom
