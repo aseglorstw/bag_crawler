@@ -81,7 +81,7 @@ def create_graph_z_over_time(coord_icp, times_icp, objects_odom, folder):
 
 
 def create_graph_distance_over_time(distances_icp, saved_times_icp, start_and_end_of_moving_icp,
-                                    start_and_end_of_moving_odom, objects_odom, folder):
+                                    start_and_end_of_moving_odom, objects_odom, topic_name_odom, folder):
     fig, ax = plt.subplots()
     plt.xlabel('time [s]')
     plt.ylabel('distance[m]')
@@ -98,8 +98,8 @@ def create_graph_distance_over_time(distances_icp, saved_times_icp, start_and_en
         ax.axvline(start_and_end_of_moving_icp[0], color='green', linestyle=':', label='start_of_moving')
         ax.axvline(start_and_end_of_moving_icp[1], color='green', linestyle='--', label='end_of_moving')
     elif start_and_end_of_moving_odom[0] is not None:
-        ax.axvline(start_and_end_of_moving_odom[0], color='green', linestyle=':', label='start_of_moving')
-        ax.axvline(start_and_end_of_moving_odom[1], color='green', linestyle='--', label='end_of_moving')
+        ax.axvline(start_and_end_of_moving_odom[0], color='green', linestyle=':', label='start of moving')
+        ax.axvline(start_and_end_of_moving_odom[1], color='green', linestyle='--', label='end of moving')
 
     plt.legend()
     plt.savefig(f"{folder}/UGVs_travelled_distance_over_time.png")
