@@ -1,6 +1,7 @@
+import numpy as np
 import yaml
 import datetime
-
+import rospy
 
 class WriterInfo:
     def __init__(self, bag, icp, odom, folder):
@@ -33,10 +34,21 @@ class WriterInfo:
         type_info, topics_info = self.bag.get_type_and_topic_info()
         with open(f"{self.folder}/topics_info.txt", "w", encoding="utf-8") as file:
             for topic_name, topic_info in topics_info.items():
+                max_time_delay, average_time_delay = self.calculate_max_and_average_time_delay(topic_name)
                 msg_type = topic_info.msg_type
                 message_count = topic_info.message_count
-                frequency = topic_info.frequency
-                file.write(f"{topic_name} {msg_type} {message_count} {frequency}\n")
+                file.write(f"{topic_name} {msg_type} {message_count} {average_time_delay} {max_time_delay}\n")
+
+    def calculate_max_and_average_time_delay(self, topic_name):
+        times = []
+        start_time = self.bag.get_start_time()
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            times.append(rospy.Time.from_sec(time.to_sec()).to_sec() - start_time)
+        if len(times) > 1:
+            times = np.array(times)
+            time_delays = times[1:] - times[:-1]
+            return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
+        return None, None
 
     @staticmethod
     def get_date(seconds):
