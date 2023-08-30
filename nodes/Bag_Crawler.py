@@ -17,11 +17,7 @@ def main(root_directory):
 
     task_lists = directory_scanner.create_task_list(root_directory)
     print(task_lists)
-    c = 0
     for path_to_bag_file in task_lists.keys():
-        if c < 2:
-            c += 1
-            continue
         task_list = task_lists[path_to_bag_file]
 
         print(path_to_bag_file)
