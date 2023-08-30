@@ -17,11 +17,18 @@ class VideoDataProcessor:
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
+        demo_image = None
         for topic_name in topic_names:
             save_interval = self.calculate_save_interval(topic_name)
+            center_of_video = self.calculate_center_of_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, fourcc, 60, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
+                if msg_number == center_of_video and demo_image is None:
+                    msg = CompressedImage(*self.slots(msg))
+                    np_arr = np.fromstring(msg.data, np.uint8)
+                    demo_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                    cv2.imwrite(os.path.join(folder, "demo_img.jpg"), demo_image)
                 if msg_number % save_interval == 0:
                     time = rospy.Time.from_sec(time.to_sec())
                     time_from_start = int(time.to_sec() - self.start_time)
@@ -45,6 +52,10 @@ class VideoDataProcessor:
     def calculate_save_interval(self, topic_name):
         save_interval = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 1200)
         return save_interval if save_interval > 0 else 1
+
+    def calculate_center_of_video(self, topic_name):
+        center_of_video = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 2)
+        return center_of_video
 
     def get_datetime(self, time_from_start):
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
