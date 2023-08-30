@@ -1,6 +1,5 @@
 import pathlib
 import os
-import logging
 
 
 class DirectoryScanner:

@@ -1,7 +1,5 @@
 import yaml
-import os
 import datetime
-import numpy as np
 
 
 class WriterInfo:

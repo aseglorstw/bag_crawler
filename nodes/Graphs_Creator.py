@@ -10,8 +10,12 @@ def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
     if point_cloud is not None:
-        colors = transform_z_coordinates_to_color(point_cloud[2, :])
-        ax.scatter(point_cloud[0, :], point_cloud[1, :], s=marker_size, c=colors, cmap='Greens', label="point_cloud")
+        not_nan_index = ~np.isnan(point_cloud[0, :]) & ~np.isnan(point_cloud[1, :]) & ~np.isnan(point_cloud[2, :])
+        cleaned_point_cloud = [point_cloud[0, :][not_nan_index], point_cloud[1, :][not_nan_index],
+                               point_cloud[2, :][not_nan_index]]
+        colors = transform_z_coordinates_to_color(cleaned_point_cloud[2])
+        ax.scatter(cleaned_point_cloud[0], cleaned_point_cloud[1], s=marker_size, c=colors, cmap='Greens',
+                   label="point_cloud")
     colors_odom = ['blue', 'brown', 'yellow', 'black', 'purple', 'gray']
     for idx, odom in enumerate(objects_odom):
         coord_odom = odom.get_transformed_odom()
