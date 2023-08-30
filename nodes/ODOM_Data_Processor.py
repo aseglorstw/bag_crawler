@@ -7,7 +7,6 @@ import pathlib
 
 
 class ODOMDataProcessor:
-
     def __init__(self, bag):
         self.bag = bag
         self.odom_topics = []

@@ -134,4 +134,3 @@ class PointCloudDataProcessor:
     @staticmethod
     def slots(msg):
         return [getattr(msg, var) for var in msg.__slots__]
-

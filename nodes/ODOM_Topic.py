@@ -2,6 +2,7 @@ import numpy as np
 
 
 class ODOMTopic:
+
     def __init__(self):
         self.topic_name = None
         self.first_rotation_matrix = None

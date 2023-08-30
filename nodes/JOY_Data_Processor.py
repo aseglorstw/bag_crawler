@@ -3,7 +3,6 @@ import numpy as np
 
 
 class JOYDataProcessor:
-
     def __init__(self, bag, icp, odom):
         self.bag = bag
         self.icp = icp
