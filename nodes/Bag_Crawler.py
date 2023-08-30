@@ -122,6 +122,7 @@ def write_info_to_files(bag, icp, odom, output_folder):
     writer = WriterInfo(bag, icp, odom, output_folder)
     writer.write_bag_info()
     writer.write_topics_info()
+    writer.write_moving_joints_info()
 
 
 def close_bag_file(bag, path_to_bag_file):

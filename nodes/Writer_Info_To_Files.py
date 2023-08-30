@@ -3,7 +3,9 @@ import yaml
 import datetime
 import rospy
 
+
 class WriterInfo:
+
     def __init__(self, bag, icp, odom, folder):
         self.bag = bag
         self.folder = folder
@@ -49,6 +51,22 @@ class WriterInfo:
             time_delays = times[1:] - times[:-1]
             return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
         return None, None
+
+    def write_moving_joints_info(self):
+        all_joints = None
+        old_coordinates = []
+        moving_joints = set()
+        for topic, msg, time in self.bag.read_messages(topics=["/joint_states"]):
+            if all_joints is None:
+                all_joints = np.array(msg.name)
+                old_coordinates = msg.position
+            distances = np.array(msg.position) - np.array(old_coordinates)
+            moving_indexes = np.where(distances > 0.02)[0]
+            old_coordinates = msg.position
+            moving_joints.update(set(all_joints[moving_indexes]))
+        with open(f"{self.folder}/moving_joints_info.txt", "w", encoding="utf-8") as file:
+            for joint in moving_joints:
+                file.write(f"{joint}\n")
 
     @staticmethod
     def get_date(seconds):
