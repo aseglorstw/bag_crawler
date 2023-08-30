@@ -70,7 +70,7 @@ class ODOMTopic:
         times_one_period = self.times[1:] - self.times[:-1]
         speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
         speeds = np.linalg.norm(speeds_xyz, axis=1)
-        return np.sum(speeds) / len(speeds) if speeds is not None else None
+        return np.average(speeds) if speeds is not None else None
 
     def get_transform_matrices(self):
         return self.transform_matrices
