@@ -97,23 +97,25 @@ def process_joy(bag, icp, odom):
 
 
 def create_graphs(icp, odom, point_cloud, joy, output_folder):
+    odom_topics_color = Graphs_Creator.match_color_odom_topic(odom.get_odom_topics_objects())
     Graphs_Creator.create_graph_x_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
-                                            odom.get_odom_topics_objects(), output_folder)
+                                            odom.get_odom_topics_objects(), output_folder, odom_topics_color)
     Graphs_Creator.create_graph_y_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
-                                            odom.get_odom_topics_objects(), output_folder)
+                                            odom.get_odom_topics_objects(), output_folder, odom_topics_color)
     Graphs_Creator.create_graph_z_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
-                                            odom.get_odom_topics_objects(), output_folder)
+                                            odom.get_odom_topics_objects(), output_folder, odom_topics_color)
     Graphs_Creator.create_graph_distance_over_time(icp.get_distances_icp(), icp.get_times_icp(),
                                                    icp.get_start_and_end_of_moving_icp(),
                                                    odom.get_start_and_end_of_moving_odom_from_selected_topic(),
-                                                   odom.get_odom_topics_objects(), output_folder)
+                                                   odom.get_odom_topics_objects(), output_folder, odom_topics_color)
     Graphs_Creator.create_graph_xy_and_point_cloud(icp.get_transformed_icp(), odom.get_odom_topics_objects(),
-                                                   point_cloud.get_transformed_point_cloud(), output_folder)
+                                                   point_cloud.get_transformed_point_cloud(), output_folder,
+                                                   odom_topics_color)
     Graphs_Creator.create_graph_joy_control_times_and_icp(icp.get_transformed_icp(),
                                                           odom.get_transformed_odom_from_selected_topic(),
                                                           joy.get_joy_control_coordinates(),
                                                           odom.get_name_of_selected_topic(), joy.get_joy_topic(),
-                                                          output_folder)
+                                                          output_folder, odom_topics_color)
 
 
 def write_info_to_files(bag, icp, odom, output_folder):

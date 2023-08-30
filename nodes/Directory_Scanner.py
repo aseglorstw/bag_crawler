@@ -26,7 +26,6 @@ class DirectoryScanner:
         if os.path.exists(os.path.join(directory, ".ignore")):
             with open(os.path.join(directory, ".ignore"), "r", encoding="utf-8") as file:
                 ignore_bag_files = [line.strip() for line in file if line.strip()]
-                print(ignore_bag_files)
         for file in pathlib.Path(directory).iterdir():
             if (file.is_file() and file.suffix == ".bag" and not any(suffix in file.stem for suffix in stop_suffixes)
                     and file.name not in ignore_bag_files):
