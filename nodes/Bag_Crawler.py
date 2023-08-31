@@ -31,7 +31,7 @@ def main(root_directory):
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
-        joy = process_joy(bag, icp, odom)
+        joy = process_joy(bag, icp, odom, path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
         write_bag_info_to_files(bag, icp, odom, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
@@ -87,13 +87,14 @@ def process_video(bag, is_video, output_folder):
     video = VideoDataProcessor(bag)
     if not is_video:
         result = video.read_images_and_save_video(output_folder)
-        video.write_result_to_file(result, output_folder)
+        video.write_info_to_data_availability(result, output_folder)
 
 
-def process_joy(bag, icp, odom):
+def process_joy(bag, icp, odom, output_folder):
     joy = JOYDataProcessor(bag, icp, odom)
     joy_control_times = joy.read_joy_topic()
     joy.create_joy_control_coordinates(joy_control_times)
+    joy.write_info_to_data_availability(output_folder)
     return joy
 
 

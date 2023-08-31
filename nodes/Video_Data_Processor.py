@@ -62,7 +62,7 @@ class VideoDataProcessor:
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
     @staticmethod
-    def write_result_to_file(result, output_folder):
+    def write_info_to_data_availability(result, output_folder):
         is_video_in_file = False
         state_video = "False"
         if result:

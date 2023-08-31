@@ -1,5 +1,6 @@
 import rospy
 import numpy as np
+import os
 
 
 class JOYDataProcessor:
@@ -46,3 +47,22 @@ class JOYDataProcessor:
 
     def get_joy_control_coordinates(self):
         return self.joy_control_coordinates
+
+    @staticmethod
+    def write_info_to_data_availability(output_folder):
+        is_joy_in_file = False
+        if os.path.exists(f"{output_folder}/.data_availability.txt"):
+            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+                lines = file.readlines()
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                for line in lines:
+                    if line.startswith('joy'):
+                        file.write(f"joy True\n")
+                        is_joy_in_file = True
+                    else:
+                        file.write(line)
+                if not is_joy_in_file:
+                    file.write(f"joy True\n")
+        else:
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                file.write(f"joy True\n")
