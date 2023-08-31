@@ -1,5 +1,6 @@
 import pathlib
 import os
+import json
 
 
 class DirectoryScanner:
@@ -60,10 +61,12 @@ class DirectoryScanner:
                      "bag_info": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
-        if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
-            return task_list
         log_file = os.path.join(web_folder, ".data_availability.txt")
-        if not os.path.exists(log_file):
+        new_file_size = os.path.getsize(path_to_bag_file)
+        with open(os.path.join(web_folder, "bag_info.json"), 'r') as json_file:
+            old_file_size = json.load(json_file)["size"]
+        if (not (os.path.exists(web_folder) and os.path.isdir(web_folder)) or not os.path.exists(log_file)
+                or new_file_size != old_file_size):
             return task_list
         with open(log_file, "r", encoding="utf-8") as file:
             for line in file:

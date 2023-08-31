@@ -31,7 +31,7 @@ class BAGInfoDataProcessor:
         bag_info = {"distance": distance, "average_speed": average_speed, "start of moving": start_of_moving,
                     "end of moving": end_of_moving, "start": self.get_date(info_dict['start']), "end":
                     self.get_date(info_dict['end']), "duration": info_dict['duration'],
-                    "size": round((info_dict['size']/pow(10, 9)), 2), "messages": info_dict['messages']}
+                    "size": info_dict['size'], "messages": info_dict['messages']}
         with open(f"{self.folder}/bag_info.json", "w", encoding="utf-8") as file:
             json.dump(bag_info, file, indent=4)
 
