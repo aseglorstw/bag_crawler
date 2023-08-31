@@ -33,7 +33,7 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, task_list["graphs"], path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom, path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom,task_list["bag_info"], path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -84,8 +84,8 @@ def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
 
 
 def process_video(bag, is_video, output_folder):
-    video = VideoDataProcessor(bag)
     if not is_video:
+        video = VideoDataProcessor(bag)
         result = video.read_images_and_save_video(output_folder)
         video.write_info_to_data_availability(result, output_folder)
 
@@ -122,12 +122,13 @@ def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
         Graphs_Creator.write_info_to_data_availability(output_folder)
 
 
-def write_bag_info_to_files(bag, icp, odom, output_folder):
-    bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
-    bag_info.write_bag_info()
-    bag_info.write_topics_info()
-    bag_info.write_moving_joints_info()
-
+def write_bag_info_to_files(bag, icp, odom, is_info, output_folder):
+    if not is_info:
+        bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
+        bag_info.write_bag_info()
+        bag_info.write_topics_info()
+        bag_info.write_moving_joints_info()
+        bag_info.write_info_to_data_availability(output_folder)
 
 
 def close_bag_file(bag, path_to_bag_file):

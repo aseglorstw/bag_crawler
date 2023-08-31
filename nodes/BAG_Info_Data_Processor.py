@@ -3,6 +3,7 @@ import yaml
 import datetime
 import rospy
 import json
+import os
 
 
 class BAGInfoDataProcessor:
@@ -74,6 +75,24 @@ class BAGInfoDataProcessor:
         return None, None
 
     @staticmethod
+    def write_info_to_data_availability(output_folder):
+        is_info_in_file = False
+        if os.path.exists(f"{output_folder}/.data_availability.txt"):
+            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+                lines = file.readlines()
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                for line in lines:
+                    if line.startswith('bag_info'):
+                        file.write(f"bag_info True\n")
+                        is_info_in_file = True
+                    else:
+                        file.write(line)
+                if not is_info_in_file:
+                    file.write(f"bag_info True\n")
+        else:
+            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+                file.write(f"bag_info True\n")
+
+    @staticmethod
     def get_date(seconds):
         return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')
-
