@@ -5,7 +5,7 @@ import rospy
 import json
 
 
-class WriterInfo:
+class BAGInfoDataProcessor:
 
     def __init__(self, bag, icp, odom, folder):
         self.bag = bag
@@ -47,17 +47,6 @@ class WriterInfo:
                                                 "max time delay": max_time_delay}
             json.dump(topics_info_dict, file, indent=4)
 
-    def calculate_max_and_average_time_delay(self, topic_name):
-        times = []
-        start_time = self.bag.get_start_time()
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            times.append(rospy.Time.from_sec(time.to_sec()).to_sec() - start_time)
-        if len(times) > 1:
-            times = np.array(times)
-            time_delays = times[1:] - times[:-1]
-            return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
-        return None, None
-
     def write_moving_joints_info(self):
         all_joints = None
         old_coordinates = []
@@ -72,6 +61,17 @@ class WriterInfo:
             moving_joints.update(set(all_joints[moving_indexes]))
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
             json.dump(list(moving_joints), file, indent=4)
+
+    def calculate_max_and_average_time_delay(self, topic_name):
+        times = []
+        start_time = self.bag.get_start_time()
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            times.append(rospy.Time.from_sec(time.to_sec()).to_sec() - start_time)
+        if len(times) > 1:
+            times = np.array(times)
+            time_delays = times[1:] - times[:-1]
+            return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
+        return None, None
 
     @staticmethod
     def get_date(seconds):

@@ -6,7 +6,7 @@ from ODOM_Data_Processor import ODOMDataProcessor
 from Point_Cloud_Data_Processor import PointCloudDataProcessor
 from Video_Data_Processor import VideoDataProcessor
 from JOY_Data_Processor import JOYDataProcessor
-from Writer_Info_To_Files import WriterInfo
+from BAG_Info_Data_Processor import BAGInfoDataProcessor
 
 
 def main(root_directory):
@@ -32,7 +32,7 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom)
         create_graphs(icp, odom, point_cloud, joy, path_to_web_folder)
-        write_info_to_files(bag, icp, odom, path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -118,11 +118,11 @@ def create_graphs(icp, odom, point_cloud, joy, output_folder):
                                                           output_folder, odom_topics_color)
 
 
-def write_info_to_files(bag, icp, odom, output_folder):
-    writer = WriterInfo(bag, icp, odom, output_folder)
-    writer.write_bag_info()
-    writer.write_topics_info()
-    writer.write_moving_joints_info()
+def write_bag_info_to_files(bag, icp, odom, output_folder):
+    bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
+    bag_info.write_bag_info()
+    bag_info.write_topics_info()
+    bag_info.write_moving_joints_info()
 
 
 def close_bag_file(bag, path_to_bag_file):
