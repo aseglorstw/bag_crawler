@@ -56,7 +56,7 @@ class DirectoryScanner:
 
     @staticmethod
     def check_web_folder(path_to_bag_file):
-        task_list = {"icp": False, "odom": False, "point_cloud": False, "joy": False, "video": False}
+        task_list = {"icp": False, "odom": False, "point_cloud": False, "joy": False, "video": False, "graphs": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not (os.path.exists(web_folder) and os.path.isdir(web_folder)):
@@ -72,5 +72,5 @@ class DirectoryScanner:
 
     @staticmethod
     def should_process_bag_file(task_list):
-        return (not task_list["icp"] or not task_list["odom"] or
-                not task_list["point_cloud"] or not task_list["video"]) or not task_list["joy"]
+        return (not task_list["icp"] or not task_list["odom"] or not task_list["point_cloud"] or not
+                task_list["video"]) or not task_list["joy"] or not task_list["graphs"]

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pyvista as pv
+import os
 
 
 def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder, odom_topics_color):
@@ -146,3 +147,22 @@ def match_color_odom_topic(objects_odom):
     for idx, odom_topic in enumerate(objects_odom):
         odom_topics_colors[odom_topic.get_topic_name()] = colors[idx % len(colors)]
     return odom_topics_colors
+
+
+def write_info_to_data_availability(output_folder):
+    is_graphs_in_file = False
+    if os.path.exists(f"{output_folder}/.data_availability.txt"):
+        with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
+            lines = file.readlines()
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            for line in lines:
+                if line.startswith('graphs'):
+                    file.write(f"graphs True\n")
+                    is_graphs_in_file = True
+                else:
+                    file.write(line)
+            if not is_graphs_in_file:
+                file.write(f"graphs True\n")
+    else:
+        with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
+            file.write(f"graphs True\n")
