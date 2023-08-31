@@ -2,6 +2,7 @@ import numpy as np
 import yaml
 import datetime
 import rospy
+import json
 
 
 class WriterInfo:
@@ -26,20 +27,25 @@ class WriterInfo:
         end_of_moving = start_and_end_of_moving_icp[1] if start_and_end_of_moving_icp[1] is not None else start_and_end_of_moving_odom[1]
         average_speed = average_speed_icp if average_speed_icp is not None else average_speed_odom
         distance = distance_icp if distance_icp is not None else distance_odom
-        with open(f"{self.folder}/bag_info.txt", "w", encoding="utf-8") as file:
-            file.write(f"{distance}\n{average_speed}\n{start_of_moving}\n{end_of_moving}\n"
-                       f"{self.get_date(info_dict['start'])}\n{self.get_date(info_dict['end'])}\n"
-                       f"{info_dict['duration']}\n" f"{round((info_dict['size']/pow(10, 9)), 2)}\n"
-                       f"{info_dict['messages']}\n")
+        bag_info = {"distance": distance, "average_speed": average_speed, "start of moving": start_of_moving,
+                    "end of moving": end_of_moving, "start": self.get_date(info_dict['start']), "end":
+                    self.get_date(info_dict['end']), "duration": info_dict['duration'],
+                    "size": round((info_dict['size']/pow(10, 9)), 2), "messages": info_dict['messages']}
+        with open(f"{self.folder}/bag_info.json", "w", encoding="utf-8") as file:
+            json.dump(bag_info, file, indent=4)
 
     def write_topics_info(self):
         type_info, topics_info = self.bag.get_type_and_topic_info()
-        with open(f"{self.folder}/topics_info.txt", "w", encoding="utf-8") as file:
+        topics_info_dict = dict()
+        with open(f"{self.folder}/topics_info.json", "w", encoding="utf-8") as file:
             for topic_name, topic_info in topics_info.items():
                 max_time_delay, average_time_delay = self.calculate_max_and_average_time_delay(topic_name)
                 msg_type = topic_info.msg_type
                 message_count = topic_info.message_count
-                file.write(f"{topic_name} {msg_type} {message_count} {average_time_delay} {max_time_delay}\n")
+                topics_info_dict[topic_name] = {"msg type": msg_type, "message count": message_count,
+                                                "average time delay": average_time_delay,
+                                                "max time delay": max_time_delay}
+            json.dump(topics_info_dict, file, indent=4)
 
     def calculate_max_and_average_time_delay(self, topic_name):
         times = []
@@ -64,9 +70,8 @@ class WriterInfo:
             moving_indexes = np.where(distances > 0.02)[0]
             old_coordinates = msg.position
             moving_joints.update(set(all_joints[moving_indexes]))
-        with open(f"{self.folder}/moving_joints_info.txt", "w", encoding="utf-8") as file:
-            for joint in moving_joints:
-                file.write(f"{joint}\n")
+        with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
+            json.dump(list(moving_joints), file, indent=4)
 
     @staticmethod
     def get_date(seconds):
