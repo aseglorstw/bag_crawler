@@ -1,6 +1,7 @@
 import rospy
 import numpy as np
 import os
+import json
 
 
 class JOYDataProcessor:
@@ -48,9 +49,14 @@ class JOYDataProcessor:
     def get_joy_control_coordinates(self):
         return self.joy_control_coordinates
 
-    @staticmethod
-    def write_info_to_data_availability(output_folder):
+    def load_class_object(self, output_folder):
+        with open(f"{output_folder}/.joy.json", 'r') as json_file:
+            self.joy_control_coordinates = [np.array(arr_item) for arr_item in json.load(json_file)]
+
+    def save_class_object(self, output_folder):
         is_joy_in_file = False
+        with open(f"{output_folder}/.joy.json", 'w') as file:
+            json.dump([arr_item.tolist() for arr_item in self.joy_control_coordinates], file)
         if os.path.exists(f"{output_folder}/.data_availability.txt"):
             with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
                 lines = file.readlines()
