@@ -76,3 +76,4 @@ class BAGInfoDataProcessor:
     @staticmethod
     def get_date(seconds):
         return datetime.datetime.fromtimestamp(seconds).strftime('%Y-%m-%d %H:%M:%S')
+

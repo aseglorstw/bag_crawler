@@ -10,6 +10,7 @@ from BAG_Info_Data_Processor import BAGInfoDataProcessor
 
 
 def main(root_directory):
+
     directory_scanner = DirectoryScanner()
 
     if not directory_scanner.input_check(root_directory):
