@@ -57,7 +57,7 @@ class BAGInfoDataProcessor:
                 all_joints = np.array(msg.name)
                 old_coordinates = msg.position
             distances = np.array(msg.position) - np.array(old_coordinates)
-            moving_indexes = np.where(distances > 0.02)[0]
+            moving_indexes = np.where(distances > 0.2)[0]
             old_coordinates = msg.position
             moving_joints.update(set(all_joints[moving_indexes]))
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
