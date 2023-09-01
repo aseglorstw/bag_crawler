@@ -143,7 +143,7 @@ def transform_z_coordinates_to_color(coord_z):
 
 def match_color_odom_topic(objects_odom):
     odom_topics_colors = dict()
-    colors = ['blue', 'brown', 'yellow', 'black', 'purple', 'gray']
+    colors = ['blue', 'brown', 'yellow', 'black', 'purple', 'gray', 'pink', 'darkcyan', 'navy', 'khaki', 'olive']
     for idx, odom_topic in enumerate(objects_odom):
         odom_topics_colors[odom_topic.get_topic_name()] = colors[idx % len(colors)]
     return odom_topics_colors
