@@ -19,6 +19,8 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
+            if "spot" not in topic_name:
+                continue
             save_interval = self.calculate_save_interval(topic_name)
             mid_video = self.calculate_mid_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
@@ -40,7 +42,7 @@ class VideoDataProcessor:
                     if is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                     current_datetime = self.get_datetime(time_from_start)
-                    cv2.putText(image, current_datetime, (30, 90), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+                    cv2.putText(image, current_datetime, (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
