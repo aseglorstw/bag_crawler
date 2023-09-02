@@ -72,6 +72,20 @@ class ODOMTopic:
         speeds = np.linalg.norm(speeds_xyz, axis=1)
         return np.average(speeds) if speeds is not None else None
 
+    def get_max_diff(self):
+        if self.transformed_odom is None:
+            return None
+        x_diff = abs(max(self.transformed_odom[0, :]) - min(self.transformed_odom[0, :]))
+        y_diff = abs(max(self.transformed_odom[1, :]) - min(self.transformed_odom[1, :]))
+        z_diff = abs(max(self.transformed_odom[2, :]) - min(self.transformed_odom[2, :]))
+        return max(x_diff, y_diff, z_diff)
+
+    def get_z_coord(self):
+        if self.transformed_odom is None:
+            return None
+        return self.transformed_odom[2, :]
+        #return abs(max(self.transformed_odom[2, :]) - min(self.transformed_odom[2, :]))
+
     def get_transform_matrices(self):
         return self.transform_matrices
 

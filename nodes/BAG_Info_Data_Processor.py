@@ -13,6 +13,7 @@ class BAGInfoDataProcessor:
         self.folder = folder
         self.icp = icp
         self.odom = odom
+        self.movement_joints = None
 
     def write_bag_info(self):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
@@ -60,19 +61,9 @@ class BAGInfoDataProcessor:
             moving_indexes = np.where(distances > 0.2)[0]
             old_coordinates = msg.position
             moving_joints.update(set(all_joints[moving_indexes]))
+        self.movement_joints = list(moving_joints)
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
-            json.dump(list(moving_joints), file, indent=4)
-
-    def calculate_max_and_average_time_delay(self, topic_name):
-        times = []
-        start_time = self.bag.get_start_time()
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            times.append(rospy.Time.from_sec(time.to_sec()).to_sec() - start_time)
-        if len(times) > 1:
-            times = np.array(times)
-            time_delays = times[1:] - times[:-1]
-            return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
-        return None, None
+            json.dump(self.movement_joints, file, indent=4)
 
     @staticmethod
     def write_info_to_data_availability(output_folder):
@@ -92,6 +83,42 @@ class BAGInfoDataProcessor:
         else:
             with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
                 file.write(f"bag_info True\n")
+
+    def write_movement_tag_info(self):
+        max_diff_icp = self.icp.get_max_diff()
+        max_diff_odom = self.odom.get_max_diff_from_selected_topic()
+        max_diff = max_diff_icp if max_diff_icp is not None else max_diff_odom
+        movement_tag = ""
+        if max_diff is None or max_diff < 0.5:
+            movement_tag = "stayed_in_place"
+        else:
+            z_icp = self.icp.get_z_coord()
+            z_odom = self.odom.get_z_coord_from_selected_topic()
+            z_coord = z_icp if z_icp is not None else z_odom
+            z_diff_icp = abs(max(z_icp) - min(z_icp))
+            z_diff_odom = abs(max(z_odom) - min(z_odom))
+            z_diff = z_diff_icp if z_diff_icp is not None else z_diff_odom
+            if len(self.movement_joints) == 1 and "laser_j" in self.movement_joints:
+                movement_tag = "observation"
+            if z_diff > 0.1:
+                movement_tag += "overcame_obstacle" if movement_tag == "" else ",overcame_obstacle"
+            if abs(z_coord[-1]) > 2:
+                movement_tag += "changed_floor" if movement_tag == "" else ",changed_floor"
+            if movement_tag == "":
+                movement_tag = "general_movement"
+        with open(f"{self.folder}/movement_tag.txt", "w", encoding="utf-8") as file:
+            file.write(movement_tag)
+
+    def calculate_max_and_average_time_delay(self, topic_name):
+        times = []
+        start_time = self.bag.get_start_time()
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            times.append(rospy.Time.from_sec(time.to_sec()).to_sec() - start_time)
+        if len(times) > 1:
+            times = np.array(times)
+            time_delays = times[1:] - times[:-1]
+            return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
+        return None, None
 
     @staticmethod
     def get_date(seconds):

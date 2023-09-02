@@ -63,7 +63,7 @@ class DirectoryScanner:
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         log_file = os.path.join(web_folder, ".data_availability.txt")
         new_file_size = os.path.getsize(path_to_bag_file)
-        old_file_size = -1
+        old_file_size = new_file_size
         if os.path.exists(os.path.join(web_folder, "bag_info.json")):
             with open(os.path.join(web_folder, "bag_info.json"), 'r') as json_file:
                 old_file_size = json.load(json_file)["size"]

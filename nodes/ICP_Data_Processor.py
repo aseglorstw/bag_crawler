@@ -87,6 +87,20 @@ class ICPDataProcessor:
             self.end_of_moving = self.times[moving_indexes[-1]]
         return self.start_of_moving, self.end_of_moving
 
+    def get_max_diff(self):
+        if self.transformed_icp is None:
+            return None
+        x_diff = abs(max(self.transformed_icp[0, :]) - min(self.transformed_icp[0, :]))
+        y_diff = abs(max(self.transformed_icp[1, :]) - min(self.transformed_icp[1, :]))
+        z_diff = abs(max(self.transformed_icp[2, :]) - min(self.transformed_icp[2, :]))
+        return max(x_diff, y_diff, z_diff)
+
+    def get_z_coord(self):
+        if self.transformed_icp is None:
+            return None
+        return self.transformed_icp[2, :]
+        #return abs(max(self.transformed_icp[2, :]) - min(self.transformed_icp[2, :]))
+
     def get_times_icp(self):
         return self.times
 

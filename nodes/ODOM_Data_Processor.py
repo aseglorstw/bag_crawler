@@ -98,6 +98,12 @@ class ODOMDataProcessor:
     def get_name_of_selected_topic(self):
         return self.selected_topic.get_topic_name()
 
+    def get_max_diff_from_selected_topic(self):
+        return self.selected_topic.get_max_diff()
+
+    def get_z_coord_from_selected_topic(self):
+        return self.selected_topic.get_z_coord()
+
     def load_class_object(self, output_folder):
         for file in pathlib.Path(output_folder).iterdir():
             if "npz" in file.name and "icp" not in file.name and "point_cloud" not in file.name:
