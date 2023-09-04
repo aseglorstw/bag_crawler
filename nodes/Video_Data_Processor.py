@@ -20,13 +20,15 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
+            if "spot" not in topic_name:
+                continue
             save_interval = self.calculate_save_interval(topic_name)
             mid_video = self.calculate_mid_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
             is_gray = self.is_gray(topic_name)
             size = self.get_size_of_image(topic_name, is_gray)
             fps = 60
-            video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, size, True)
+            video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number == mid_video and not is_gray:
                     msg = CompressedImage(*self.slots(msg))
@@ -40,6 +42,7 @@ class VideoDataProcessor:
                     image = cv_bridge.compressed_imgmsg_to_cv2(msg)
                     if is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+                    image = cv2.resize(image, (1920, 1200))
                     current_datetime = self.get_datetime(time_from_start)
                     cv2.putText(image, current_datetime, (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     video_out.write(image)
@@ -47,6 +50,7 @@ class VideoDataProcessor:
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
             self.save_demo_images(folder)
+            break
         return True
 
     def get_size_of_image(self, topic_name, is_grey):
