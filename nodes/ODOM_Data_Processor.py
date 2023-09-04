@@ -1,7 +1,7 @@
 import numpy as np
 import rospy
 from pyquaternion import Quaternion
-import os
+import json
 from ODOM_Topic import ODOMTopic
 import pathlib
 
@@ -118,32 +118,21 @@ class ODOMDataProcessor:
                 self.odom_topics.append(odom_topic)
 
     def save_class_object(self, output_folder):
-        state_odom = "False"
+        state_odom = False
         for odom_topic in self.odom_topics:
             transformed_odom = odom_topic.get_transformed_odom()
             if transformed_odom is not None:
-                state_odom = "True"
+                state_odom = True
                 np.savez(f"{output_folder}/.{self.get_name_for_npz_file(odom_topic.get_topic_name())}.npz",
                          coordinates=transformed_odom, times=odom_topic.get_times(),
                          first_rotation_matrix=odom_topic.get_first_matrix(),
                          first_transform=odom_topic.get_first_transform(),
                          transform_matrices=odom_topic.get_transform_matrices())
-        is_odom_in_file = False
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('odom'):
-                        file.write(f"odom {state_odom}\n")
-                        is_odom_in_file = True
-                    else:
-                        file.write(line)
-                if not is_odom_in_file:
-                    file.write(f"odom {state_odom}\n")
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                file.write(f"odom {state_odom}\n")
+        with open(f"{output_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
+        task_list["odom"] = state_odom
+        with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+            json.dump(task_list, file, indent=4)
 
     @staticmethod
     def create_transform_matrix(rotation_matrix, translation):

@@ -54,21 +54,10 @@ class JOYDataProcessor:
             self.joy_control_coordinates = [np.array(arr_item) for arr_item in json.load(json_file)]
 
     def save_class_object(self, output_folder):
-        is_joy_in_file = False
         with open(f"{output_folder}/.joy.json", 'w') as file:
             json.dump([arr_item.tolist() for arr_item in self.joy_control_coordinates], file)
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('joy'):
-                        file.write(f"joy True\n")
-                        is_joy_in_file = True
-                    else:
-                        file.write(line)
-                if not is_joy_in_file:
-                    file.write(f"joy True\n")
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                file.write(f"joy True\n")
+        with open(f"{output_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
+        task_list["joy"] = True
+        with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+            json.dump(task_list, file, indent=4)

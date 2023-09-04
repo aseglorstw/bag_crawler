@@ -1,7 +1,7 @@
 import numpy as np
 import rospy
 from pyquaternion import Quaternion
-import os
+import json
 
 
 class ICPDataProcessor:
@@ -124,26 +124,12 @@ class ICPDataProcessor:
         self.transform_matrices = object_["transform_matrices"]
 
     def save_class_object(self, output_folder):
-        state_icp = "False"
         if self.transformed_icp is not None:
-            state_icp = "True"
             np.savez(f"{output_folder}/.icp.npz", coordinates=self.transformed_icp, times=self.times,
                      first_matrix=self.first_rotation_matrix, first_transform=self.first_transform,
                      transform_matrices=self.transform_matrices)
-        is_icp_in_file = False
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('icp'):
-                        file.write(f"icp {state_icp}\n")
-                        is_icp_in_file = True
-                    else:
-                        file.write(line)
-                if not is_icp_in_file:
-                    file.write(f"icp {state_icp}\n")
-
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                file.write(f"icp {state_icp}\n")
+        with open(f"{output_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
+        task_list["icp"] = self.transformed_icp is not None
+        with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+            json.dump(task_list, file, indent=4)

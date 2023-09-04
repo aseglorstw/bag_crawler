@@ -26,7 +26,7 @@ def main(root_directory):
         if bag is None:
             continue
 
-        path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file)
+        path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file, task_list)
 
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)

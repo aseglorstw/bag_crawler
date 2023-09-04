@@ -40,11 +40,13 @@ class DirectoryScanner:
         return True
 
     @staticmethod
-    def create_web_folder(path_to_bag_file):
+    def create_web_folder(path_to_bag_file, task_list):
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not os.path.exists(web_folder):
             os.mkdir(web_folder)
+            with open(f"{web_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+                json.dump(task_list, file, indent=4)
         return web_folder
 
     @staticmethod
@@ -61,19 +63,17 @@ class DirectoryScanner:
                      "bag_info": False}
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
-        log_file = os.path.join(web_folder, ".data_availability.txt")
         new_file_size = os.path.getsize(path_to_bag_file)
         old_file_size = new_file_size
         if os.path.exists(os.path.join(web_folder, "bag_info.json")):
             with open(os.path.join(web_folder, "bag_info.json"), 'r') as json_file:
                 old_file_size = json.load(json_file)["size"]
+        log_file = os.path.join(web_folder, ".data_availability.json")
         if (not (os.path.exists(web_folder) and os.path.isdir(web_folder)) or not os.path.exists(log_file)
                 or new_file_size != old_file_size):
             return task_list
-        with open(log_file, "r", encoding="utf-8") as file:
-            for line in file:
-                key, value = line.split()
-                task_list[key] = True if "True" in value else False
+        with open(f"{web_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
         return task_list
 
     @staticmethod

@@ -5,6 +5,7 @@ from sensor_msgs.msg import CompressedImage
 import datetime
 import os
 from cv_bridge import CvBridge
+import json
 
 
 class VideoDataProcessor:
@@ -104,25 +105,11 @@ class VideoDataProcessor:
 
     @staticmethod
     def write_info_to_data_availability(result, output_folder):
-        is_video_in_file = False
-        state_video = "False"
-        if result:
-            state_video = "True"
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('video'):
-                        file.write(f"video {state_video}\n")
-                        is_video_in_file = True
-                    else:
-                        file.write(line)
-                if not is_video_in_file:
-                    file.write(f"video {state_video}\n")
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                file.write(f"video {state_video}\n")
+        with open(f"{output_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
+        task_list["video"] = result
+        with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+            json.dump(task_list, file, indent=4)
 
     @staticmethod
     def create_name_for_video(topic_name):

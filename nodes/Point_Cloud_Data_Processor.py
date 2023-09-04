@@ -8,7 +8,7 @@ from ros_numpy import numpify
 import tf2_ros
 from tqdm import tqdm
 from rosbag import ROSBagException
-import os
+import json
 
 
 class PointCloudDataProcessor:
@@ -107,26 +107,13 @@ class PointCloudDataProcessor:
         return self.transformed_point_cloud
 
     def save_class_object(self, output_folder):
-        state_point_cloud = "False"
         if self.transformed_point_cloud is not None:
-            state_point_cloud = "True"
             np.savez(f"{output_folder}/.point_cloud.npz", point_cloud=self.transformed_point_cloud)
-        is_point_cloud_in_file = False
-        if os.path.exists(f"{output_folder}/.data_availability.txt"):
-            with open(f"{output_folder}/.data_availability.txt", 'r', encoding="utf-8") as file:
-                lines = file.readlines()
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                for line in lines:
-                    if line.startswith('point_cloud'):
-                        file.write(f"point_cloud {state_point_cloud}\n")
-                        is_point_cloud_in_file = True
-                    else:
-                        file.write(line)
-                if not is_point_cloud_in_file:
-                    file.write(f"point_cloud {state_point_cloud}\n")
-        else:
-            with open(f"{output_folder}/.data_availability.txt", 'w', encoding="utf-8") as file:
-                file.write(f"point_cloud {state_point_cloud}\n")
+        with open(f"{output_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+            task_list = json.load(file)
+        task_list["point_cloud"] = self.transformed_point_cloud is not None
+        with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
+            json.dump(task_list, file, indent=4)
 
     def load_class_object(self, output_folder):
         self.transformed_point_cloud = np.load(f"{output_folder}/.point_cloud.npz")["point_cloud"]
