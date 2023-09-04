@@ -6,6 +6,7 @@ import datetime
 import os
 from cv_bridge import CvBridge
 import json
+import math
 
 
 class VideoDataProcessor:
@@ -20,7 +21,7 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            if "spot" not in topic_name:
+            if "depth" not in topic_name:
                 continue
             save_interval = self.calculate_save_interval(topic_name)
             mid_video = self.calculate_mid_video(topic_name)
@@ -60,7 +61,7 @@ class VideoDataProcessor:
             if is_grey:
                 cv_image = cv2.cvtColor(cv_image, cv2.COLOR_GRAY2RGB)
             height, width, layers = cv_image.shape
-            return (width, height)
+            return width, height
 
     def is_gray(self, topic_name):
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
