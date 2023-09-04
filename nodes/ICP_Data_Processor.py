@@ -99,7 +99,6 @@ class ICPDataProcessor:
         if self.transformed_icp is None:
             return None
         return self.transformed_icp[2, :]
-        #return abs(max(self.transformed_icp[2, :]) - min(self.transformed_icp[2, :]))
 
     def get_times_icp(self):
         return self.times
