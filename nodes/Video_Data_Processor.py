@@ -20,8 +20,6 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            if "spot" not in topic_name:
-                continue
             save_interval = self.calculate_save_interval(topic_name)
             mid_video = self.calculate_mid_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"

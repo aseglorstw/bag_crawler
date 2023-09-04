@@ -32,8 +32,8 @@ def main(root_directory):
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
-        create_graphs(icp, odom, point_cloud, joy, task_list["graphs"], path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom,task_list["bag_info"], path_to_bag_file, path_to_web_folder)
+        create_graphs(icp, odom, point_cloud, joy, task_list, path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom, task_list, path_to_bag_file, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -101,8 +101,8 @@ def process_joy(bag, icp, odom, is_joy, output_folder):
     return joy
 
 
-def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
-    if not are_graphs:
+def create_graphs(icp, odom, point_cloud, joy, task_list, output_folder):
+    if should_create_graphs_or_write_bag_info(task_list):
         odom_topics_color = Graphs_Creator.match_color_odom_topic(odom.get_odom_topics_objects())
         Graphs_Creator.create_graph_x_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
                                                 odom.get_odom_topics_objects(), output_folder, odom_topics_color)
@@ -125,8 +125,8 @@ def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
         Graphs_Creator.write_info_to_data_availability(output_folder)
 
 
-def write_bag_info_to_files(bag, icp, odom, is_info, path_to_bag_file, output_folder):
-    if not is_info:
+def write_bag_info_to_files(bag, icp, odom, task_list, path_to_bag_file, output_folder):
+    if should_create_graphs_or_write_bag_info(task_list):
         bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
         bag_info.write_bag_info()
         bag_info.write_topics_info()
@@ -134,6 +134,10 @@ def write_bag_info_to_files(bag, icp, odom, is_info, path_to_bag_file, output_fo
         bag_info.write_movement_tag_info()
         bag_info.write_controller_info(path_to_bag_file)
         bag_info.write_info_to_data_availability(output_folder)
+
+
+def should_create_graphs_or_write_bag_info(task_list):
+    return not task_list["icp"] or not task_list["odom"] or not task_list["point_cloud"] or not task_list["joy"]
 
 
 def close_bag_file(bag, path_to_bag_file):
