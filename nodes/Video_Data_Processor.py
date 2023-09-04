@@ -1,4 +1,6 @@
 import cv2
+import matplotlib.pyplot as plt
+
 import rospy
 import numpy as np
 from sensor_msgs.msg import CompressedImage
@@ -21,12 +23,11 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            if "depth" not in topic_name:
-                continue
             save_interval = self.calculate_save_interval(topic_name)
             mid_video = self.calculate_mid_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
             is_gray = self.is_gray(topic_name)
+            is_depth = "is_depth" in topic_name
             size = self.get_size_of_image(topic_name, is_gray)
             fps = 60
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
@@ -43,9 +44,10 @@ class VideoDataProcessor:
                     image = cv_bridge.compressed_imgmsg_to_cv2(msg)
                     if is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-                    image = cv2.resize(image, (1920, 1200))
-                    current_datetime = self.get_datetime(time_from_start)
-                    cv2.putText(image, current_datetime, (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+                    if is_depth:
+                        image = self.transform_rgbd_image(image)
+                    image = np.asarray(cv2.resize(image, (1920, 1200)), dtype=np.uint8)
+                    cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
@@ -105,6 +107,16 @@ class VideoDataProcessor:
         else:
             for key in self.demo_images.keys():
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
+
+    @staticmethod
+    def transform_rgbd_image(image):
+        q_min = np.percentile(image, 2)
+        q_max = np.percentile(image, 98)
+        image = image[image > q_min]
+        image = image[image < q_max]
+        image -= np.min(image)
+        image = (image / np.max(image)) * 255
+        return image
 
     @staticmethod
     def write_info_to_data_availability(result, output_folder):
