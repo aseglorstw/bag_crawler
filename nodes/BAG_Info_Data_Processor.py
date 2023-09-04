@@ -65,6 +65,17 @@ class BAGInfoDataProcessor:
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
             json.dump(self.movement_joints, file, indent=4)
 
+    def write_controller_info(self, path_to_bag_file):
+        path_to_config_file = path_to_bag_file.replace(".bag", ".config.json")
+        with open(path_to_config_file, 'r') as file:
+            elements_of_control = yaml.safe_load(file)
+        used_elements_of_control = set()
+        for topic, msg, time in self.bag.read_messages():
+            if topic in list(elements_of_control.keys()):
+                used_elements_of_control.add(elements_of_control[topic])
+        with open(f"{self.folder}/controller_info.json", "w", encoding="utf-8") as file:
+            json.dump(list(used_elements_of_control), file, indent=4)
+
     @staticmethod
     def write_info_to_data_availability(output_folder):
         is_info_in_file = False

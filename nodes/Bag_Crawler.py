@@ -33,7 +33,7 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, task_list["graphs"], path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom,task_list["bag_info"], path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom,task_list["bag_info"], path_to_bag_file, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -125,13 +125,14 @@ def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
         Graphs_Creator.write_info_to_data_availability(output_folder)
 
 
-def write_bag_info_to_files(bag, icp, odom, is_info, output_folder):
+def write_bag_info_to_files(bag, icp, odom, is_info, path_to_bag_file, output_folder):
     if not is_info:
         bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
         bag_info.write_bag_info()
         bag_info.write_topics_info()
         bag_info.write_moving_joints_info()
         bag_info.write_movement_tag_info()
+        bag_info.write_controller_info(path_to_bag_file)
         bag_info.write_info_to_data_availability(output_folder)
 
 
