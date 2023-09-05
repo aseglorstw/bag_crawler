@@ -139,7 +139,7 @@ class VideoDataProcessor:
     def transform_rgbd_image(image, upper_limit, lower_limit):
         max_value_below_percentile = np.max(image[image <= upper_limit])
         image[image > upper_limit] = max_value_below_percentile
-        min_value_over_percentile = np.min(image[image >= upper_limit])
+        min_value_over_percentile = np.min(image[image >= lower_limit])
         image[image < lower_limit] = min_value_over_percentile
         image -= np.min(image)
         image = (image / np.max(image)) * 255
