@@ -6,7 +6,7 @@ import datetime
 import os
 from cv_bridge import CvBridge
 import json
-import pyvista as pv
+
 
 class VideoDataProcessor:
     def __init__(self, bag):
@@ -24,12 +24,12 @@ class VideoDataProcessor:
                 continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
-            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             is_gray = self.is_gray(topic_name)
             is_depth = "depth" in topic_name
-            size = self.get_size_of_image(topic_name, is_gray)
+            if is_depth:
+                upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
             fps = 60
-            upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
+            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number == mid_video and not is_gray:
@@ -73,6 +73,7 @@ class VideoDataProcessor:
                 cv_bridge = CvBridge()
                 image = cv_bridge.compressed_imgmsg_to_cv2(msg)
                 depth_histogram = self.update_depth_histogram(image, depth_histogram)
+                print(time)
         depths = list()
         for key, value in depth_histogram.items():
             depths.extend([key] * value)

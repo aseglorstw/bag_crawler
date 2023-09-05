@@ -84,7 +84,6 @@ class ODOMTopic:
         if self.transformed_odom is None:
             return None
         return self.transformed_odom[2, :]
-        #return abs(max(self.transformed_odom[2, :]) - min(self.transformed_odom[2, :]))
 
     def get_transform_matrices(self):
         return self.transform_matrices
