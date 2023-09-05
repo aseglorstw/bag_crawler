@@ -27,7 +27,7 @@ class VideoDataProcessor:
             mid_video = self.calculate_mid_video(topic_name)
             video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
             is_gray = self.is_gray(topic_name)
-            is_depth = "is_depth" in topic_name
+            is_depth = "depth" in topic_name
             size = self.get_size_of_image(topic_name, is_gray)
             fps = 60
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
