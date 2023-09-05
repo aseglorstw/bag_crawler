@@ -1,6 +1,4 @@
 import cv2
-import matplotlib.pyplot as plt
-
 import rospy
 import numpy as np
 from sensor_msgs.msg import CompressedImage
@@ -8,8 +6,7 @@ import datetime
 import os
 from cv_bridge import CvBridge
 import json
-import math
-
+import pyvista as pv
 
 class VideoDataProcessor:
     def __init__(self, bag):
@@ -18,18 +15,23 @@ class VideoDataProcessor:
         self.demo_images = dict()
 
     def read_images_and_save_video(self, folder):
-        topic_names = list(self.find_camera_topic())
+        topic_names = list(self.get_camera_topics())
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            save_interval = self.calculate_save_interval(topic_name)
-            mid_video = self.calculate_mid_video(topic_name)
-            video_name = f"{folder}/{self.create_name_for_video(topic_name)}_video.avi"
+            if "depth" not in topic_name:
+                continue
+            save_interval = self.get_save_interval(topic_name)
+            mid_video = self.get_mid_video(topic_name)
+            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             is_gray = self.is_gray(topic_name)
             is_depth = "depth" in topic_name
             size = self.get_size_of_image(topic_name, is_gray)
             fps = 60
+            upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
+            print(upper_limit, lower_limit)
+            break
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number == mid_video and not is_gray:
@@ -42,11 +44,11 @@ class VideoDataProcessor:
                     msg = CompressedImage(*self.slots(msg))
                     cv_bridge = CvBridge()
                     image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-                    if is_gray:
-                        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                     if is_depth:
-                        image = self.transform_rgbd_image(image)
-                    image = np.asarray(cv2.resize(image, (1920, 1200)), dtype=np.uint8)
+                        image = self.transform_rgbd_image(image, upper_limit, lower_limit)
+                    elif is_gray:
+                        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+                    image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
@@ -65,23 +67,29 @@ class VideoDataProcessor:
             height, width, layers = cv_image.shape
             return width, height
 
-    def is_gray(self, topic_name):
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            cv_bridge = CvBridge()
-            image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-            return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
+    def get_upper_and_lower_limits(self, topic_name, save_interval):
+        depth_histogram = dict()
+        for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
+            if msg_number % save_interval == 0:
+                msg = CompressedImage(*self.slots(msg))
+                cv_bridge = CvBridge()
+                image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+                print(np.unique(image))
+        return None, None
 
-    def find_camera_topic(self):
+    def get_camera_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
             if "CompressedImage" in topic_info.msg_type:
                 yield topic_name
         return None
 
-    def calculate_save_interval(self, topic_name):
-        save_interval = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 1200)
+    def get_save_interval(self, topic_name):
+        fps = 60
+        duration_of_video = 20
+        save_interval = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / (fps * duration_of_video))
         return save_interval if save_interval > 0 else 1
 
-    def calculate_mid_video(self, topic_name):
+    def get_mid_video(self, topic_name):
         center_of_video = int(self.bag.get_type_and_topic_info()[1][topic_name].message_count / 2)
         return center_of_video
 
@@ -108,12 +116,20 @@ class VideoDataProcessor:
             for key in self.demo_images.keys():
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
+    def is_gray(self, topic_name):
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            cv_bridge = CvBridge()
+            image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+            return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
+
     @staticmethod
-    def transform_rgbd_image(image):
-        q_min = np.percentile(image, 2)
-        q_max = np.percentile(image, 98)
-        image = image[image > q_min]
-        image = image[image < q_max]
+    def transform_rgbd_image(image, upper_limit, lower_limit):
+        #upper_limit = np.percentile(image, upper_percentile)
+        max_value_below_percentile = np.max(image[image <= upper_limit])
+        image[image > upper_limit] = max_value_below_percentile
+        #lower_limit = np.percentile(image, lower_percentile)
+        min_value_over_percentile = np.min(image[image >= upper_limit])
+        image[image < lower_limit] = min_value_over_percentile
         image -= np.min(image)
         image = (image / np.max(image)) * 255
         return image
@@ -127,7 +143,7 @@ class VideoDataProcessor:
             json.dump(task_list, file, indent=4)
 
     @staticmethod
-    def create_name_for_video(topic_name):
+    def get_name_for_video(topic_name):
         return topic_name.replace('/', '_')[1:]
 
     @staticmethod
