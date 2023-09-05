@@ -30,8 +30,6 @@ class VideoDataProcessor:
             size = self.get_size_of_image(topic_name, is_gray)
             fps = 60
             upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-            print(upper_limit, lower_limit)
-            break
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number == mid_video and not is_gray:
@@ -74,8 +72,11 @@ class VideoDataProcessor:
                 msg = CompressedImage(*self.slots(msg))
                 cv_bridge = CvBridge()
                 image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-                print(np.unique(image))
-        return None, None
+                depth_histogram = self.update_depth_histogram(image, depth_histogram)
+        depths = list()
+        for key, value in depth_histogram.items():
+            depths.extend([key] * value)
+        return np.percentile(depths, 99),  np.percentile(depths, 2)
 
     def get_camera_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
@@ -123,11 +124,20 @@ class VideoDataProcessor:
             return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
 
     @staticmethod
+    def update_depth_histogram(image, depth_histogram):
+        for y in range(image.shape[0]):
+            for x in range(image.shape[1]):
+                key = int(50 * np.round(image[y][x] / 50))
+                if key in depth_histogram:
+                    depth_histogram[key] += 1
+                else:
+                    depth_histogram[key] = 1
+        return depth_histogram
+
+    @staticmethod
     def transform_rgbd_image(image, upper_limit, lower_limit):
-        #upper_limit = np.percentile(image, upper_percentile)
         max_value_below_percentile = np.max(image[image <= upper_limit])
         image[image > upper_limit] = max_value_below_percentile
-        #lower_limit = np.percentile(image, lower_percentile)
         min_value_over_percentile = np.min(image[image >= upper_limit])
         image[image < lower_limit] = min_value_over_percentile
         image -= np.min(image)
