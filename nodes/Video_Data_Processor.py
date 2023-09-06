@@ -27,8 +27,7 @@ class VideoDataProcessor:
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.is_gray(topic_name)
             is_depth = "depth" in topic_name
-            is_rotate = self.is_rotate("/spot/camera/frontleft/camera_info")
-            break
+            #is_rotate = self.is_rotate(topic_name)
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
             fps = 60
@@ -130,12 +129,11 @@ class VideoDataProcessor:
             return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
 
     def is_rotate(self, topic_name):
-        #buffer = self.load_buffer()
-        topic_name_frame_id = dict()
+        buffer = self.load_buffer()
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            # transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
-            #                                                           msg.header.frame_id, time, "base_link",
-            #                                                           rospy.Duration.from_sec(0.3))
+            transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
+                                                                      msg.header.frame_id, time, "base_link",
+                                                                      rospy.Duration.from_sec(0.3))
             print(topic, msg)
             break
         return False
