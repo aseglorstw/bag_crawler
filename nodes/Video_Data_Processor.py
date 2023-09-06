@@ -6,6 +6,9 @@ import datetime
 import os
 from cv_bridge import CvBridge
 import json
+import tf2_ros
+from rosbag import ROSBagException
+from tqdm import tqdm
 
 
 class VideoDataProcessor:
@@ -20,15 +23,14 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            if "depth" not in topic_name:
-                continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.is_gray(topic_name)
             is_depth = "depth" in topic_name
+            is_rotate = self.is_rotate("/spot/camera/frontleft/camera_info")
+            break
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-                break
             fps = 60
             video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
@@ -126,6 +128,29 @@ class VideoDataProcessor:
             cv_bridge = CvBridge()
             image = cv_bridge.compressed_imgmsg_to_cv2(msg)
             return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
+
+    def is_rotate(self, topic_name):
+        #buffer = self.load_buffer()
+        topic_name_frame_id = dict()
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            # transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
+            #                                                           msg.header.frame_id, time, "base_link",
+            #                                                           rospy.Duration.from_sec(0.3))
+            print(topic, msg)
+            break
+        return False
+
+    def load_buffer(self):
+        rospy.init_node('tf_listener')
+        buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
+        try:
+            for topic, msg, time in tqdm(self.bag.read_messages(topics='/tf_static'),
+                                         total=self.bag.get_message_count(topic_filters='/tf_static')):
+                for tf in msg.transforms:
+                    buffer.set_transform_static(tf, 'bag')
+        except ROSBagException:
+            print('Could not read')
+        return buffer
 
     @staticmethod
     def update_depth_histogram(image, depth_histogram):
