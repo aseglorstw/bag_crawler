@@ -80,7 +80,8 @@ class VideoDataProcessor:
         depths = list()
         for key, value in depth_histogram.items():
             depths.extend([key] * value)
-        return np.percentile(depths, 99),  np.percentile(depths, 2)
+        print(np.percentile(depths, 98),  np.percentile(depths, 2))
+        return np.percentile(depths, 98),  np.percentile(depths, 2)
 
     def get_camera_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
