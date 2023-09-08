@@ -10,6 +10,7 @@ import tf2_ros
 from rosbag import ROSBagException
 from tqdm import tqdm
 from tf2_ros import ExtrapolationException
+from tf2_ros import LookupException
 from ros_numpy import numpify
 
 
@@ -18,26 +19,29 @@ class VideoDataProcessor:
         self.bag = bag
         self.start_time = bag.get_start_time()
         self.demo_images = dict()
+        self.buffer = None
+        self.load_buffer()
 
     def read_images_and_save_video(self, folder):
         topic_names = list(self.get_camera_topics())
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
+        c = 10
         for topic_name in topic_names:
-            if "/spot/camera/right/image/compressed" not in topic_name:
+            if "frontright" not in topic_name and "frontleft" not in topic_name:
                 continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
-            is_gray = self.is_gray(topic_name)
+            is_gray = self.get_is_gray(topic_name)
             is_depth = "depth" in topic_name
-            is_rotate = self.is_rotate(topic_name)
-            break
+            rotation_angle = self.get_rotation_angle(topic_name)
+            continue
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-            fps = 60
-            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
-            video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
+            #fps = 60
+            #video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
+            #video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
                 if msg_number == mid_video and not is_gray:
                     msg = CompressedImage(*self.slots(msg))
@@ -53,16 +57,37 @@ class VideoDataProcessor:
                         image = self.transform_rgbd_image(image, upper_limit, lower_limit)
                     elif is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+                    # if rotation_angle > 0:
+                    #     image = self.get_rotated_image(image, rotation_angle)
                     image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
-                    cv2.imshow("a", image)
-                    cv2.waitKey(0)
-                    video_out.write(image)
+                    #cv2.imwrite(f"{folder}/{c}.png", image)
+                    c += 1
+                    break
+                    #video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
-            video_out.release()
+            #video_out.release()
             self.save_demo_images(folder)
         return True
+
+    def get_rotation_angle(self, topic_name):
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            try:
+                transform_base_link_camera = self.buffer.lookup_transform_full("base_link", time,
+                                                                               msg.header.frame_id, time, "base_link")
+                rotate_matrix = numpify(transform_base_link_camera.transform)[:3, :3]
+                ax_y_new_base = rotate_matrix[:, 1]
+                ax_z = np.array([0, 0, 1])
+                cos_angle = (np.dot(ax_z, ax_y_new_base) / np.linalg.norm(ax_z) / np.linalg.norm(ax_y_new_base))
+                rotation_angle = np.degrees(np.arccos(cos_angle))
+                if 70 < rotation_angle < 110:
+                    return -90 if self.get_is_turn_right(rotate_matrix) else 90
+                elif 0 < rotation_angle < 50:
+                    return -180
+            except LookupException:
+                return 0
+        return 0
 
     def get_size_of_image(self, topic_name, is_grey):
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
@@ -109,6 +134,50 @@ class VideoDataProcessor:
         return datetime.datetime.fromtimestamp(self.start_time).strftime('%Y-%m-%d %H:%M:%S') + "+" + \
                                                                 str(datetime.timedelta(seconds=time_from_start))
 
+    def get_is_gray(self, topic_name):
+        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
+            cv_bridge = CvBridge()
+            image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+            return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
+
+    @staticmethod
+    def get_rotated_image(image, rotation_angle):
+        height, width = image.shape[:2]
+        center = (width // 2, height // 2)
+        rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
+        rotated_image = cv2.warpAffine(image, rotation_matrix, (width, height))
+        return rotated_image
+
+    @staticmethod
+    def get_name_for_video(topic_name):
+        return topic_name.replace('/', '_')[1:]
+
+    @staticmethod
+    def get_is_turn_right(rotate_matrix):
+        ax_z_new_base = rotate_matrix[:, 2]
+        ax_x = np.array([1, 0, 0])
+        cos_angle_x_z_new_base = (np.dot(ax_x, ax_z_new_base) / np.linalg.norm(ax_x) / np.linalg.norm(ax_z_new_base))
+        angle_x_z_new_base = np.degrees(np.arccos(cos_angle_x_z_new_base))
+        if 0 < angle_x_z_new_base < 50 or 130 < angle_x_z_new_base < 180:
+            ax_y_new_base = rotate_matrix[:, 1]
+            ax_y = np.array([0, 1, 0])
+            cos_angle_y_y_new_base = (
+                        np.dot(ax_y, ax_y_new_base) / np.linalg.norm(ax_y) / np.linalg.norm(ax_y_new_base))
+            angle_y_y_new_base = np.degrees(np.arccos(cos_angle_y_y_new_base))
+            return 0 < angle_y_y_new_base < 90
+        else:
+            ax_y_new_base = rotate_matrix[:, 1]
+            cos_angle_x_y_new_base = (
+                    np.dot(ax_x, ax_y_new_base) / np.linalg.norm(ax_x) / np.linalg.norm(ax_y_new_base))
+            angle_x_y_new_base = np.degrees(np.arccos(cos_angle_x_y_new_base))
+            return 0 < angle_x_y_new_base < 90
+
+    @staticmethod
+    def get_angle_between_vectors(vector1, vector2):
+        cos_angle = (np.dot(vector1, vector2) / np.linalg.norm(vector1) / np.linalg.norm(vector2))
+        angle = np.degrees(np.arccos(cos_angle))
+        return angle
+
     def add_image_to_demo(self, image, topic_name):
         if "front" in topic_name:
             self.demo_images["demo_image_front"] = image
@@ -128,40 +197,16 @@ class VideoDataProcessor:
             for key in self.demo_images.keys():
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
-    def is_gray(self, topic_name):
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            cv_bridge = CvBridge()
-            image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-            return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
-
-    def is_rotate(self, topic_name):
-        buffer = self.load_buffer()
-        for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            try:
-                transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
-                                                                          msg.header.frame_id, time, "base_link",
-                                                                          rospy.Duration.from_sec(0.3))
-                rotate_matrix = numpify(transform_base_link_camera.transform)[:3, :3]
-                ax_y_new_base = rotate_matrix[:, 1]
-                ax_z = np.array([0, 0, 1])
-                cos_angle = np.dot(ax_z, ax_y_new_base) / np.linalg.norm(ax_z) / np.linalg.norm(ax_y_new_base)
-                print(np.degrees(np.arccos(cos_angle)), topic_name)
-                break
-            except ExtrapolationException:
-                break
-        return False
-
     def load_buffer(self):
         rospy.init_node('tf_listener')
-        buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
+        self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
         try:
             for topic, msg, time in tqdm(self.bag.read_messages(topics='/tf_static'),
                                          total=self.bag.get_message_count(topic_filters='/tf_static')):
                 for tf in msg.transforms:
-                    buffer.set_transform_static(tf, 'bag')
+                    self.buffer.set_transform_static(tf, 'bag')
         except ROSBagException:
             print('Could not read')
-        return buffer
 
     @staticmethod
     def update_depth_histogram(image, depth_histogram):
@@ -191,10 +236,6 @@ class VideoDataProcessor:
         task_list["video"] = result
         with open(f"{output_folder}/.data_availability.json", "w", encoding="utf-8") as file:
             json.dump(task_list, file, indent=4)
-
-    @staticmethod
-    def get_name_for_video(topic_name):
-        return topic_name.replace('/', '_')[1:]
 
     @staticmethod
     def slots(msg):

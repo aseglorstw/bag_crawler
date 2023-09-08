@@ -28,12 +28,12 @@ def main(root_directory):
 
         path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file, task_list)
 
-        icp = process_icp(bag, task_list["icp"], path_to_web_folder)
-        odom = process_odom(bag, task_list["odom"], path_to_web_folder)
-        point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
-        joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
-        create_graphs(icp, odom, point_cloud, joy, task_list, path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom, task_list, path_to_bag_file, path_to_web_folder)
+        # icp = process_icp(bag, task_list["icp"], path_to_web_folder)
+        # odom = process_odom(bag, task_list["odom"], path_to_web_folder)
+        # point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
+        # joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
+        # create_graphs(icp, odom, point_cloud, joy, task_list, path_to_web_folder)
+        # write_bag_info_to_files(bag, icp, odom, task_list, path_to_bag_file, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
