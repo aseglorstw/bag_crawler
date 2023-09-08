@@ -29,13 +29,14 @@ class VideoDataProcessor:
             return False
         c = 10
         for topic_name in topic_names:
-            if "frontright" not in topic_name and "frontleft" not in topic_name:
+            if "right" not in topic_name:
                 continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.get_is_gray(topic_name)
             is_depth = "depth" in topic_name
             rotation_angle = self.get_rotation_angle(topic_name)
+            print(rotation_angle)
             continue
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
@@ -77,10 +78,7 @@ class VideoDataProcessor:
                 transform_base_link_camera = self.buffer.lookup_transform_full("base_link", time,
                                                                                msg.header.frame_id, time, "base_link")
                 rotate_matrix = numpify(transform_base_link_camera.transform)[:3, :3]
-                ax_y_new_base = rotate_matrix[:, 1]
-                ax_z = np.array([0, 0, 1])
-                cos_angle = (np.dot(ax_z, ax_y_new_base) / np.linalg.norm(ax_z) / np.linalg.norm(ax_y_new_base))
-                rotation_angle = np.degrees(np.arccos(cos_angle))
+                rotation_angle = self.get_angle_between_vectors(np.array([0, 0, 1]), rotate_matrix[:, 1])
                 if 70 < rotation_angle < 110:
                     return -90 if self.get_is_turn_right(rotate_matrix) else 90
                 elif 0 < rotation_angle < 50:
@@ -140,6 +138,15 @@ class VideoDataProcessor:
             image = cv_bridge.compressed_imgmsg_to_cv2(msg)
             return image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1)
 
+    def get_is_turn_right(self, rotate_matrix):
+        angle_between_x_and_z_new_base = self.get_angle_between_vectors(np.array([1, 0, 0]), rotate_matrix[:, 2])
+        if 0 < angle_between_x_and_z_new_base < 50 or 130 < angle_between_x_and_z_new_base < 180:
+            angle_between_y_and_y_new_base = self.get_angle_between_vectors(np.array([0, 1, 0]), rotate_matrix[:, 1])
+            return 0 < angle_between_y_and_y_new_base < 90
+        else:
+            angle_between_x_and_y_new_base = self.get_angle_between_vectors(np.array([1, 0, 0]), rotate_matrix[:, 1])
+            return 0 < angle_between_x_and_y_new_base < 90
+
     @staticmethod
     def get_rotated_image(image, rotation_angle):
         height, width = image.shape[:2]
@@ -151,26 +158,6 @@ class VideoDataProcessor:
     @staticmethod
     def get_name_for_video(topic_name):
         return topic_name.replace('/', '_')[1:]
-
-    @staticmethod
-    def get_is_turn_right(rotate_matrix):
-        ax_z_new_base = rotate_matrix[:, 2]
-        ax_x = np.array([1, 0, 0])
-        cos_angle_x_z_new_base = (np.dot(ax_x, ax_z_new_base) / np.linalg.norm(ax_x) / np.linalg.norm(ax_z_new_base))
-        angle_x_z_new_base = np.degrees(np.arccos(cos_angle_x_z_new_base))
-        if 0 < angle_x_z_new_base < 50 or 130 < angle_x_z_new_base < 180:
-            ax_y_new_base = rotate_matrix[:, 1]
-            ax_y = np.array([0, 1, 0])
-            cos_angle_y_y_new_base = (
-                        np.dot(ax_y, ax_y_new_base) / np.linalg.norm(ax_y) / np.linalg.norm(ax_y_new_base))
-            angle_y_y_new_base = np.degrees(np.arccos(cos_angle_y_y_new_base))
-            return 0 < angle_y_y_new_base < 90
-        else:
-            ax_y_new_base = rotate_matrix[:, 1]
-            cos_angle_x_y_new_base = (
-                    np.dot(ax_x, ax_y_new_base) / np.linalg.norm(ax_x) / np.linalg.norm(ax_y_new_base))
-            angle_x_y_new_base = np.degrees(np.arccos(cos_angle_x_y_new_base))
-            return 0 < angle_x_y_new_base < 90
 
     @staticmethod
     def get_angle_between_vectors(vector1, vector2):
