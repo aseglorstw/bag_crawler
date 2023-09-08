@@ -9,6 +9,8 @@ import json
 import tf2_ros
 from rosbag import ROSBagException
 from tqdm import tqdm
+from tf2_ros import ExtrapolationException
+from ros_numpy import numpify
 
 
 class VideoDataProcessor:
@@ -23,11 +25,14 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
+            if "/spot/camera/right/image/compressed" not in topic_name:
+                continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.is_gray(topic_name)
             is_depth = "depth" in topic_name
-            #is_rotate = self.is_rotate(topic_name)
+            is_rotate = self.is_rotate(topic_name)
+            break
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
             fps = 60
@@ -50,12 +55,13 @@ class VideoDataProcessor:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                     image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+                    cv2.imshow("a", image)
+                    cv2.waitKey(0)
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
             self.save_demo_images(folder)
-            break
         return True
 
     def get_size_of_image(self, topic_name, is_grey):
@@ -131,11 +137,18 @@ class VideoDataProcessor:
     def is_rotate(self, topic_name):
         buffer = self.load_buffer()
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
-            transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
-                                                                      msg.header.frame_id, time, "base_link",
-                                                                      rospy.Duration.from_sec(0.3))
-            print(topic, msg)
-            break
+            try:
+                transform_base_link_camera = buffer.lookup_transform_full("base_link", time,
+                                                                          msg.header.frame_id, time, "base_link",
+                                                                          rospy.Duration.from_sec(0.3))
+                rotate_matrix = numpify(transform_base_link_camera.transform)[:3, :3]
+                ax_y_new_base = rotate_matrix[:, 1]
+                ax_z = np.array([0, 0, 1])
+                cos_angle = np.dot(ax_z, ax_y_new_base) / np.linalg.norm(ax_z) / np.linalg.norm(ax_y_new_base)
+                print(np.degrees(np.arccos(cos_angle)), topic_name)
+                break
+            except ExtrapolationException:
+                break
         return False
 
     def load_buffer(self):
