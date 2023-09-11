@@ -68,7 +68,7 @@ class BAGInfoDataProcessor:
     def write_controller_info(self, path_to_bag_file):
         path_to_config_file = path_to_bag_file.replace(".bag", ".config.json")
         with open(path_to_config_file, 'r') as file:
-            elements_of_control = yaml.safe_load(file)
+            elements_of_control = json.load(file)
         used_elements_of_control = set()
         for topic, msg, time in self.bag.read_messages():
             if topic in list(elements_of_control.keys()):
