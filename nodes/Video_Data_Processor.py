@@ -28,17 +28,13 @@ class VideoDataProcessor:
             print("The topic in which messages from the camera are posted was not found")
             return False
         for topic_name in topic_names:
-            if "depth" not in topic_name:
-                continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.get_is_gray(topic_name)
             is_depth = "depth" in topic_name
             rotation_angle = self.get_rotation_angle(topic_name)
             if is_depth:
-                #upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-                upper_limit = 7500.0
-                lower_limit = 0.0
+                upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
             fps = 60
             video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
