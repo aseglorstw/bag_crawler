@@ -87,7 +87,7 @@ def process_video(bag, is_video, output_folder):
     if not is_video:
         video = VideoDataProcessor(bag)
         result = video.read_images_and_save_video(output_folder)
-        #video.write_info_to_data_availability(result, output_folder)
+        video.write_info_to_data_availability(result, output_folder)
 
 
 def process_joy(bag, icp, odom, is_joy, output_folder):

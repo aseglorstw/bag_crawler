@@ -63,7 +63,7 @@ class VideoDataProcessor:
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
-            self.save_demo_images(folder)
+        self.save_demo_images(folder)
         return True
 
     def get_rotation_angle(self, topic_name):
