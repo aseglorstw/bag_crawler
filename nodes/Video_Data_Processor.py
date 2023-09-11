@@ -27,11 +27,8 @@ class VideoDataProcessor:
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
-        cont = True
         for topic_name in topic_names:
-            if "/spot/camera/frontleft/image/compressed" in topic_name:
-                cont = False
-            if cont:
+            if "depth" not in topic_name:
                 continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
@@ -39,7 +36,9 @@ class VideoDataProcessor:
             is_depth = "depth" in topic_name
             rotation_angle = self.get_rotation_angle(topic_name)
             if is_depth:
-                upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
+                #upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
+                upper_limit = 7500.0
+                lower_limit = 0.0
             fps = 60
             video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
@@ -56,8 +55,9 @@ class VideoDataProcessor:
                     cv_bridge = CvBridge()
                     image = cv_bridge.compressed_imgmsg_to_cv2(msg)
                     if is_depth:
-                        image = self.transform_rgbd_image(image, upper_limit, lower_limit)
-                    elif is_gray:
+                        image = self.get_transformed_rgbd_image(image, upper_limit, lower_limit)
+                        image = image.astype(np.uint8)
+                    if is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                     if abs(rotation_angle) > 0:
                         image = self.get_rotated_image(image, rotation_angle)
@@ -105,15 +105,14 @@ class VideoDataProcessor:
                 msg = CompressedImage(*self.slots(msg))
                 cv_bridge = CvBridge()
                 image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-                depth_histogram = self.update_depth_histogram(image, depth_histogram)
+                depth_histogram = self.get_updated_depth_histogram(image, depth_histogram)
                 time = rospy.Time.from_sec(time.to_sec())
                 time_from_start = int(time.to_sec() - self.start_time)
                 print(time_from_start)
         depths = list()
         for key, value in depth_histogram.items():
             depths.extend([key] * value)
-        print(np.percentile(depths, 98),  np.percentile(depths, 2))
-        return np.percentile(depths, 98),  np.percentile(depths, 2)
+        return np.percentile(depths, 99),  np.percentile(depths, 2)
 
     def get_camera_topics(self):
         for topic_name, topic_info in self.bag.get_type_and_topic_info()[1].items():
@@ -168,6 +167,27 @@ class VideoDataProcessor:
         angle = np.degrees(np.arccos(cos_angle))
         return angle
 
+    @staticmethod
+    def get_updated_depth_histogram(image, depth_histogram):
+        for y in range(image.shape[0]):
+            for x in range(image.shape[1]):
+                key = int(50 * np.round(image[y][x] / 50))
+                if key in depth_histogram:
+                    depth_histogram[key] += 1
+                else:
+                    depth_histogram[key] = 1
+        return depth_histogram
+
+    @staticmethod
+    def get_transformed_rgbd_image(image, upper_limit, lower_limit):
+        max_value_below_percentile = np.max(image[image <= upper_limit])
+        image[image > upper_limit] = max_value_below_percentile
+        min_value_over_percentile = np.min(image[image >= lower_limit])
+        image[image < lower_limit] = min_value_over_percentile
+        image -= np.min(image)
+        image = (image / np.max(image)) * 255
+        return image
+
     def add_image_to_demo(self, image, topic_name):
         if "front" in topic_name:
             self.demo_images["demo_image_front"] = image
@@ -197,27 +217,6 @@ class VideoDataProcessor:
                     self.buffer.set_transform_static(tf, 'bag')
         except ROSBagException:
             print('Could not read')
-
-    @staticmethod
-    def update_depth_histogram(image, depth_histogram):
-        for y in range(image.shape[0]):
-            for x in range(image.shape[1]):
-                key = int(50 * np.round(image[y][x] / 50))
-                if key in depth_histogram:
-                    depth_histogram[key] += 1
-                else:
-                    depth_histogram[key] = 1
-        return depth_histogram
-
-    @staticmethod
-    def transform_rgbd_image(image, upper_limit, lower_limit):
-        max_value_below_percentile = np.max(image[image <= upper_limit])
-        image[image > upper_limit] = max_value_below_percentile
-        min_value_over_percentile = np.min(image[image >= lower_limit])
-        image[image < lower_limit] = min_value_over_percentile
-        image -= np.min(image)
-        image = (image / np.max(image)) * 255
-        return image
 
     @staticmethod
     def write_info_to_data_availability(result, output_folder):
