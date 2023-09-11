@@ -13,3 +13,4 @@
     <node if="$(arg rviz)" name="rviz" pkg="rviz" type="rviz"
           args="-d $(find bag_crawler)/config/only_tf.rviz"/>
 </launch>
+
