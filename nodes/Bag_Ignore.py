@@ -4,6 +4,9 @@ import json
 
 
 def main(args):
+    if len(args) < 3:
+        print("Enter arguments in the form <operation> <path_to_bag_file>.")
+        return
     operation = args[1]
     path_to_bag_file = args[2]
     path_to_ignore_file = get_path_to_ignore_file(path_to_bag_file)
@@ -12,7 +15,7 @@ def main(args):
     elif operation == "-rm":
         remove_bag_from_ignore_file(path_to_bag_file, path_to_ignore_file)
     else:
-        print("")
+        print(f"'{operation}' is unknown operation. Available operations: -add, -rm.")
 
 
 def get_path_to_ignore_file(path_to_bag_file):
