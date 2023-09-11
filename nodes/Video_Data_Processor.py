@@ -56,8 +56,8 @@ class VideoDataProcessor:
                     image = cv_bridge.compressed_imgmsg_to_cv2(msg)
                     if is_depth:
                         image = self.get_transformed_rgbd_image(image, upper_limit, lower_limit)
-                        image = image.astype(np.uint8)
-                    if is_gray:
+                        image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+                    elif is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
                     if abs(rotation_angle) > 0:
                         image = self.get_rotated_image(image, rotation_angle)
