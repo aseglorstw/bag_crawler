@@ -27,10 +27,7 @@ class VideoDataProcessor:
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
-        c = 10
         for topic_name in topic_names:
-            if "right" not in topic_name:
-                continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.get_is_gray(topic_name)
@@ -58,12 +55,11 @@ class VideoDataProcessor:
                         image = self.transform_rgbd_image(image, upper_limit, lower_limit)
                     elif is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-                    # if rotation_angle > 0:
-                    #     image = self.get_rotated_image(image, rotation_angle)
+                    if rotation_angle > 0:
+                        image = self.get_rotated_image(image, rotation_angle)
                     image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     #cv2.imwrite(f"{folder}/{c}.png", image)
-                    c += 1
                     break
                     #video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
@@ -78,13 +74,17 @@ class VideoDataProcessor:
                 transform_base_link_camera = self.buffer.lookup_transform_full("base_link", time,
                                                                                msg.header.frame_id, time, "base_link")
                 rotate_matrix = numpify(transform_base_link_camera.transform)[:3, :3]
+                # Robot HUSKY has non-standard frame layout, so I'm checking an angle between z-axes.
+                angle_between_z_axes = self.get_angle_between_vectors(np.array([0, 0, 1]), rotate_matrix[:, 2])
+                if 0 <= angle_between_z_axes <= 30:
+                    break
                 rotation_angle = self.get_angle_between_vectors(np.array([0, 0, 1]), rotate_matrix[:, 1])
                 if 70 < rotation_angle < 110:
                     return -90 if self.get_is_turn_right(rotate_matrix) else 90
                 elif 0 < rotation_angle < 50:
                     return -180
             except LookupException:
-                return 0
+                break
         return 0
 
     def get_size_of_image(self, topic_name, is_grey):
