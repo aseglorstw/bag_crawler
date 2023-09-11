@@ -27,7 +27,12 @@ class VideoDataProcessor:
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
             return False
+        cont = True
         for topic_name in topic_names:
+            if "/spot/camera/frontleft/image/compressed" in topic_name:
+                cont = False
+            if cont:
+                continue
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
             is_gray = self.get_is_gray(topic_name)
@@ -54,11 +59,10 @@ class VideoDataProcessor:
                         image = self.transform_rgbd_image(image, upper_limit, lower_limit)
                     elif is_gray:
                         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-                    if rotation_angle > 0:
+                    if abs(rotation_angle) > 0:
                         image = self.get_rotated_image(image, rotation_angle)
                     image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
-                    #cv2.imwrite(f"{folder}/{c}.png", image)
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
