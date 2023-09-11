@@ -33,15 +33,14 @@ class VideoDataProcessor:
             is_gray = self.get_is_gray(topic_name)
             is_depth = "depth" in topic_name
             rotation_angle = self.get_rotation_angle(topic_name)
-            print(rotation_angle)
-            continue
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-            #fps = 60
-            #video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
-            #video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
+            fps = 60
+            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
+            video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
-                if msg_number == mid_video and not is_gray:
+                print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle)
+                if msg_number == mid_video and not is_gray and not is_depth:
                     msg = CompressedImage(*self.slots(msg))
                     demo_image = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
                     self.add_image_to_demo(demo_image, topic_name)
@@ -60,11 +59,10 @@ class VideoDataProcessor:
                     image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
                     cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
                     #cv2.imwrite(f"{folder}/{c}.png", image)
-                    break
-                    #video_out.write(image)
+                    video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
             print(f"Video  from topic {topic_name} is saved.")
-            #video_out.release()
+            video_out.release()
             self.save_demo_images(folder)
         return True
 
