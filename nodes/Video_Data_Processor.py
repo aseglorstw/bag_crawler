@@ -22,7 +22,7 @@ class VideoDataProcessor:
         self.buffer = None
         self.load_buffer()
 
-    def read_images_and_save_video(self, folder):
+    def create_videos(self, folder):
         topic_names = list(self.get_camera_topics())
         if topic_names[0] is None:
             print("The topic in which messages from the camera are posted was not found")
@@ -30,36 +30,64 @@ class VideoDataProcessor:
         for topic_name in topic_names:
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
-            is_gray = self.get_is_gray(topic_name)
-            is_depth = "depth" in topic_name
-            rotation_angle = self.get_rotation_angle(topic_name)
-            upper_limit, lower_limit = None, None
-            if is_depth:
-                upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
-            fps = 60
-            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
-            video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
-            for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
-                print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, msg.header.frame_id)
-                if msg_number == mid_video and not is_gray and not is_depth:
-                    msg = CompressedImage(*self.slots(msg))
-                    demo_image = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
-                    self.add_image_to_demo(demo_image, topic_name)
-                if msg_number % save_interval == 0:
-                    time = rospy.Time.from_sec(time.to_sec())
-                    time_from_start = int(time.to_sec() - self.start_time)
-                    msg = CompressedImage(*self.slots(msg))
-                    image = self.get_processed_image(msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle,
-                                                     time_from_start)
-                    cv2.imwrite(f"{folder}/{self.get_name_for_video(topic_name)}_img.png", image)
-                    break
-                    video_out.write(image)
-                    print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
-            break
-            print(f"Video  from topic {topic_name} is saved.")
-            video_out.release()
+            if "omnicam" in topic_name:
+                self.save_video_omnicam(topic_name, save_interval, mid_video, folder)
+            else:
+                is_gray = self.get_is_gray(topic_name)
+                is_depth = "depth" in topic_name
+                rotation_angle = self.get_rotation_angle(topic_name)
+                self.save_video(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, folder)
         self.save_demo_images(folder)
         return True
+
+    def save_video(self, topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, folder):
+        upper_limit, lower_limit = None, None
+        if is_depth:
+            upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
+        fps = 60
+        video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
+        video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
+        for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
+            print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, msg.header.frame_id)
+            if msg_number == mid_video and not is_gray and not is_depth:
+                msg = CompressedImage(*self.slots(msg))
+                demo_image = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
+                self.add_image_to_demo(demo_image, topic_name)
+            if msg_number % save_interval == 0:
+                time = rospy.Time.from_sec(time.to_sec())
+                time_from_start = int(time.to_sec() - self.start_time)
+                msg = CompressedImage(*self.slots(msg))
+                image = self.get_processed_image(msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle,
+                                                 time_from_start)
+                cv2.imwrite(f"{folder}/{self.get_name_for_video(topic_name)}_img.png", image)
+                video_out.write(image)
+                print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
+        print(f"Video  from topic {topic_name} is saved.")
+        video_out.release()
+
+    def save_video_omnicam(self, topic_name, save_interval, mid_video, folder):
+        video_outs = self.get_video_outs_for_omnicam(topic_name, folder)
+        for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
+            if msg_number % save_interval == 0:
+                time = rospy.Time.from_sec(time.to_sec())
+                time_from_start = int(time.to_sec() - self.start_time)
+                print(topic_name, save_interval, mid_video, msg.header.frame_id, time_from_start)
+                msg = CompressedImage(*self.slots(msg))
+                images = self.get_processed_images_omnicam(msg, time_from_start)
+                if msg_number == mid_video:
+                    demo = self.get_demo_image_omnicam(images)
+                    self.add_image_to_demo(demo, topic_name)
+                for i in range(6):
+                    video_outs[i].write(images[i])
+        for i in range(6):
+            video_outs[i].release()
+
+    def save_demo_images(self, output_folder):
+        if "demo_panorama" in self.demo_images:
+            cv2.imwrite(os.path.join(output_folder, "demo_panorama.jpg"), self.demo_images["demo_panorama"])
+        else:
+            for key in self.demo_images.keys():
+                cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
     def get_rotation_angle(self, topic_name):
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
@@ -150,7 +178,7 @@ class VideoDataProcessor:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         if abs(rotation_angle) > 0:
             image = self.get_rotated_image(image, rotation_angle)
-        #image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
+        image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
         image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
         return image
 
@@ -193,6 +221,44 @@ class VideoDataProcessor:
         image = (image / np.max(image)) * 255
         return image
 
+    def get_video_outs_for_omnicam(self, topic_name, folder):
+        video_outs = []
+        fps = 60
+        for i in range(6):
+            video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video_{i}.avi"
+            video_outs.append(cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True))
+        return video_outs
+
+    def get_processed_images_omnicam(self, msg, time_from_start):
+        cv_bridge = CvBridge()
+        image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+        images = []
+        height_one_image = 1232
+        rotated_angle = -90
+        number_of_images = 6
+        for i in range(number_of_images):
+            one_image = image[height_one_image * i: height_one_image + height_one_image * i, :, :]
+            one_image = self.get_rotated_image(one_image, rotated_angle)
+            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (1920, 1200))
+            one_image = cv2.putText(one_image, self.get_datetime(time_from_start), (30, 40),
+                                              cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+            images.append(one_image)
+        return images
+
+    def get_demo_image_omnicam(self, msg):
+        cv_bridge = CvBridge()
+        image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+        images = []
+        height_one_image = 1232
+        rotated_angle = -90
+        number_of_images = 6
+        for i in range(number_of_images):
+            one_image = image[height_one_image * i: height_one_image + height_one_image * i, :, :]
+            one_image = self.get_rotated_image(one_image, rotated_angle)
+            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (1920, 1200))
+            images.append(one_image)
+        return np.hstack(images)
+
     def add_image_to_demo(self, image, topic_name):
         if "front" in topic_name:
             self.demo_images["demo_image_front"] = image
@@ -202,15 +268,8 @@ class VideoDataProcessor:
             self.demo_images["demo_image_right"] = image
         elif "rear" in topic_name:
             self.demo_images["demo_image_rear"] = image
-        elif "pano" in topic_name:
+        elif "pano" or "omnicam" in topic_name:
             self.demo_images["demo_panorama"] = image
-
-    def save_demo_images(self, output_folder):
-        if "demo_panorama" in self.demo_images:
-            cv2.imwrite(os.path.join(output_folder, "demo_panorama.jpg"), self.demo_images["panorama"])
-        else:
-            for key in self.demo_images.keys():
-                cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
     def load_buffer(self):
         rospy.init_node('tf_listener')
