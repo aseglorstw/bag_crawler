@@ -33,13 +33,14 @@ class VideoDataProcessor:
             is_gray = self.get_is_gray(topic_name)
             is_depth = "depth" in topic_name
             rotation_angle = self.get_rotation_angle(topic_name)
+            upper_limit, lower_limit = None, None
             if is_depth:
                 upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
             fps = 60
             video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
             video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
             for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
-                print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle)
+                print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, msg.header.frame_id)
                 if msg_number == mid_video and not is_gray and not is_depth:
                     msg = CompressedImage(*self.slots(msg))
                     demo_image = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
@@ -48,19 +49,13 @@ class VideoDataProcessor:
                     time = rospy.Time.from_sec(time.to_sec())
                     time_from_start = int(time.to_sec() - self.start_time)
                     msg = CompressedImage(*self.slots(msg))
-                    cv_bridge = CvBridge()
-                    image = cv_bridge.compressed_imgmsg_to_cv2(msg)
-                    if is_depth:
-                        image = self.get_transformed_rgbd_image(image, upper_limit, lower_limit)
-                        image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2RGB)
-                    elif is_gray:
-                        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-                    if abs(rotation_angle) > 0:
-                        image = self.get_rotated_image(image, rotation_angle)
-                    image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
-                    cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+                    image = self.get_processed_image(msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle,
+                                                     time_from_start)
+                    cv2.imwrite(f"{folder}/{self.get_name_for_video(topic_name)}_img.png", image)
+                    break
                     video_out.write(image)
                     print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
+            break
             print(f"Video  from topic {topic_name} is saved.")
             video_out.release()
         self.save_demo_images(folder)
@@ -144,6 +139,20 @@ class VideoDataProcessor:
         else:
             angle_between_x_and_y_new_base = self.get_angle_between_vectors(np.array([1, 0, 0]), rotate_matrix[:, 1])
             return 0 < angle_between_x_and_y_new_base < 90
+
+    def get_processed_image(self, msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle, time_from_start):
+        cv_bridge = CvBridge()
+        image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+        if is_depth:
+            image = self.get_transformed_rgbd_image(image, upper_limit, lower_limit)
+            image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2RGB)
+        elif is_gray:
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        if abs(rotation_angle) > 0:
+            image = self.get_rotated_image(image, rotation_angle)
+        #image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
+        image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+        return image
 
     @staticmethod
     def get_rotated_image(image, rotation_angle):
