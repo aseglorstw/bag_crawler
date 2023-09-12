@@ -75,7 +75,7 @@ class VideoDataProcessor:
                 msg = CompressedImage(*self.slots(msg))
                 images = self.get_processed_images_omnicam(msg, time_from_start)
                 if msg_number == mid_video:
-                    demo = self.get_demo_image_omnicam(images)
+                    demo = self.get_demo_image_omnicam(msg)
                     self.add_image_to_demo(demo, topic_name)
                 for i in range(6):
                     video_outs[i].write(images[i])
@@ -184,10 +184,13 @@ class VideoDataProcessor:
 
     @staticmethod
     def get_rotated_image(image, rotation_angle):
-        height, width = image.shape[:2]
-        center = (width // 2, height // 2)
-        rotation_matrix = cv2.getRotationMatrix2D(center, rotation_angle, 1.0)
-        rotated_image = cv2.warpAffine(image, rotation_matrix, (width, height))
+        if rotation_angle == 90:
+            k = 1
+        elif rotation_angle == -90:
+            k = -1
+        else:
+            k = 2
+        rotated_image = np.rot90(image, k=k)
         return rotated_image
 
     @staticmethod
