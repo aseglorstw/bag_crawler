@@ -83,6 +83,8 @@ class ICPDataProcessor:
             distances_one_period_xyz = np.abs(self.transformed_icp.T[1:] - self.transformed_icp.T[:-1])
             distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
             moving_indexes = np.where(distances_one_period > 0.002)[0]
+            if len(moving_indexes) == 0:
+                return None, None
             self.start_of_moving = self.times[moving_indexes[0]]
             self.end_of_moving = self.times[moving_indexes[-1]]
         return self.start_of_moving, self.end_of_moving
