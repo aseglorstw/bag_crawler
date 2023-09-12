@@ -58,8 +58,7 @@ class PointCloudDataProcessor:
         return self.transformed_point_cloud
 
     def load_buffer(self):
-        rospy.init_node('tf_listener')
-        buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
+        buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600), False)
         try:
             for topic, msg, time in tqdm(self.bag.read_messages(topics='/tf_static'),
                                          total=self.bag.get_message_count(topic_filters='/tf_static')):

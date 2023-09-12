@@ -275,8 +275,7 @@ class VideoDataProcessor:
             self.demo_images["demo_panorama"] = image
 
     def load_buffer(self):
-        rospy.init_node('tf_listener')
-        self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600))
+        self.buffer = tf2_ros.Buffer(rospy.Duration(3600 * 3600), False)
         try:
             for topic, msg, time in tqdm(self.bag.read_messages(topics='/tf_static'),
                                          total=self.bag.get_message_count(topic_filters='/tf_static')):
