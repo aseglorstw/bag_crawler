@@ -33,7 +33,8 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, should_create_graphs_or_write_bag_info(task_list), path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom, should_create_graphs_or_write_bag_info(task_list), path_to_bag_file, path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom, should_create_graphs_or_write_bag_info(task_list), path_to_bag_file,
+                                root_directory, path_to_web_folder)
         process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -86,8 +87,8 @@ def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
 def process_video(bag, is_video, output_folder):
     if not is_video:
         video = VideoDataProcessor(bag)
-        result = video.read_images_and_save_video(output_folder)
-        #video.write_info_to_data_availability(result, output_folder)
+        result = video.create_videos(output_folder)
+        video.write_info_to_data_availability(result, output_folder)
 
 
 def process_joy(bag, icp, odom, is_joy, output_folder):
@@ -125,19 +126,20 @@ def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
         Graphs_Creator.write_info_to_data_availability(output_folder)
 
 
-def write_bag_info_to_files(bag, icp, odom, is_bag_info, path_to_bag_file, output_folder):
+def write_bag_info_to_files(bag, icp, odom, is_bag_info, path_to_bag_file, root_directory, output_folder):
     if not is_bag_info:
-        bag_info = BAGInfoDataProcessor(bag, icp, odom, output_folder)
+        bag_info = BAGInfoDataProcessor(bag, icp, odom, root_directory, output_folder)
         bag_info.write_bag_info()
-        bag_info.write_topics_info()
-        bag_info.write_moving_joints_info()
-        bag_info.write_movement_tag_info()
-        bag_info.write_controller_info(path_to_bag_file)
-        bag_info.write_info_to_data_availability(output_folder)
+        #bag_info.write_topics_info()
+        #bag_info.write_moving_joints_info()
+        #bag_info.write_movement_tag_info()
+        #bag_info.write_controller_info(path_to_bag_file)
+        #bag_info.write_info_to_data_availability(output_folder)
 
 
 def should_create_graphs_or_write_bag_info(task_list):
-    return task_list["icp"] and task_list["odom"] and task_list["point_cloud"] and task_list["joy"]
+    return (task_list["icp"] and task_list["odom"] and task_list["point_cloud"] and task_list["joy"]
+            and task_list["graphs"] and task_list["bag_info"])
 
 
 def close_bag_file(bag, path_to_bag_file):
