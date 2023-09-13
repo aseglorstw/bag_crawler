@@ -5,12 +5,13 @@ import json
 
 
 class JOYDataProcessor:
-    def __init__(self, bag, icp, odom):
+    def __init__(self, bag, icp, odom, elements_of_control):
         self.bag = bag
         self.icp = icp
         self.odom = odom
         self.start_time = bag.get_start_time()
         self.joy_control_coordinates = []
+        self.elements_of_control = elements_of_control
 
     def read_joy_topic(self):
         joy_control_times = []
@@ -20,6 +21,7 @@ class JOYDataProcessor:
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             control_time = time.to_sec() - self.start_time
+            print(control_time)
             joy_control_times.append(control_time)
         return np.array(joy_control_times)
 
@@ -41,8 +43,12 @@ class JOYDataProcessor:
 
     def get_joy_topic(self):
         topics_info = self.bag.get_type_and_topic_info()[1]
+        config_topic_names = []
+        if self.elements_of_control is not None:
+            config_topic_names = [key for key, value in self.elements_of_control.items() if
+                                  value == "robot_gamepad" or value == "gamepad_PC"]
         for topic_name, topics_info in topics_info.items():
-            if "joy" in topic_name and "cmd_vel" in topic_name:
+            if ("joy" in topic_name and "cmd_vel" in topic_name) or topic_name in config_topic_names:
                 return topic_name
         return None
 
