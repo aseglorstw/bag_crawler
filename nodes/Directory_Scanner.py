@@ -59,7 +59,7 @@ class DirectoryScanner:
         return None
 
     @staticmethod
-    def get_configs(root_directory, path_to_bag_file):
+    def get_config(root_directory, path_to_bag_file):
         path_to_global_file_config = os.path.join(root_directory, ".bag_crawler_global_config.json")
         directory, _ = path_to_bag_file.rsplit('/', 1)
         path_to_local_file_config = os.path.join(directory, ".bag_crawler_local_config.json")
@@ -76,7 +76,7 @@ class DirectoryScanner:
             with open(path_to_global_file_config, "r", encoding="utf-8") as file:
                 config = json.load(file)
                 return config
-        return None
+        return {}
 
     @staticmethod
     def check_web_folder(path_to_bag_file):
