@@ -169,7 +169,7 @@ class VideoDataProcessor:
         if abs(rotation_angle) > 0:
             image = self.get_rotated_image(image, rotation_angle)
         image = cv2.resize(np.asarray(image, dtype=np.uint8), (640, 480))
-        image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+        image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         return image
 
     @staticmethod
@@ -219,7 +219,7 @@ class VideoDataProcessor:
         fps = 60
         for i in range(6):
             video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video_{i}.avi"
-            video_outs.append(cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True))
+            video_outs.append(cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (640, 480), True))
         return video_outs
 
     def get_processed_images_omnicam(self, msg, time_from_start):
@@ -234,7 +234,7 @@ class VideoDataProcessor:
             one_image = self.get_rotated_image(one_image, rotated_angle)
             one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (640, 480))
             one_image = cv2.putText(one_image, self.get_datetime(time_from_start), (30, 40),
-                                              cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
+                                              cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             images.append(one_image)
         return images
 
