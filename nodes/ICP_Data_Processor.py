@@ -70,11 +70,10 @@ class ICPDataProcessor:
     def get_average_speed_icp(self):
         if self.transformed_icp is None:
             return None
-        distances_one_period = np.abs(self.transformed_icp.T[1:] - self.transformed_icp.T[:-1])
-        times_one_period = self.times[1:] - self.times[:-1]
-        speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
-        speeds = np.linalg.norm(speeds_xyz, axis=1)
-        return np.sum(speeds) / len(speeds) if speeds is not None else None
+        elif self.start_of_moving is None:
+            return 0
+        average_speed = self.distances[-1] / (self.end_of_moving - self.start_of_moving)
+        return average_speed
 
     def get_start_and_end_of_moving_icp(self):
         if self.transformed_icp is None:
