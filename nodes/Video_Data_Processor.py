@@ -46,20 +46,16 @@ class VideoDataProcessor:
             upper_limit, lower_limit = self.get_upper_and_lower_limits(topic_name, save_interval)
         fps = 60
         video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
-        video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (1920, 1200), True)
+        video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (640, 480), True)
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, msg.header.frame_id)
             if msg_number == mid_video and not is_gray and not is_depth:
-                msg = CompressedImage(*self.slots(msg))
-                demo_image = cv2.imdecode(np.fromstring(msg.data, np.uint8), cv2.IMREAD_COLOR)
+                demo_image = cv2.imdecode(np.fromstring(CompressedImage(*self.slots(msg)).data, np.uint8), cv2.IMREAD_COLOR)
                 self.add_image_to_demo(demo_image, topic_name)
             if msg_number % save_interval == 0:
-                time = rospy.Time.from_sec(time.to_sec())
-                time_from_start = int(time.to_sec() - self.start_time)
-                msg = CompressedImage(*self.slots(msg))
-                image = self.get_processed_image(msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle,
-                                                 time_from_start)
-                cv2.imwrite(f"{folder}/{self.get_name_for_video(topic_name)}_img.png", image)
+                time_from_start = int(rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time)
+                image = self.get_processed_image(CompressedImage(*self.slots(msg)), is_depth, is_gray, upper_limit,
+                                                 lower_limit, rotation_angle, time_from_start)
                 video_out.write(image)
                 print(f"Image from topic {topic_name} for video is saved. Time: {time.to_sec() - self.start_time}")
         print(f"Video  from topic {topic_name} is saved.")
@@ -69,13 +65,11 @@ class VideoDataProcessor:
         video_outs = self.get_video_outs_for_omnicam(topic_name, folder)
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
-                time = rospy.Time.from_sec(time.to_sec())
-                time_from_start = int(time.to_sec() - self.start_time)
+                time_from_start = int(rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time)
                 print(topic_name, save_interval, mid_video, msg.header.frame_id, time_from_start)
-                msg = CompressedImage(*self.slots(msg))
-                images = self.get_processed_images_omnicam(msg, time_from_start)
+                images = self.get_processed_images_omnicam(CompressedImage(*self.slots(msg)), time_from_start)
                 if msg_number == mid_video:
-                    demo = self.get_demo_image_omnicam(msg)
+                    demo = self.get_demo_image_omnicam(CompressedImage(*self.slots(msg)))
                     self.add_image_to_demo(demo, topic_name)
                 for i in range(6):
                     video_outs[i].write(images[i])
@@ -121,13 +115,9 @@ class VideoDataProcessor:
         depth_histogram = dict()
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
-                msg = CompressedImage(*self.slots(msg))
                 cv_bridge = CvBridge()
-                image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+                image = cv_bridge.compressed_imgmsg_to_cv2(CompressedImage(*self.slots(msg)))
                 depth_histogram = self.get_updated_depth_histogram(image, depth_histogram)
-                time = rospy.Time.from_sec(time.to_sec())
-                time_from_start = int(time.to_sec() - self.start_time)
-                print(time_from_start)
         depths = list()
         for key, value in depth_histogram.items():
             depths.extend([key] * value)
@@ -168,9 +158,9 @@ class VideoDataProcessor:
             angle_between_x_and_y_new_base = self.get_angle_between_vectors(np.array([1, 0, 0]), rotate_matrix[:, 1])
             return 0 < angle_between_x_and_y_new_base < 90
 
-    def get_processed_image(self, msg, is_depth, is_gray, upper_limit, lower_limit, rotation_angle, time_from_start):
+    def get_processed_image(self, compressed_image, is_depth, is_gray, upper_limit, lower_limit, rotation_angle, time_from_start):
         cv_bridge = CvBridge()
-        image = cv_bridge.compressed_imgmsg_to_cv2(msg)
+        image = cv_bridge.compressed_imgmsg_to_cv2(compressed_image)
         if is_depth:
             image = self.get_transformed_rgbd_image(image, upper_limit, lower_limit)
             image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2RGB)
@@ -178,7 +168,7 @@ class VideoDataProcessor:
             image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
         if abs(rotation_angle) > 0:
             image = self.get_rotated_image(image, rotation_angle)
-        image = cv2.resize(np.asarray(image, dtype=np.uint8), (1920, 1200))
+        image = cv2.resize(np.asarray(image, dtype=np.uint8), (640, 480))
         image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
         return image
 
@@ -242,7 +232,7 @@ class VideoDataProcessor:
         for i in range(number_of_images):
             one_image = image[height_one_image * i: height_one_image + height_one_image * i, :, :]
             one_image = self.get_rotated_image(one_image, rotated_angle)
-            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (1920, 1200))
+            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (640, 480))
             one_image = cv2.putText(one_image, self.get_datetime(time_from_start), (30, 40),
                                               cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
             images.append(one_image)
@@ -258,7 +248,7 @@ class VideoDataProcessor:
         for i in range(number_of_images):
             one_image = image[height_one_image * i: height_one_image + height_one_image * i, :, :]
             one_image = self.get_rotated_image(one_image, rotated_angle)
-            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (1920, 1200))
+            one_image = cv2.resize(np.asarray(one_image, dtype=np.uint8), (640, 480))
             images.append(one_image)
         return np.hstack(images)
 
