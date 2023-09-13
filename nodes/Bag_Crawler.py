@@ -136,7 +136,7 @@ def write_bag_info_to_files(bag, icp, odom, is_bag_info, config,  output_folder)
         else:
             bag_info = BAGInfoDataProcessor(bag, icp, odom, None, output_folder)
         bag_info.write_bag_info()
-        bag_info.write_topics_info()
+        #bag_info.write_topics_info()
         bag_info.write_moving_joints_info()
         bag_info.write_movement_tag_info()
         bag_info.write_controller_info()

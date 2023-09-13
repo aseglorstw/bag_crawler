@@ -73,8 +73,7 @@ class PointCloudDataProcessor:
             try:
                 buffer = self.load_buffer()
                 transform_base_link_lidar = buffer.lookup_transform_full("base_link", time,
-                                                                         msg.header.frame_id, time, "base_link",
-                                                                         rospy.Duration.from_sec(0.3))
+                                                                         msg.header.frame_id, time, "base_link")
                 return numpify(transform_base_link_lidar.transform)
             except ExtrapolationException:
                 print(f"Transformation from lidar coordinate system to base_link was not found.")
