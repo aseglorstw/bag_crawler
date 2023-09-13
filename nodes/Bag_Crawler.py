@@ -32,9 +32,9 @@ def main(root_directory):
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, task_list["joy"], config, path_to_web_folder)
-        create_graphs(icp, odom, point_cloud, joy, should_create_graphs_or_write_bag_info(task_list), path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom, should_create_graphs_or_write_bag_info(task_list),
-                                config, path_to_web_folder)
+        create_graphs(icp, odom, point_cloud, joy, should_create_graphs(task_list), path_to_web_folder)
+        # write_bag_info_to_files(bag, icp, odom, should_write_bag_info(task_list),
+        #                         config, path_to_web_folder)
         process_video(bag, task_list["video"], config, path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -143,9 +143,14 @@ def write_bag_info_to_files(bag, icp, odom, is_bag_info, config,  output_folder)
         bag_info.write_info_to_data_availability(output_folder)
 
 
-def should_create_graphs_or_write_bag_info(task_list):
+def should_create_graphs(task_list):
     return (task_list["icp"] and task_list["odom"] and task_list["point_cloud"] and task_list["joy"]
-            and task_list["graphs"] and task_list["bag_info"])
+            and task_list["graphs"])
+
+
+def should_write_bag_info(task_list):
+    return (task_list["icp"] and task_list["odom"] and task_list["point_cloud"] and task_list["joy"]
+            and task_list["bag_info"])
 
 
 def close_bag_file(bag, path_to_bag_file):
