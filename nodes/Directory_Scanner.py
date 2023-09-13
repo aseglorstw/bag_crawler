@@ -82,10 +82,10 @@ class DirectoryScanner:
     def check_web_folder(path_to_bag_file):
         task_list = {"icp": False, "odom": False, "point_cloud": False, "joy": False, "video": False, "graphs": False,
                      "bag_info": False}
-        directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
+        directory, bag_file_name = os.path.split(path_to_bag_file)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         new_file_size = os.path.getsize(path_to_bag_file)
-        old_file_size = new_file_size
+        old_file_size = 0
         if os.path.exists(os.path.join(web_folder, "bag_info.json")):
             with open(os.path.join(web_folder, "bag_info.json"), 'r') as json_file:
                 old_file_size = json.load(json_file)["size"]
