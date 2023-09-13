@@ -15,6 +15,7 @@ class ICPDataProcessor:
         self.distances = None
         self.start_of_moving = None
         self.end_of_moving = None
+        self.max_diff = None
 
     def read_icp_topic(self):
         icp = []
@@ -91,10 +92,12 @@ class ICPDataProcessor:
     def get_max_diff(self):
         if self.transformed_icp is None:
             return None
-        x_diff = abs(max(self.transformed_icp[0, :]) - min(self.transformed_icp[0, :]))
-        y_diff = abs(max(self.transformed_icp[1, :]) - min(self.transformed_icp[1, :]))
-        z_diff = abs(max(self.transformed_icp[2, :]) - min(self.transformed_icp[2, :]))
-        return max(x_diff, y_diff, z_diff)
+        if self.max_diff is None:
+            x_diff = abs(max(self.transformed_icp[0, :]) - min(self.transformed_icp[0, :]))
+            y_diff = abs(max(self.transformed_icp[1, :]) - min(self.transformed_icp[1, :]))
+            z_diff = abs(max(self.transformed_icp[2, :]) - min(self.transformed_icp[2, :]))
+            self.max_diff = max(x_diff, y_diff, z_diff)
+        return self.max_diff
 
     def get_z_coord(self):
         if self.transformed_icp is None:

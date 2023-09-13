@@ -10,6 +10,7 @@ class ODOMTopic:
         self.start_of_moving = None
         self.end_of_moving = None
         self.distances = None
+        self.max_diff = None
         self.odom = []
         self.transformed_odom = []
         self.times = []
@@ -51,21 +52,23 @@ class ODOMTopic:
     def get_distances(self):
         if self.transformed_odom is None:
             return None
-        distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
-        distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
-        self.distances = np.linalg.norm(distances_xyz, axis=1)
+        if self.distances is None:
+            distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+            distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
+            self.distances = np.linalg.norm(distances_xyz, axis=1)
         return self.distances
 
     def get_start_and_end_of_moving(self):
         if self.transformed_odom is None:
             return None, None
-        distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
-        distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
-        moving_indexes = np.where(distances_one_period > 0.002)[0]
-        if len(moving_indexes) == 0:
-            return None, None
-        self.start_of_moving = self.times[moving_indexes[0]]
-        self.end_of_moving = self.times[moving_indexes[-1]]
+        if self.start_of_moving is None:
+            distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
+            distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
+            moving_indexes = np.where(distances_one_period > 0.002)[0]
+            if len(moving_indexes) == 0:
+                return None, None
+            self.start_of_moving = self.times[moving_indexes[0]]
+            self.end_of_moving = self.times[moving_indexes[-1]]
         return self.start_of_moving, self.end_of_moving
 
     def get_average_speed(self):
@@ -79,10 +82,12 @@ class ODOMTopic:
     def get_max_diff(self):
         if self.transformed_odom is None:
             return None
-        x_diff = abs(max(self.transformed_odom[0, :]) - min(self.transformed_odom[0, :]))
-        y_diff = abs(max(self.transformed_odom[1, :]) - min(self.transformed_odom[1, :]))
-        z_diff = abs(max(self.transformed_odom[2, :]) - min(self.transformed_odom[2, :]))
-        return max(x_diff, y_diff, z_diff)
+        if self.max_diff is None:
+            x_diff = abs(max(self.transformed_odom[0, :]) - min(self.transformed_odom[0, :]))
+            y_diff = abs(max(self.transformed_odom[1, :]) - min(self.transformed_odom[1, :]))
+            z_diff = abs(max(self.transformed_odom[2, :]) - min(self.transformed_odom[2, :]))
+            self.max_diff = max(x_diff, y_diff, z_diff)
+        return self.max_diff
 
     def get_z_coord(self):
         if self.transformed_odom is None:
