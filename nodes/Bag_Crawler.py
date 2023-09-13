@@ -27,17 +27,15 @@ def main(root_directory):
             continue
 
         path_to_web_folder = directory_scanner.get_path_to_web_folder(path_to_bag_file, task_list)
-        configs = directory_scanner.get_configs(root_directory, path_to_bag_file)
-        print(configs)
-        return
+        config = directory_scanner.get_config(root_directory, path_to_bag_file)
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
-        joy = process_joy(bag, icp, odom, task_list["joy"], path_to_web_folder)
+        joy = process_joy(bag, icp, odom, task_list["joy"], config, path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, should_create_graphs_or_write_bag_info(task_list), path_to_web_folder)
-        write_bag_info_to_files(bag, icp, odom, should_create_graphs_or_write_bag_info(task_list), path_to_bag_file,
-                                root_directory, path_to_web_folder)
-        process_video(bag, task_list["video"], path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom, should_create_graphs_or_write_bag_info(task_list),
+                                config, path_to_web_folder)
+        process_video(bag, task_list["video"], config, path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
 
@@ -86,15 +84,18 @@ def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
     return point_cloud
 
 
-def process_video(bag, is_video, output_folder):
+def process_video(bag, is_video, config, output_folder):
     if not is_video:
         video = VideoDataProcessor(bag)
         result = video.create_videos(output_folder)
         video.write_info_to_data_availability(result, output_folder)
 
 
-def process_joy(bag, icp, odom, is_joy, output_folder):
-    joy = JOYDataProcessor(bag, icp, odom)
+def process_joy(bag, icp, odom, is_joy, config, output_folder):
+    if "elements_of_control" in config:
+        joy = JOYDataProcessor(bag, icp, odom, config["elements_of_control"])
+    else:
+        joy = JOYDataProcessor(bag, icp, odom, None)
     if is_joy:
         joy.load_class_object(output_folder)
         return joy
@@ -128,15 +129,18 @@ def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
         Graphs_Creator.write_info_to_data_availability(output_folder)
 
 
-def write_bag_info_to_files(bag, icp, odom, is_bag_info, path_to_bag_file, root_directory, output_folder):
+def write_bag_info_to_files(bag, icp, odom, is_bag_info, config,  output_folder):
     if not is_bag_info:
-        bag_info = BAGInfoDataProcessor(bag, icp, odom, root_directory, output_folder)
+        if "elements_of_control" in config:
+            bag_info = BAGInfoDataProcessor(bag, icp, odom, config["elements_of_control"], output_folder)
+        else:
+            bag_info = BAGInfoDataProcessor(bag, icp, odom, None, output_folder)
         bag_info.write_bag_info()
-        #bag_info.write_topics_info()
-        #bag_info.write_moving_joints_info()
-        #bag_info.write_movement_tag_info()
-        #bag_info.write_controller_info(path_to_bag_file)
-        #bag_info.write_info_to_data_availability(output_folder)
+        bag_info.write_topics_info()
+        bag_info.write_moving_joints_info()
+        bag_info.write_movement_tag_info()
+        bag_info.write_controller_info()
+        bag_info.write_info_to_data_availability(output_folder)
 
 
 def should_create_graphs_or_write_bag_info(task_list):

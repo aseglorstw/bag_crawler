@@ -8,13 +8,13 @@ import os
 
 class BAGInfoDataProcessor:
 
-    def __init__(self, bag, icp, odom, root_directory, folder):
+    def __init__(self, bag, icp, odom, elements_of_control, folder):
         self.bag = bag
         self.folder = folder
         self.icp = icp
         self.odom = odom
         self.movement_joints = None
-        self.root_directory = root_directory
+        self.elements_of_control = elements_of_control
 
     def write_bag_info(self):
         info_dict = yaml.load(self.bag._get_yaml_info(), Loader=yaml.Loader)
@@ -66,19 +66,14 @@ class BAGInfoDataProcessor:
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
             json.dump(self.movement_joints, file, indent=4)
 
-    def write_controller_info(self, path_to_bag_file):
-        path_to_config_file = self.get_config_file(path_to_bag_file)
-        if path_to_config_file is None:
-            print("The config file wasn't founded. "
-                  "It isn't possible to obtain information about the robot's control methods.")
+    def write_controller_info(self):
+        if self.elements_of_control is None:
+            print("No information on how to control the robot was found.")
             return
-        with open(path_to_config_file, 'r') as file:
-            configs = json.load(file)
-            elements_of_control = configs["elements_of_control"]
         used_elements_of_control = set()
         for topic, msg, time in self.bag.read_messages():
-            if topic in list(elements_of_control.keys()):
-                used_elements_of_control.add(elements_of_control[topic])
+            if topic in list(self.elements_of_control.keys()):
+                used_elements_of_control.add(self.elements_of_control[topic])
         with open(f"{self.folder}/controller_info.json", "w", encoding="utf-8") as file:
             json.dump(list(used_elements_of_control), file, indent=4)
 
@@ -125,18 +120,6 @@ class BAGInfoDataProcessor:
             time_delays = times[1:] - times[:-1]
             return round(np.max(time_delays), 3), round(np.average(time_delays), 3)
         return None, None
-
-    def get_config_file(self, path_to_bag_file):
-        path_to_global_file_config = os.path.join(self.root_directory, ".bag_crawler_global_config.json")
-        path_to_local_file_config = os.path.join(self.folder, ".bag_crawler_local_config.json")
-        path_to_super_local_file_config = path_to_bag_file.replace(".bag", ".config.json")
-        if os.path.exists(path_to_super_local_file_config):
-            return path_to_super_local_file_config
-        elif os.path.exists(path_to_local_file_config):
-            return path_to_local_file_config
-        elif os.path.exists(path_to_global_file_config):
-            return path_to_global_file_config
-        return None
 
     @staticmethod
     def get_date(seconds):
