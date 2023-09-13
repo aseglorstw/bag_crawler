@@ -47,10 +47,15 @@ class JOYDataProcessor:
         if self.elements_of_control is not None:
             config_topic_names = [key for key, value in self.elements_of_control.items() if
                                   value == "robot_gamepad" or value == "gamepad_PC"]
+        selected_topic_name, config_topic_name = None, None
         for topic_name, topics_info in topics_info.items():
-            if ("joy" in topic_name and "cmd_vel" in topic_name) or topic_name in config_topic_names:
-                return topic_name
-        return None
+            if "joy" in topic_name and "cmd_vel" in topic_name:
+                selected_topic_name = topic_name
+            elif topic_name in config_topic_names:
+                config_topic_name = topic_name
+        if selected_topic_name is None and config_topic_name is None:
+            return None
+        return config_topic_name if config_topic_names is not None else selected_topic_name
 
     def get_joy_control_coordinates(self):
         return self.joy_control_coordinates
