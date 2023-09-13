@@ -7,6 +7,9 @@ class ODOMTopic:
         self.topic_name = None
         self.first_rotation_matrix = None
         self.first_transform = None
+        self.start_of_moving = None
+        self.end_of_moving = None
+        self.distances = None
         self.odom = []
         self.transformed_odom = []
         self.times = []
@@ -50,29 +53,28 @@ class ODOMTopic:
             return None
         distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
         distances_xyz = np.concatenate((np.zeros((1, 3)), np.cumsum(distances_one_period_xyz, axis=0)), axis=0)
-        distances = np.linalg.norm(distances_xyz, axis=1)
-        return distances
+        self.distances = np.linalg.norm(distances_xyz, axis=1)
+        return self.distances
 
     def get_start_and_end_of_moving(self):
         if self.transformed_odom is None:
-            return None
+            return None, None
         distances_one_period_xyz = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
         distances_one_period = np.linalg.norm(distances_one_period_xyz, axis=1)
         moving_indexes = np.where(distances_one_period > 0.002)[0]
         if len(moving_indexes) == 0:
             return None, None
-        start_of_moving = self.times[moving_indexes[0]]
-        end_of_moving = self.times[moving_indexes[-1]]
-        return start_of_moving, end_of_moving
+        self.start_of_moving = self.times[moving_indexes[0]]
+        self.end_of_moving = self.times[moving_indexes[-1]]
+        return self.start_of_moving, self.end_of_moving
 
     def get_average_speed(self):
         if self.transformed_odom is None:
             return None
-        distances_one_period = np.abs(self.transformed_odom.T[1:] - self.transformed_odom.T[:-1])
-        times_one_period = self.times[1:] - self.times[:-1]
-        speeds_xyz = distances_one_period / times_one_period.reshape(-1, 1)
-        speeds = np.linalg.norm(speeds_xyz, axis=1)
-        return np.average(speeds) if speeds is not None else None
+        elif self.start_of_moving is None:
+            return 0
+        average_speed = self.distances[-1] / (self.end_of_moving - self.start_of_moving)
+        return average_speed
 
     def get_max_diff(self):
         if self.transformed_odom is None:
