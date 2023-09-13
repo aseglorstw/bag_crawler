@@ -42,7 +42,7 @@ class DirectoryScanner:
 
     @staticmethod
     def get_path_to_web_folder(path_to_bag_file, task_list):
-        directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
+        directory, bag_file_name = os.path.split(path_to_bag_file)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not os.path.exists(web_folder):
             os.mkdir(web_folder)
@@ -52,7 +52,7 @@ class DirectoryScanner:
 
     @staticmethod
     def get_loc_file(path_to_bag_file):
-        directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
+        directory, bag_file_name = os.path.split(path_to_bag_file)
         for file in pathlib.Path(directory).iterdir():
             if bag_file_name.replace(".bag", "_loc.bag") in file.name:
                 return os.path.join(directory, file.name)
@@ -61,7 +61,7 @@ class DirectoryScanner:
     @staticmethod
     def get_config(root_directory, path_to_bag_file):
         path_to_global_file_config = os.path.join(root_directory, ".bag_crawler_global_config.json")
-        directory, _ = path_to_bag_file.rsplit('/', 1)
+        directory, _ = os.path.split(path_to_bag_file)
         path_to_local_file_config = os.path.join(directory, ".bag_crawler_local_config.json")
         path_to_super_local_file_config = path_to_bag_file.replace(".bag", ".config.json")
         if os.path.exists(path_to_super_local_file_config):
@@ -89,15 +89,15 @@ class DirectoryScanner:
         if os.path.exists(os.path.join(web_folder, "bag_info.json")):
             with open(os.path.join(web_folder, "bag_info.json"), 'r') as json_file:
                 old_file_size = json.load(json_file)["size"]
-        log_file = os.path.join(web_folder, ".data_availability.json")
-        if (not (os.path.exists(web_folder) and os.path.isdir(web_folder)) or not os.path.exists(log_file)
+        logger_file = os.path.join(web_folder, ".data_availability.json")
+        if (not (os.path.exists(web_folder) and os.path.isdir(web_folder)) or not os.path.exists(logger_file)
                 or new_file_size != old_file_size):
             return task_list
-        with open(f"{web_folder}/.data_availability.json", "r", encoding="utf-8") as file:
+        with open(logger_file, "r", encoding="utf-8") as file:
             task_list = json.load(file)
         return task_list
 
     @staticmethod
     def should_process_bag_file(task_list):
-        return (not task_list["icp"] or not task_list["odom"] or not task_list["point_cloud"] or not
-                task_list["video"]) or not task_list["joy"] or not task_list["graphs"] or not task_list["bag_info"]
+        return not (task_list["icp"] and task_list["odom"] and task_list["point_cloud"] and
+                    task_list["video"] and task_list["joy"] and task_list["graphs"] and task_list["bag_info"])
