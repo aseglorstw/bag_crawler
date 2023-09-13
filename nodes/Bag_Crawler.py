@@ -16,7 +16,7 @@ def main(root_directory):
     if not directory_scanner.input_check(root_directory):
         return 1
 
-    task_lists = directory_scanner.create_task_list(root_directory)
+    task_lists = directory_scanner.get_task_list(root_directory)
     print(task_lists)
     for path_to_bag_file in task_lists.keys():
         task_list = task_lists[path_to_bag_file]
@@ -26,8 +26,10 @@ def main(root_directory):
         if bag is None:
             continue
 
-        path_to_web_folder = directory_scanner.create_web_folder(path_to_bag_file, task_list)
-
+        path_to_web_folder = directory_scanner.get_path_to_web_folder(path_to_bag_file, task_list)
+        configs = directory_scanner.get_configs(root_directory, path_to_bag_file)
+        print(configs)
+        return
         icp = process_icp(bag, task_list["icp"], path_to_web_folder)
         odom = process_odom(bag, task_list["odom"], path_to_web_folder)
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)

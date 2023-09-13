@@ -9,21 +9,28 @@ class DirectoryScanner:
         self.task_lists = {}
         self.paths_to_bag_files = []
 
-    def create_task_list(self, root_directory):
-        self.find_bag_files(root_directory)
+    @staticmethod
+    def input_check(root_directory):
+        if not (os.path.exists(root_directory) and os.path.isdir(root_directory)):
+            print("This directory doesn't exist.")
+            return False
+        return True
+
+    def get_task_list(self, root_directory):
+        self.get_bag_files(root_directory)
         for path_to_bag_file in self.paths_to_bag_files:
             task_list = self.check_web_folder(path_to_bag_file)
             if self.should_process_bag_file(task_list):
                 self.task_lists[path_to_bag_file] = task_list
         return self.task_lists
 
-    def find_bag_files(self, directory):
+    def get_bag_files(self, directory):
         stop_suffixes = ["_loc", "params", "no_sensors"]
         items = os.listdir(directory)
         child_directories = [os.path.join(directory, item) for item in items if
                              os.path.isdir(os.path.join(directory, item)) and ".web_server" not in item]
         for child_directory in child_directories:
-            self.find_bag_files(child_directory)
+            self.get_bag_files(child_directory)
         ignore_bag_files = []
         if os.path.exists(os.path.join(directory, ".ignore.json")):
             with open(os.path.join(directory, ".ignore.json"), "r", encoding="utf-8") as file:
@@ -34,14 +41,7 @@ class DirectoryScanner:
                 self.paths_to_bag_files.append(os.path.join(directory, file.name))
 
     @staticmethod
-    def input_check(root_directory):
-        if not (os.path.exists(root_directory) and os.path.isdir(root_directory)):
-            print("This directory doesn't exist.")
-            return False
-        return True
-
-    @staticmethod
-    def create_web_folder(path_to_bag_file, task_list):
+    def get_path_to_web_folder(path_to_bag_file, task_list):
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
         if not os.path.exists(web_folder):
@@ -51,11 +51,31 @@ class DirectoryScanner:
         return web_folder
 
     @staticmethod
-    def find_loc_file(path_to_bag_file):
+    def get_loc_file(path_to_bag_file):
         directory, bag_file_name = path_to_bag_file.rsplit('/', 1)
         for file in pathlib.Path(directory).iterdir():
             if bag_file_name.replace(".bag", "_loc.bag") in file.name:
                 return os.path.join(directory, file.name)
+        return None
+
+    @staticmethod
+    def get_configs(root_directory, path_to_bag_file):
+        path_to_global_file_config = os.path.join(root_directory, ".bag_crawler_global_config.json")
+        directory, _ = path_to_bag_file.rsplit('/', 1)
+        path_to_local_file_config = os.path.join(directory, ".bag_crawler_local_config.json")
+        path_to_super_local_file_config = path_to_bag_file.replace(".bag", ".config.json")
+        if os.path.exists(path_to_super_local_file_config):
+            with open(path_to_super_local_file_config, "r", encoding="utf-8") as file:
+                config = json.load(file)
+                return config
+        elif os.path.exists(path_to_local_file_config):
+            with open(path_to_local_file_config, "r", encoding="utf-8") as file:
+                config = json.load(file)
+                return config
+        elif os.path.exists(path_to_global_file_config):
+            with open(path_to_global_file_config, "r", encoding="utf-8") as file:
+                config = json.load(file)
+                return config
         return None
 
     @staticmethod
