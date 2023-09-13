@@ -48,8 +48,8 @@ class ODOMDataProcessor:
                 return None
             inv_matrix = np.linalg.inv(odom_topic.get_first_matrix()[:3, :3])
             coordinates = np.concatenate(odom, axis=1)
-            odom_topic.set_transformed_odom(inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0],
-                                                                                      axis=1))
+            transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
+            odom_topic.set_transformed_odom(transformed_odom)
 
     def find_selected_topic(self):
         random_topic = None
