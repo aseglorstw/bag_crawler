@@ -94,7 +94,7 @@ class BAGInfoDataProcessor:
         max_diff_icp = self.icp.get_max_diff()
         max_diff_odom = self.odom.get_max_diff_from_selected_topic()
         max_diff = max_diff_icp if max_diff_icp is not None else max_diff_odom
-        movement_tag = "general_movement"
+        movement_tag = ""
         if max_diff is None or max_diff < 0.5:
             movement_tag = "stayed_in_place"
         else:
@@ -110,6 +110,8 @@ class BAGInfoDataProcessor:
                 movement_tag += "overcame_obstacle" if movement_tag == "" else ",overcame_obstacle"
             if abs(z_coord[-1]) > 2:
                 movement_tag += "changed_floor" if movement_tag == "" else ",changed_floor"
+            if movement_tag == "":
+                movement_tag = "general_movement"
         with open(f"{self.folder}/movement_tag.txt", "w", encoding="utf-8") as file:
             file.write(movement_tag)
 
