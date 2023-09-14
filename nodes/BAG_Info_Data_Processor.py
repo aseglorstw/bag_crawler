@@ -101,8 +101,8 @@ class BAGInfoDataProcessor:
             z_icp = self.icp.get_z_coord()
             z_odom = self.odom.get_z_coord_from_selected_topic()
             z_coord = z_icp if z_icp is not None else z_odom
-            z_diff_icp = abs(max(z_icp) - min(z_icp))
-            z_diff_odom = abs(max(z_odom) - min(z_odom))
+            z_diff_icp = abs(max(z_icp) - min(z_icp)) if z_icp is not None else -1
+            z_diff_odom = abs(max(z_odom) - min(z_odom)) if z_odom is not None else -1
             z_diff = z_diff_icp if z_diff_icp is not None else z_diff_odom
             if len(self.movement_joints) == 1 and "laser_j" in self.movement_joints:
                 movement_tag = "observation"
