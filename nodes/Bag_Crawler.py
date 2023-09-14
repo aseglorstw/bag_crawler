@@ -33,8 +33,8 @@ def main(root_directory):
         point_cloud = process_point_cloud(bag, icp, odom, task_list["point_cloud"], path_to_web_folder)
         joy = process_joy(bag, icp, odom, task_list["joy"], config, path_to_web_folder)
         create_graphs(icp, odom, point_cloud, joy, should_create_graphs(task_list), path_to_web_folder)
-        # write_bag_info_to_files(bag, icp, odom, should_write_bag_info(task_list),
-        #                         config, path_to_web_folder)
+        write_bag_info_to_files(bag, icp, odom, should_write_bag_info(task_list),
+                                config, path_to_web_folder)
         process_video(bag, task_list["video"], config, path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
@@ -136,7 +136,7 @@ def write_bag_info_to_files(bag, icp, odom, is_bag_info, config,  output_folder)
         else:
             bag_info = BAGInfoDataProcessor(bag, icp, odom, None, output_folder)
         bag_info.write_bag_info()
-        #bag_info.write_topics_info()
+        bag_info.write_topics_info()
         bag_info.write_moving_joints_info()
         bag_info.write_movement_tag_info()
         bag_info.write_controller_info()
