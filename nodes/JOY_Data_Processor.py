@@ -16,6 +16,7 @@ class JOYDataProcessor:
     def read_joy_topic(self):
         joy_control_times = []
         topic_name = self.get_joy_topic()
+        print(topic_name)
         if topic_name is None:
             return None
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
@@ -55,7 +56,7 @@ class JOYDataProcessor:
                 config_topic_name = topic_name
         if selected_topic_name is None and config_topic_name is None:
             return None
-        return config_topic_name if config_topic_names is not None else selected_topic_name
+        return config_topic_name if config_topic_name is not None else selected_topic_name
 
     def get_joy_control_coordinates(self):
         return self.joy_control_coordinates
