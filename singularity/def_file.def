@@ -18,6 +18,7 @@ From: ros:noetic-perception
     wget
     curl
     git
+    python3.8
     python3-pip
     python3-catkin-tools
     python3-pcl
@@ -30,38 +31,14 @@ From: ros:noetic-perception
 
     # Install Python packages
     python_pkgs="
-    rosbag
-    sys
-    timeit
-    pathlib
-    os
-    numpy
-    matplotlib.pyplot
-    pyvista
-    rospy
-    pyquaternion
-    sensor_msgs.msg
-    sensor_msgs.point_cloud2
-    tf2_ros
-    ros_numpy
-    tqdm
-    cv2
-    datetime
-    yaml
+    torch==2.0.1
+    matplotlib==3.1.2
+    pyquaternion==0.9.9
+    pyvista==0.41.0
+    PyYAML==6.0.1
+    schedule==1.2.0
     "
     pip install ${python_pkgs}
-    pip install git+https://github.com/facebookresearch/pytorch3d.git@stable
-    pip install git+https://github.com/autonomousvision/kitti360Scripts.git
     ln -s /usr/bin/python3 /usr/bin/python
 
-    # Setup ROS workspace
-    ws=/opt/ros/depthcorr_ws/
-    mkdir -p "${ws}/src/"
-    cd "${ws}/src/"
     git clone https://github.com/aseglorstw/Bag_Crawler.git
-    cd $ws && wstool init src ${ws}/src/depth_correction/dependencies.rosinstall
-
-    # build ROS workspace
-    cd "${ws}/" && catkin config --extend /opt/ros/noetic
-    cd "${ws}/" && catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
-    cd "${ws}/" && catkin build
