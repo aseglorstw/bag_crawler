@@ -71,6 +71,10 @@ class BAGInfoDataProcessor:
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
             json.dump(self.movement_joints, file, indent=4)
 
+    """
+    in the configuration file should lie a dictionary, where the key is the topic and the value is the control method. 
+    Here I'm going through all the tops and trying to find the keys of this dictionary.
+    """
     def write_controller_info(self):
         if self.elements_of_control is None:
             print("No information on how to control the robot was found.")
