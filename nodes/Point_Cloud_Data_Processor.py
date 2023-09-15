@@ -27,6 +27,8 @@ class PointCloudDataProcessor:
         save_interval = 20
         pc_save_frequency = 200
         matrix_lidar_base_link = self.get_matrix_from_lidar_to_base_link(topic_name)
+        if matrix_lidar_base_link is None:
+            return None
         start_time = self.bag.get_start_time()
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
@@ -36,6 +38,9 @@ class PointCloudDataProcessor:
                 cloud = np.array(list(read_points(msg)))
                 vectors = np.array([cloud[::pc_save_frequency, 0], cloud[::pc_save_frequency, 1],
                                     cloud[::pc_save_frequency, 2]])
+                # If the icp_odom topic is available, knowing the transformation matrix from base_link to map and the
+                # transformation matrix from os_sensor to base_link I get the transformation matrix from os_sensor to
+                # base_link. If the icp_topic doesn't exist, I will use selected odom topic.
                 matrix_lidar_static_frame = self.get_matrix_from_lidar_to_static_frame(matrix_lidar_base_link, save_time)
                 if matrix_lidar_static_frame is None:
                     continue
@@ -54,6 +59,7 @@ class PointCloudDataProcessor:
         first_transform = first_transform_icp if first_transform_icp is not None else first_transform_odom
         inv_matrix = np.linalg.inv(first_matrix[:3, :3])
         point_cloud = np.concatenate(point_cloud, axis=1)
+        # Multiply by the inverse of the first rotation matrix and subtract the first coordinate from the entire array.
         self.transformed_point_cloud = inv_matrix @ point_cloud - inv_matrix @ first_transform
         return self.transformed_point_cloud
 
@@ -89,10 +95,13 @@ class PointCloudDataProcessor:
         return None
 
     def get_matrix_from_lidar_to_static_frame(self, matrix_base_link_lidar, save_time):
+        # I have a points message time, I find the index of the closest time to it from icp and odom.
+        # Then I use this index to find the transformation matrix.
         index_icp = np.unique(np.searchsorted(self.icp.get_times_icp(), save_time))[0]
         index_odom = np.unique(np.searchsorted(self.odom.get_times_odom_from_selected_topic(), save_time))[0]
         matrices_icp = self.icp.get_transform_matrices_icp()
         matrices_odom = self.odom.get_transform_matrices_odom_from_selected_topic()
+        # First of all I try to get the icp matrix, if it is not available, then odom.
         if 0 <= index_icp < len(matrices_icp) and len(matrices_icp) > 0:
             matrix_lidar_static_frame = matrices_icp[index_icp]
         elif len(matrices_icp) <= index_odom < len(matrices_odom) and len(matrices_odom) > 0:
