@@ -58,6 +58,11 @@ class DirectoryScanner:
                 return os.path.join(directory, file.name)
         return None
 
+    """
+    You can write a config for all bag files, which will be in the root. It is also possible to write a local 
+    config file for a single folder with files, and in addition you can write a super local config, which will be 
+    only for one bag.
+    """
     @staticmethod
     def get_config(root_directory, path_to_bag_file):
         path_to_global_file_config = os.path.join(root_directory, ".bag_crawler_global_config.json")
@@ -84,6 +89,7 @@ class DirectoryScanner:
                      "bag_info": False}
         directory, bag_file_name = os.path.split(path_to_bag_file)
         web_folder = os.path.join(directory, f".web_server_{bag_file_name}")
+        # Checking if no new data has been added to the bag file.
         new_file_size = os.path.getsize(path_to_bag_file)
         old_file_size = 0
         if os.path.exists(os.path.join(web_folder, "bag_info.json")):

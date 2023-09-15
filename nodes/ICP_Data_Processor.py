@@ -29,8 +29,10 @@ class ICPDataProcessor:
             position = msg.pose.pose.position
             orientation = msg.pose.pose.orientation
             quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+            # Then I'll use these matrices to get the lidar coordinates.
             self.add_transform_matrix(quaternion.rotation_matrix, [position.x, position.y, position.z])
             icp.append(np.array([[position.x], [position.y], [position.z]]))
+            # Then I'll use these data for transformation of trajectory.
             if self.first_rotation_matrix is None:
                 self.first_rotation_matrix = quaternion.rotation_matrix
                 self.first_transform = np.array([[position.x], [position.y], [position.z]])
@@ -50,6 +52,7 @@ class ICPDataProcessor:
             return None
         inv_matrix = np.linalg.inv(self.first_rotation_matrix[:3, :3])
         coordinates = np.concatenate(icp, axis=1)
+        # Multiply by the inverse of the first rotation matrix and subtract the first coordinate from the entire array.
         self.transformed_icp = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
 
     def get_icp_topic(self):
