@@ -16,17 +16,16 @@ class JOYDataProcessor:
     def read_joy_topic(self):
         joy_control_times = []
         topic_name = self.get_joy_topic()
-        print(topic_name)
         if topic_name is None:
             return None
         for topic, msg, time in self.bag.read_messages(topics=[topic_name]):
             time = rospy.Time.from_sec(time.to_sec())
             control_time = time.to_sec() - self.start_time
-            print(control_time)
             joy_control_times.append(control_time)
         return np.array(joy_control_times)
 
     def create_joy_control_coordinates(self, joy_control_times):
+        # Again I use the icp topic if there is one, if not, then the selected odom topic.
         icp = self.icp.get_transformed_icp()
         odom = self.odom.get_transformed_odom_from_selected_topic()
         times_icp = self.icp.get_times_icp()
@@ -35,13 +34,22 @@ class JOYDataProcessor:
             return None
         saved_times = times_icp if icp is not None else times_odom
         coordinates = icp if icp is not None else odom
+        # I find the closest to the times from the joy topic posts times in the icp topic.
         indices = np.unique(np.searchsorted(saved_times, joy_control_times))
+        # Then, I slice the entire time array into arrays where the index difference is greater than 5, meaning the
+        # robot has not received a message from the joystick for more than 5 time segments.
         split_indices = np.concatenate(([-1], np.where(np.diff(indices) > 5)[0], [len(indices) - 1]))
+        # Taking the extremes as well.
         split_indices = [indices[split_indices[i] + 1:split_indices[i + 1] + 1] for i in range(len(split_indices) - 1)]
+        # Now I have the intervals when the robot was controlled with the joystick, from them I get the coordinates.
         for indices in split_indices:
             self.joy_control_coordinates.append(coordinates.T[indices[indices < len(saved_times)]])
         return self.joy_control_coordinates
 
+    """
+    I'm trying to find joy topic using information from the config file, if there is no such file, then I find the topic 
+    if it has "joy" and "cmd_vel".
+    """
     def get_joy_topic(self):
         topics_info = self.bag.get_type_and_topic_info()[1]
         config_topic_names = []
