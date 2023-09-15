@@ -19,6 +19,7 @@ class ODOMDataProcessor:
             print("The topic odom was not found")
             return None
         for topic_name in topic_names:
+            # I create an object that will contain all the necessary data from this odom topic.
             odom_topic = ODOMTopic()
             odom_topic.set_topic_name(topic_name)
             times = []
@@ -29,8 +30,10 @@ class ODOMDataProcessor:
                 position = msg.pose.pose.position
                 orientation = msg.pose.pose.orientation
                 quaternion = Quaternion(orientation.w, orientation.x, orientation.y, orientation.z)
+                # Then I'll use these matrices to get the lidar coordinates.
                 transform_matrices.append(self.create_transform_matrix(quaternion.rotation_matrix, [position.x, position.y, position.z]))
                 odom.append(np.array([[position.x], [position.y], [position.z]]))
+                # Then I'll use these data for transformation of trajectory.
                 if odom_topic.get_first_matrix() is None:
                     odom_topic.set_first_rotation_matrix(quaternion.rotation_matrix)
                     odom_topic.set_first_transform(np.array([[position.x], [position.y], [position.z]]))
@@ -48,9 +51,14 @@ class ODOMDataProcessor:
                 return None
             inv_matrix = np.linalg.inv(odom_topic.get_first_matrix()[:3, :3])
             coordinates = np.concatenate(odom, axis=1)
+        # Multiply by the inverse of the first rotation matrix and subtract the first coordinate from the entire array.
             transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
             odom_topic.set_transformed_odom(transformed_odom)
 
+    """
+    I choose one of all available odom topics, so that if there is no icp_odom topic, I can find such data as start 
+    of movement, end of movement, average speed and others from this odom topic.
+    """
     def find_selected_topic(self):
         random_topic = None
         for odom_topic in self.odom_topics:
