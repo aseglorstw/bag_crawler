@@ -107,6 +107,7 @@ def process_joy(bag, icp, odom, is_joy, config, output_folder):
 
 def create_graphs(icp, odom, point_cloud, joy, are_graphs, output_folder):
     if not are_graphs:
+        # I'm giving each odom top a specific color.
         odom_topics_color = Graphs_Creator.match_color_odom_topic(odom.get_odom_topics_objects())
         Graphs_Creator.create_graph_x_over_time(icp.get_transformed_icp(),  icp.get_times_icp(),
                                                 odom.get_odom_topics_objects(), output_folder, odom_topics_color)

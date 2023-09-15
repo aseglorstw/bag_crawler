@@ -117,6 +117,8 @@ def create_graph_joy_control_times_and_icp(coord_icp, coord_odom,  joy_control_c
         ax.plot(coord_odom[0, :], coord_odom[1, :], color=color, label=topic_name_odom)
     else:
         pass
+    # I draw the graph as segments to show when the robot was controlled with the joystick against the background
+    # of the entire trajectory.
     if joy_control_coordinates is not None:
         for coordinates in joy_control_coordinates:
             ax.plot(coordinates[:, 0], coordinates[:, 1], color='orange')
