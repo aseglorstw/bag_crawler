@@ -159,22 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-data/*
-gen/
-*pth
 *.bak
-config/weights/
-runs/
-tb_runs/
-
-# sbatch jobs logging
-*.err
-*.out
-
-# slurm files for remote jobs launching
-*.batch
-*.sh
-
 *.bag
 web_server
 .bag_crawler_global_config.json
