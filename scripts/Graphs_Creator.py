@@ -5,25 +5,27 @@ import json
 
 
 def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder, odom_topics_color):
-    fig, ax = plt.subplots()
+    fig = plt.figure()
     marker_size = 0.5
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
     if point_cloud is not None:
         # remove nan values
-        cleaned_point_cloud = point_cloud[:, ~np.isnan(point_cloud).any(axis=0)]
-        colors = transform_z_coordinates_to_color(cleaned_point_cloud[2])
-        ax.scatter(cleaned_point_cloud[0], cleaned_point_cloud[1], s=marker_size, c=colors, cmap='Greens',
-                   label="point_cloud")
+        point_cloud = point_cloud[:, ~np.isnan(point_cloud).any(axis=0)] if np.isnan(point_cloud).any() else point_cloud
+        if point_cloud.size != 0:
+            colors = transform_z_coordinates_to_color(point_cloud[2])
+            plt.scatter(point_cloud[0], point_cloud[1], s=marker_size, c=colors, cmap='jet', label="point_cloud")
+            plt.colorbar()
     for idx, odom in enumerate(objects_odom):
         coord_odom = odom.get_transformed_odom()
         if coord_odom is not None:
             color = odom_topics_color[odom.get_topic_name()]
-            ax.plot(coord_odom[0, :], coord_odom[1, :], color=color, label=odom.get_topic_name())
+            plt.plot(coord_odom[0, :], coord_odom[1, :], color=color, label=odom.get_topic_name())
     if coord_icp is not None:
-        ax.plot(coord_icp[0, :], coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
+        plt.plot(coord_icp[0, :], coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
+    plt.axis('equal')
     plt.savefig(f"{folder}/XY_plot_of_UGVs_movement.png")
     plt.close()
 
