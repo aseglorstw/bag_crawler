@@ -1,6 +1,7 @@
 import pathlib
 import os
 import json
+from datetime import datetime
 
 
 class DirectoryScanner:
@@ -38,6 +39,13 @@ class DirectoryScanner:
         for file in pathlib.Path(directory).iterdir():
             if (file.is_file() and file.suffix == ".bag" and not any(suffix in file.stem for suffix in stop_suffixes)
                     and file.name not in ignore_bag_files):
+                # validate that the bag file has a corresponding format
+                date_pattern = "%Y-%m-%d-%H-%M-%S"
+                try:
+                    datetime.strptime(file.stem.split('_')[-1], date_pattern)
+                except ValueError:
+                    print(f"Bag file {file.name} is not in the correct format.")
+                    continue
                 self.paths_to_bag_files.append(os.path.join(directory, file.name))
 
     @staticmethod

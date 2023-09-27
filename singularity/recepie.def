@@ -41,4 +41,4 @@ From: ros:noetic-perception
     pip install ${python_pkgs}
     ln -s /usr/bin/python3 /usr/bin/python
 
-    git clone https://github.com/aseglorstw/Bag_Crawler.git
+    # git clone https://github.com/aseglorstw/Bag_Crawler.git
