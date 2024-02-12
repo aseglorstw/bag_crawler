@@ -10,7 +10,7 @@ def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("XY plot of UGV's movement")
-    if point_cloud is not None:
+    if len(point_cloud) > 0:
         # remove nan values
         point_cloud = point_cloud[:, ~np.isnan(point_cloud).any(axis=0)] if np.isnan(point_cloud).any() else point_cloud
         if point_cloud.size != 0:
