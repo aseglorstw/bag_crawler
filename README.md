@@ -50,7 +50,7 @@ The script starting from the root folder searches for bag files to process. For 
 <p align="center">
   <img src="https://i.imgur.com/EnJfNqI.gif" width="30%">
   <img src="https://i.imgur.com/7r34Yvu.gif" width="30%">  
-  <img src="https://i.imgur.com/354QZEu.gif" width="30%">  
+  <img src="https://i.imgur.com/W7NMVqa.gif" width="30%">  
 </p>
 
 ![Гифка](https://i.imgur.com/AwnoLQa.gif)
