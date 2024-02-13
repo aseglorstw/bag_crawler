@@ -45,7 +45,12 @@ The script starting from the root folder searches for bag files to process. For 
 </p>
 
 
-- Video from all possible cameras(Color, black and white and depth cameras).
+- The video is 20 seconds long from every possible color, black and white, and depth cameras.
+
+<p align="center">
+  <img src="https://i.imgur.com/EnJfNqI.gif" width="30%">
+  <img src="https://i.imgur.com/GdD5G1h.gif" width="30%">  
+</p>
   
 
 - Information about the bag file.
