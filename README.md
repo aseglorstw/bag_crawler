@@ -26,6 +26,7 @@ The script starting from the root folder searches for bag files to process. For 
  <br><sub>Graphs for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag".</sub>
 </p>
 
+
 - Graphs of changes in the distance traveled by the robot from all available topics.
 
 <p align="center">
@@ -38,16 +39,49 @@ The script starting from the root folder searches for bag files to process. For 
 - Graph showing the marks of controlling the robot with the joystick. 
 
 <p align="center">
-  <img src="https://i.imgur.com/WQrwHTR.png">
-   <br><sub>Graphfor bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag". <br> 
-    The principle is that on top of the trajectory given by the selected topic, areas are drawn where the robot was controlled by the joystick. </sub> 
+  <img src="https://i.imgur.com/AcNqizz.png">
+   <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-27-10-33-15.bag". <br> 
+    The principle is that on top of the trajectory given by the selected topic - /husky_velocity_controller/odom, areas are drawn where the robot was controlled by the joystick. </sub> 
 </p>
 
 
+- Video from all possible cameras(Color, black and white and depth cameras).
+  
+
+- Information about the bag file.
+
+Example of "bag_info.json" file for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag":
+
+```json
+{
+    "distance": 71.85627031389019,
+    "average_speed": 0.6973400679781954,
+    "start of moving": 0.07594871520996094,
+    "end of moving": 103.11931824684143,
+    "start": "2022-09-27 15:01:44",
+    "end": "2022-09-27 15:03:27",
+    "duration": 103.311347,
+    "size": 4682860168,
+    "messages": 242458
+}
+``` 
+Thus this file contains information about the beginning and end of bag file recording, its duration, size, total number of messages in all topics. And also based on the data from the selected topic, information about the average speed, distance traveled, start and end of the robot's movement.
+
+- Information about the bag file topics.
+
+So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag" the script generates the file "topics_info.json", which for each topic contains information about the number of messages in this topic, maximum and average waiting time between messages:
 
 
+```json 
+ "/camera_front/camera_info": {
+        "msg type": "sensor_msgs/CameraInfo",
+        "message count": 510,
+        "average time delay": 0.202,
+        "max time delay": 0.414
+  }
+```
 
-
+- Information about the moving parts of the robot, and a short description of what the robot was doing when writing this bag file.
 
 
 
