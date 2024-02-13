@@ -3,7 +3,7 @@
 Post-processing tool to analyze the ROS bag-files available at: [http://subtdata.felk.cvut.cz/robingas/data/](http://subtdata.felk.cvut.cz/robingas/data/).
 
 
-An important part of the processing is finding the topic based on which the start and end of the robot's movement, average and maximum speeds, and similar metrics will be calculated. This topic will be referred to as the **selected topic** in this documentation. In the case where an ICP topic exists, it becomes the selected topic. When such a topic is not present, the chosen topic will be an odom topic containing GPS in its name. If neither of these topics exists, the selected topic will be a randomly available odom topic.
+An important part of the processing is finding the topic based on which the start and end of the robot's movement, average and maximum speeds, and similar metrics will be calculated. This topic will be referred to as the **selected topic** in this documentation. In the case where an ICP topic exists, it becomes the selected topic. When such a topic is not present, the chosen topic will be an odom topic containing GPS in its name. If neither of these topics exists, the selected topic will be a randomly available odom topic. 
 
 
 The script starting from the root folder searches for bag files to process. For each bag-file being processed the following data is generated:
@@ -53,8 +53,9 @@ The script starting from the root folder searches for bag files to process. For 
   <img src="https://i.imgur.com/W7NMVqa.gif" width="30%">  
 </p>
 
-![Гифка](https://i.imgur.com/AwnoLQa.gif)
+The script at the video processing stage checks the camera location based on the TF ROS library and if the camera is rotated, the program will flip the image for correct display. Depth camera image point filtering is also present. It works in such a way that all points lying above the 99th percentile and under the 2nd percentile are cut off.
 
+If there is a topic that contains a panoramic image, the script only saves the video based on it:
 
 - Information about the bag file.
 
@@ -89,8 +90,10 @@ So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_
   }
 ```
 
-- Information about the moving parts of the robot, and a short description of what the robot was doing when writing this bag file.
+- Information about the moving parts of the robot.
 
+
+- Information about the moving parts of the robot, and a short description of what the robot was doing when writing this bag file.
 
 
 
