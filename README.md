@@ -116,7 +116,7 @@ Based on the topic "/joint_states" the script saves information about moving par
 
 - A brief description of what the robot did when writing this bag file based on the data from the selected topic.
 
-So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag", as you can see from the video excerpt above the robot overcomes a small obstacle, so in the file "movement_tag.txt" is written:  
+For bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag", as you can see from the video excerpt above the robot overcomes a small obstacle, so in the file "movement_tag.txt" is written:  
 ```
 overcame_obstacle
 ```
