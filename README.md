@@ -122,15 +122,9 @@ overcame_obstacle
 ```
 
 
+- Information about how the robot was controlled.
 
-
-
-
-
-
-
-
-
+In order for the "controller_info.json" file to contain information about which ways the robot was controlled when this bag file was written, it is necessary to add possible ways of control for this robot to the config file. Then, based on the configuration, the script checks for the presence of the corresponding topic in the bag file. 
 
 The post-processed data for each bag-file is saved in a separate folder.
 For example:
