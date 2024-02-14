@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import rosbag, sys, timeit, schedule
 import Graphs_Creator
 from Directory_Scanner import DirectoryScanner

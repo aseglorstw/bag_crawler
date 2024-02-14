@@ -35,6 +35,7 @@ class ODOMDataProcessor:
                 odom.append(np.array([[position.x], [position.y], [position.z]]))
                 # Then I'll use these data for transformation of trajectory.
                 if odom_topic.get_first_matrix() is None:
+                    # Rotation matrix, shows how the coordinates of the robot are rotated with respect to odom.
                     odom_topic.set_first_rotation_matrix(quaternion.rotation_matrix)
                     odom_topic.set_first_transform(np.array([[position.x], [position.y], [position.z]]))
                 print(f"The Coordinates from topic {topic_name} are saved. Time: {save_time}")
@@ -47,13 +48,16 @@ class ODOMDataProcessor:
     def transform_trajectory(self):
         for odom_topic in self.odom_topics:
             odom = odom_topic.get_odom()
-            if odom is None:
-                return None
+            if odom is None or np.linalg.det(odom_topic.get_first_matrix()[:3, :3]) == 0:
+                self.odom_topics.remove(odom_topic)
+                continue
             inv_matrix = np.linalg.inv(odom_topic.get_first_matrix()[:3, :3])
             coordinates = np.concatenate(odom, axis=1)
         # Multiply by the inverse of the first rotation matrix and subtract the first coordinate from the entire array.
             transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
             odom_topic.set_transformed_odom(transformed_odom)
+        for odom_topic in self.odom_topics:
+            print(odom_topic.get_topic_name())
 
     """
     I choose one of all available odom topics, so that if there is no icp_odom topic, I can find such data as start 
