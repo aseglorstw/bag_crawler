@@ -51,11 +51,15 @@ The script starting from the root folder searches for bag files to process. For 
   <img src="https://i.imgur.com/EnJfNqI.gif" width="30%">
   <img src="https://i.imgur.com/7r34Yvu.gif" width="30%">  
   <img src="https://i.imgur.com/W7NMVqa.gif" width="30%">  
+  <br><sub> Black and white video and depth camera video belongs to bag file "/robingas/data/22-10-20-unhost/spot_2022-10-20-12-39-17.bag".  <br> Color video from bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag".  
+   </sub>
 </p>
 
-The script at the video processing stage checks the camera location based on the TF ROS library and if the camera is rotated, the program will flip the image for correct display. Depth camera image point filtering is also present. It works in such a way that all points lying above the 99th percentile and under the 2nd percentile are cut off.
+The script at the video processing stage checks the camera location based on the TF ROS library and if the camera is rotated, the program will flip the image for correct display. 
 
-If there is a topic that contains a panoramic image, the script only saves the video based on it:
+Depth camera image point filtering is also present. It works in such a way that all points lying above the 99th percentile and under the 2nd percentile are cut off.
+
+If a bag file has a topic containing "omnicam" in its name, the script will split this panoramic image into 5 separate videos, i.e. front, right, back, left and top views, and then save them. 
 
 - Information about the bag file.
 
@@ -92,12 +96,30 @@ So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_
 
 - Information about the moving parts of the robot.
 
+Based on the topic "/joint_states" the script saves information about moving parts of the robot to the file "moving_joints_info.json". So for "/robingas/data/22-10-20-unhost/spot_2022-10-20-20-12-39-17.bag" this file will look as follows:
+```json 
+[
+    "front_left_hip_x",
+    "front_left_knee",
+    "front_left_hip_y",
+    "rear_right_hip_y",
+    "rear_right_hip_x",
+    "rear_right_knee",
+    "front_right_hip_x",
+    "front_right_hip_y",
+    "front_right_knee",
+    "rear_left_knee",
+    "rear_left_hip_x",
+    "rear_left_hip_y"
+]
+```
 
-- Information about the moving parts of the robot, and a short description of what the robot was doing when writing this bag file.
+- A brief description of what the robot did when writing this bag file based on the data from the selected topic.
 
-
-
-
+So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag", as you can see from the video excerpt above the robot overcomes a small obstacle, so in the file "movement_tag.txt" is written:  
+```
+overcame_obstacle
+```
 
 
 
