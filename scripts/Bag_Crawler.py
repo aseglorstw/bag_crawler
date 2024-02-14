@@ -36,7 +36,7 @@ def main(root_directory):
         create_graphs(icp, odom, point_cloud, joy, should_create_graphs(task_list), path_to_web_folder)
         write_bag_info_to_files(bag, icp, odom, should_write_bag_info(task_list),
                                 config, path_to_web_folder)
-        process_video(bag, task_list["video"], config, path_to_web_folder)
+        process_video(bag, task_list["video"], path_to_web_folder)
 
         close_bag_file(bag, path_to_bag_file)
 
@@ -85,7 +85,7 @@ def process_point_cloud(bag, icp, odom, is_point_cloud, output_folder):
     return point_cloud
 
 
-def process_video(bag, is_video, config, output_folder):
+def process_video(bag, is_video, output_folder):
     if not is_video:
         video = VideoDataProcessor(bag)
         result = video.create_videos(output_folder)
