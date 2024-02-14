@@ -1,14 +1,14 @@
 # Bag Crawler
 
-Post-processing tool to analyze the ROS bag-files available at: [http://subtdata.felk.cvut.cz/robingas/data/](http://subtdata.felk.cvut.cz/robingas/data/).
+**Post-processing tool to analyze the ROS bag-files available at: [http://subtdata.felk.cvut.cz/robingas/data/](http://subtdata.felk.cvut.cz/robingas/data/).**
 
 
 An important part of the processing is finding the topic based on which the start and end of the robot's movement, average and maximum speeds, and similar metrics will be calculated. This topic will be referred to as the **selected topic** in this documentation. In the case where an ICP topic exists, it becomes the selected topic. When such a topic is not present, the chosen topic will be an odom topic containing GPS in its name. If neither of these topics exists, the selected topic will be a randomly available odom topic. 
 
 
-The script starting from the root folder searches for bag files to process. For each bag-file being processed the following data is generated:
+**The script starting from the root folder searches for bag files to process. For each bag-file being processed the following data is generated:**
 
-- Robot motion trajectories based on all available topics and a point cloud along the trajectory given a selected topic.
+- **Robot motion trajectories based on all available topics and a point cloud along the trajectory given a selected topic.**
 
 <p align="center">
   <img src="https://i.imgur.com/yRb9LH6.png">
@@ -17,7 +17,7 @@ The script starting from the root folder searches for bag files to process. For 
 
 
 
-- Graphs of the change in a single robot coordinate over time.
+- **Graphs of the change in a single robot coordinate over time.**
 
 <p align="center">
   <img src="https://i.imgur.com/W0eKOjl.png" width="30%">
@@ -27,7 +27,7 @@ The script starting from the root folder searches for bag files to process. For 
 </p>
 
 
-- Graphs of changes in the distance traveled by the robot from all available topics.
+- **Graphs of changes in the distance traveled by the robot from all available topics.**
 
 <p align="center">
   <img src="https://i.imgur.com/lr0ewq8.png">
@@ -36,7 +36,7 @@ The script starting from the root folder searches for bag files to process. For 
 </p>
 
 
-- Graph showing the marks of controlling the robot with the joystick. 
+- **Graph showing the marks of controlling the robot with the joystick.** 
 
 <p align="center">
   <img src="https://i.imgur.com/AcNqizz.png">
@@ -45,7 +45,7 @@ The script starting from the root folder searches for bag files to process. For 
 </p>
 
 
-- The video is 20 seconds long from every possible color, black and white, and depth cameras.
+- **The video is 20 seconds long from every possible color, black and white, and depth cameras.**
 
 <p align="center">
   <img src="https://i.imgur.com/EnJfNqI.gif" width="30%">
@@ -61,7 +61,7 @@ Depth camera image point filtering is also present. It works in such a way that 
 
 If a bag file has a topic containing "omnicam" in its name, the script will split this panoramic image into 5 separate videos, i.e. front, right, back, left and top views, and then save them. 
 
-- Information about the bag file.
+- **Information about the bag file.**
 
 Example of "bag_info.json" file for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag":
 
@@ -80,7 +80,7 @@ Example of "bag_info.json" file for bag file "/robingas/data/22-09-27-unhost/hus
 ``` 
 Thus this file contains information about the beginning and end of bag file recording, its duration, size, total number of messages in all topics. And also based on the data from the selected topic, information about the average speed, distance traveled, start and end of the robot's movement.
 
-- Information about the bag file topics.
+- **Information about the bag file topics.**
 
 So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag" the script generates the file "topics_info.json", which for each topic contains information about the number of messages in this topic, maximum and average waiting time between messages:
 
@@ -94,7 +94,7 @@ So, for example, for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_
   }
 ```
 
-- Information about the moving parts of the robot.
+- **Information about the moving parts of the robot.**
 
 Based on the topic "/joint_states" the script saves information about moving parts of the robot to the file "moving_joints_info.json". So for "/robingas/data/22-10-20-unhost/spot_2022-10-20-20-12-39-17.bag" this file will look as follows:
 ```json 
@@ -114,7 +114,7 @@ Based on the topic "/joint_states" the script saves information about moving par
 ]
 ```
 
-- A brief description of what the robot did when writing this bag file based on the data from the selected topic.
+- **A brief description of what the robot did when writing this bag file based on the data from the selected topic.**
 
 For bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag", as you can see from the video excerpt above the robot overcomes a small obstacle, so in the file "movement_tag.txt" is written:  
 ```
@@ -122,7 +122,7 @@ overcame_obstacle
 ```
 
 
-- Information about how the robot was controlled.
+- **Information about how the robot was controlled.**
 
 In order for the "controller_info.json" file to contain information about which ways the robot was controlled when this bag file was written, it is necessary to add possible ways of control for this robot to the config file. Then, based on the configuration, the script checks for the presence of the corresponding topic in the bag file. 
 
