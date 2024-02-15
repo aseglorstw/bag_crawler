@@ -30,7 +30,7 @@ class VideoDataProcessor:
         for topic_name in topic_names:
             save_interval = self.get_save_interval(topic_name)
             mid_video = self.get_mid_video(topic_name)
-            if "omnicam" in topic_name:
+            if "omnicam" in topic_name or "pano" in topic_name:
                 self.save_video_omnicam(topic_name, save_interval, mid_video, folder)
             else:
                 is_gray = self.get_is_gray(topic_name)
@@ -48,7 +48,6 @@ class VideoDataProcessor:
         video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
         video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (640, 480), True)
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
-            print(topic_name, save_interval, mid_video, is_gray, is_depth, rotation_angle, msg.header.frame_id)
             if msg_number == mid_video and not is_gray and not is_depth:
                 demo_image = cv2.imdecode(np.fromstring(CompressedImage(*self.slots(msg)).data, np.uint8), cv2.IMREAD_COLOR)
                 self.add_image_to_demo(demo_image, topic_name)
@@ -66,7 +65,6 @@ class VideoDataProcessor:
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             if msg_number % save_interval == 0:
                 time_from_start = int(rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time)
-                print(topic_name, save_interval, mid_video, msg.header.frame_id, time_from_start)
                 images = self.get_processed_images_omnicam(CompressedImage(*self.slots(msg)), time_from_start)
                 if msg_number == mid_video:
                     demo = self.get_demo_image_omnicam(CompressedImage(*self.slots(msg)))
@@ -79,8 +77,11 @@ class VideoDataProcessor:
     def save_demo_images(self, output_folder):
         if "demo_panorama" in self.demo_images:
             cv2.imwrite(os.path.join(output_folder, "demo_panorama.jpg"), self.demo_images["demo_panorama"])
-        else:
-            for key in self.demo_images.keys():
+        elif "demo_image_front_color" in self.demo_images:
+            for key in [key for key in self.demo_images.keys() if "color" in key]:
+                cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
+        elif "demo_image_front_gray" in self.demo_images:
+            for key in [key for key in self.demo_images.keys() if "gray" in key]:
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
     def get_rotation_angle(self, topic_name):
@@ -253,15 +254,13 @@ class VideoDataProcessor:
         return np.hstack(images)
 
     def add_image_to_demo(self, image, topic_name):
-        if "front" in topic_name:
-            self.demo_images["demo_image_front"] = image
-        elif "left" in topic_name:
-            self.demo_images["demo_image_left"] = image
-        elif "right" in topic_name:
-            self.demo_images["demo_image_right"] = image
-        elif "rear" in topic_name:
-            self.demo_images["demo_image_rear"] = image
-        elif "pano" or "omnicam" in topic_name:
+        is_grey = self.get_is_gray(topic_name)
+        position_keywords = ["front", "left", "right", "rear"]
+        for position_keyword in position_keywords:
+            if position_keyword in topic_name:
+                key = f"demo_image_{position_keyword}_gray" if is_grey else f"demo_image_{position_keyword}_color"
+                self.demo_images[key] = image if not is_grey else None
+        if "pano" in topic_name or "omnicam" in topic_name:
             self.demo_images["demo_panorama"] = image
 
     def load_buffer(self):
