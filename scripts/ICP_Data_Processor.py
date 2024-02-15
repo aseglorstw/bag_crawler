@@ -50,7 +50,7 @@ class ICPDataProcessor:
     def transform_icp_trajectory(self, icp):
         if icp is None:
             return
-        elif np.linalg.det(self.first_rotation_matrix[:3, :3]):
+        elif np.linalg.det(self.first_rotation_matrix[:3, :3]) == 0:
             coordinates = np.concatenate(icp, axis=1)
             self.transformed_icp = coordinates - coordinates[:, 0].reshape((3, 1))
             return
