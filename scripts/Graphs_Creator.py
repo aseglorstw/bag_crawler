@@ -42,7 +42,7 @@ def create_graph_x_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
     if coord_icp is not None:
         ax.plot(times_icp, coord_icp[0, :], color='red', linestyle='--', label='/icp_odom')
     maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
-    plt.ylim(minimum_coordinate, maximum_coordinate)
+    plt.ylim(minimum_coordinate - 5, maximum_coordinate + 5)
     plt.legend()
     plt.savefig(f"{folder}/UGVs_movement_in_X_direction.png")
     plt.close()
@@ -62,7 +62,7 @@ def create_graph_y_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
         ax.plot(times_icp, coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
     maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
-    plt.ylim(minimum_coordinate, maximum_coordinate)
+    plt.ylim(minimum_coordinate - 5, maximum_coordinate + 5)
     plt.savefig(f"{folder}/UGVs_movement_in_Y_direction.png")
     plt.close()
 
@@ -81,7 +81,7 @@ def create_graph_z_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
         ax.plot(times_icp, coord_icp[2, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
     maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
-    plt.ylim(minimum_coordinate, maximum_coordinate)
+    plt.ylim(minimum_coordinate - 5, maximum_coordinate + 5)
     plt.savefig(f"{folder}/UGVs_movement_in_Z_direction.png")
     plt.close()
 
