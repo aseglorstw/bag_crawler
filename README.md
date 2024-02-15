@@ -48,7 +48,7 @@ An important part of the processing is finding the topic based on which the star
 - **The video is 20 seconds long from every possible color, black and white, and depth cameras.**
 
 <p align="center">
-  <img src="https://i.imgur.com/EnJfNqI.gif" width="30%">
+  <img src="https://i.imgur.com/ffSW6FZ.gif" width="30%">
   <img src="https://i.imgur.com/7r34Yvu.gif" width="30%">  
   <img src="https://i.imgur.com/W7NMVqa.gif" width="30%">  
   <br><sub> Black and white video and depth camera video belongs to bag file "/robingas/data/22-10-20-unhost/spot_2022-10-20-12-39-17.bag".  <br> Color video from bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag".  
