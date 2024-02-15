@@ -45,14 +45,14 @@ class BAGInfoDataProcessor:
     def write_topics_info(self):
         type_info, topics_info = self.bag.get_type_and_topic_info()
         topics_info_dict = dict()
+        for topic_name, topic_info in topics_info.items():
+            max_time_delay, average_time_delay = self.calculate_max_and_average_time_delay(topic_name)
+            msg_type = topic_info.msg_type
+            message_count = topic_info.message_count
+            topics_info_dict[topic_name] = {"msg type": msg_type, "message count": message_count,
+                                            "average time delay": average_time_delay,
+                                            "max time delay": max_time_delay}
         with open(f"{self.folder}/topics_info.json", "w", encoding="utf-8") as file:
-            for topic_name, topic_info in topics_info.items():
-                max_time_delay, average_time_delay = self.calculate_max_and_average_time_delay(topic_name)
-                msg_type = topic_info.msg_type
-                message_count = topic_info.message_count
-                topics_info_dict[topic_name] = {"msg type": msg_type, "message count": message_count,
-                                                "average time delay": average_time_delay,
-                                                "max time delay": max_time_delay}
             json.dump(topics_info_dict, file, indent=4)
 
     def write_moving_joints_info(self):
@@ -71,14 +71,12 @@ class BAGInfoDataProcessor:
         with open(f"{self.folder}/moving_joints_info.json", "w", encoding="utf-8") as file:
             json.dump(self.movement_joints, file, indent=4)
 
-    """
-    in the configuration file should lie a dictionary, where the key is the topic and the value is the control method. 
-    Here I'm going through all the tops and trying to find the keys of this dictionary.
-    """
     def write_controller_info(self):
         if self.elements_of_control is None:
             print("No information on how to control the robot was found.")
             return
+        with open(f"{self.folder}/topics_info.json", "r", encoding="utf-8") as file:
+            topics_info_dict = json.load(file)
         used_elements_of_control = set()
         for topic, msg, time in self.bag.read_messages():
             if topic in list(self.elements_of_control.keys()):
