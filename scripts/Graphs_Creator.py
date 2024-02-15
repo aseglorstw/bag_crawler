@@ -16,7 +16,6 @@ def create_graph_xy_and_point_cloud(coord_icp, objects_odom, point_cloud, folder
         if point_cloud.size != 0:
             colors = transform_z_coordinates_to_color(point_cloud[2])
             plt.scatter(point_cloud[0], point_cloud[1], s=marker_size, c=colors, cmap='jet', label="point_cloud")
-            plt.colorbar()
     for idx, odom in enumerate(objects_odom):
         coord_odom = odom.get_transformed_odom()
         if coord_odom is not None:
