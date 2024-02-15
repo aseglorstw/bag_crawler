@@ -12,7 +12,7 @@ An important part of the processing is finding the topic based on which the star
 
 <p align="center">
   <img src="https://i.imgur.com/WOxdYEp.png">
-  <br><sub> Trajectories and point cloud along the trajectory given by topic /icp_odom for the bag file "/robingas/data/22-09-27-unhost/husky/husky_2022-09-09-27-15-15-01-44.bag".</sub>
+  <br><sub> Trajectories and point cloud for the bag file "/robingas/data/22-09-27-unhost/husky/husky_2022-09-09-27-15-15-01-44.bag" with selected topic /icp_odom.</sub>
 </p>
 
 
@@ -30,10 +30,10 @@ An important part of the processing is finding the topic based on which the star
 
 <p align="center">
   <img src="https://i.imgur.com/lr0ewq8.png">
-   <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag". <br> 
-     The start and end times of the movement were calculated based on data from the selected topic - /icp_odom.</sub>
+   <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag" with selected_topic /icp_odom.</sub>
 </p>
 
+On the chart, you can see the start and end marks of the robot's movement, which are important points of the file and are made based on the data from the selected topic.
 
 - **The trajectories of this selected topic with joystick control marks.** 
 
@@ -42,7 +42,7 @@ An important part of the processing is finding the topic based on which the star
    <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-27-10-33-15.bag" with selected topic - /husky_velocity_controller/odom.</sub> 
 </p>
 
-The principle is that on top of the trajectory given by the selected topic areas are drawn where the robot was controlled by the joystick. 
+The principle is that on top of the trajectory given by selected topic areas are drawn where the robot was controlled by the joystick. The script checks the configuration file, then will try to make marks based on the topic from the configuration file. If it doesn't exist, it will try to find a topic that contains "joy" and "cmd_vel" in its name. 
 
 - **The video is 20 seconds long from every possible color, black and white, and depth cameras.**
 
