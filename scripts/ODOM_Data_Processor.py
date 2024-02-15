@@ -48,21 +48,19 @@ class ODOMDataProcessor:
     def transform_trajectory(self):
         for odom_topic in self.odom_topics:
             odom = odom_topic.get_odom()
-            if odom is None or np.linalg.det(odom_topic.get_first_matrix()[:3, :3]) == 0:
+            if odom is None:
                 self.odom_topics.remove(odom_topic)
+                continue
+            elif np.linalg.det(odom_topic.get_first_matrix()[:3, :3]) == 0:
+                coordinates = np.concatenate(odom, axis=1)
+                transformed_odom = coordinates - coordinates[:, 0].reshape((3, 1))
+                odom_topic.set_transformed_odom(transformed_odom)
                 continue
             inv_matrix = np.linalg.inv(odom_topic.get_first_matrix()[:3, :3])
             coordinates = np.concatenate(odom, axis=1)
-        # Multiply by the inverse of the first rotation matrix and subtract the first coordinate from the entire array.
             transformed_odom = inv_matrix @ coordinates - np.expand_dims(inv_matrix @ coordinates[:, 0], axis=1)
             odom_topic.set_transformed_odom(transformed_odom)
-        for odom_topic in self.odom_topics:
-            print(odom_topic.get_topic_name())
 
-    """
-    I choose one of all available odom topics, so that if there is no icp_odom topic, I can find such data as start 
-    of movement, end of movement, average speed and others from this odom topic.
-    """
     def find_selected_topic(self):
         random_topic = None
         for odom_topic in self.odom_topics:

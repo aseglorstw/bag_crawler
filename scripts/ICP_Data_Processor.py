@@ -48,8 +48,12 @@ class ICPDataProcessor:
         self.transform_matrices.append(transform_matrix)
 
     def transform_icp_trajectory(self, icp):
-        if icp is None or np.linalg.det(self.first_rotation_matrix[:3, :3]):
-            return None
+        if icp is None:
+            return
+        elif np.linalg.det(self.first_rotation_matrix[:3, :3]):
+            coordinates = np.concatenate(icp, axis=1)
+            self.transformed_icp = coordinates - coordinates[:, 0].reshape((3, 1))
+            return
         # Rotation matrix, shows how the coordinates of the robot are rotated with respect to base_link.
         inv_matrix = np.linalg.inv(self.first_rotation_matrix[:3, :3])
         coordinates = np.concatenate(icp, axis=1)
