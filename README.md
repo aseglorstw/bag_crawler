@@ -11,7 +11,7 @@ An important part of the processing is finding the topic based on which the star
 - **Robot motion trajectories based on all available topics and a point cloud along the trajectory given a selected topic.**
 
 <p align="center">
-  <img src="https://i.imgur.com/yRb9LH6.png">
+  <img src="https://i.imgur.com/WOxdYEp.png">
   <br><sub> Trajectories and point cloud along the trajectory given by topic /icp_odom for the bag file "/robingas/data/22-09-27-unhost/husky/husky_2022-09-09-27-15-15-01-44.bag".</sub>
 </p>
 
@@ -20,9 +20,9 @@ An important part of the processing is finding the topic based on which the star
 - **Graphs of the change in a single robot coordinate over time.**
 
 <p align="center">
-  <img src="https://i.imgur.com/W0eKOjl.png" width="30%">
-  <img src="https://i.imgur.com/uZCRINs.png" width="30%">
-  <img src="https://i.imgur.com/fhpaeno.png" width="30%">
+  <img src="https://i.imgur.com/w9VXm3Q.png" width="30%">
+  <img src="https://i.imgur.com/s2pus5G.png" width="30%">
+  <img src="https://i.imgur.com/7Ux5AtC.png" width="30%">
  <br><sub>Graphs for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-09-09-09-27-15-15-01-44.bag".</sub>
 </p>
 
