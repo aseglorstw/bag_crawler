@@ -39,10 +39,10 @@ An important part of the processing is finding the topic based on which the star
 
 <p align="center">
   <img src="https://i.imgur.com/AcNqizz.png">
-   <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-27-10-33-15.bag". <br> 
-    The principle is that on top of the trajectory given by the selected topic - /husky_velocity_controller/odom, areas are drawn where the robot was controlled by the joystick. </sub> 
+   <br><sub>Graph for bag file "/robingas/data/22-09-27-unhost/husky/husky/husky_2022-09-27-10-33-15.bag" with selected topic - /husky_velocity_controller/odom.</sub> 
 </p>
 
+The principle is that on top of the trajectory given by the selected topic areas are drawn where the robot was controlled by the joystick. 
 
 - **The video is 20 seconds long from every possible color, black and white, and depth cameras.**
 
