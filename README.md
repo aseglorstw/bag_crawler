@@ -133,7 +133,7 @@ This file might look like this:
 
 
 **The post-processed data for each bag-file is saved in a separate folder.**
-For example:
+
 TODO
 
 

@@ -124,7 +124,7 @@ class ODOMDataProcessor:
                 odom_topic.set_first_rotation_matrix(object_["first_rotation_matrix"])
                 odom_topic.set_first_transform(object_["first_transform"])
                 odom_topic.set_transform_matrices(object_["transform_matrices"])
-                odom_topic.set_topic_name(file.name.replace('.', '/').replace('/npz', ''))
+                odom_topic.set_topic_name(file.name.replace('.npz', '').replace('.', '').replace('%', '/'))
                 self.odom_topics.append(odom_topic)
 
     def save_class_object(self, output_folder):
@@ -153,4 +153,4 @@ class ODOMDataProcessor:
 
     @staticmethod
     def get_name_for_npz_file(topic_name):
-        return topic_name.replace('/', '_')[1:]
+        return topic_name.replace('/', '%')[0:]
