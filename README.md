@@ -16,7 +16,6 @@ An important part of the processing is finding the topic based on which the star
 </p>
 
 
-
 - **Graphs of the change in a single robot coordinate over time.**
 
 <p align="center">
@@ -124,11 +123,23 @@ overcame_obstacle
 
 - **Information about how the robot was controlled.**
 
-In order for the "controller_info.json" file to contain information about which ways the robot was controlled when this bag file was written, it is necessary to add possible ways of control for this robot to the config file. Then, based on the configuration, the script checks for the presence of the corresponding topic in the bag file. 
+Based on the configuration file, the script checks for the presence of topics that characterize one of the control methods and if there were any messages in this topic, then this control method is written to the "controller_info.json" file.
+This file might look like this:
+```json 
+[
+    "gamepad_PC"
+]
+```
 
-The post-processed data for each bag-file is saved in a separate folder.
+
+**The post-processed data for each bag-file is saved in a separate folder.**
 For example:
 TODO
+
+
+
+
+
 
 ## Installation
 
@@ -138,6 +149,3 @@ TODO
 
 TODO
 
-## TODOs
-
-Web-based application that monitors a directory for ROS bag files and visualizes their metadata.
