@@ -60,7 +60,7 @@ class JOYDataProcessor:
         for topic_name, topics_info in topics_info.items():
             if "joy" in topic_name and "cmd_vel" in topic_name:
                 selected_topic_name = topic_name
-            elif topic_name in config_topic_names:
+            if topic_name in config_topic_names:
                 config_topic_name = topic_name
         if selected_topic_name is None and config_topic_name is None:
             return None

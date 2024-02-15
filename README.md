@@ -35,7 +35,7 @@ An important part of the processing is finding the topic based on which the star
 </p>
 
 
-- **Graph showing the marks of controlling the robot with the joystick.** 
+- **The trajectories of this selected topic with joystick control marks.** 
 
 <p align="center">
   <img src="https://i.imgur.com/AcNqizz.png">
