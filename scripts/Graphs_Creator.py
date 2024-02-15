@@ -41,6 +41,8 @@ def create_graph_x_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
             ax.plot(odom.get_times(), coord_odom[0, :], color=color, label=odom.get_topic_name())
     if coord_icp is not None:
         ax.plot(times_icp, coord_icp[0, :], color='red', linestyle='--', label='/icp_odom')
+    maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
+    plt.ylim(minimum_coordinate, maximum_coordinate)
     plt.legend()
     plt.savefig(f"{folder}/UGVs_movement_in_X_direction.png")
     plt.close()
@@ -59,6 +61,8 @@ def create_graph_y_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
     if coord_icp is not None:
         ax.plot(times_icp, coord_icp[1, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
+    maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
+    plt.ylim(minimum_coordinate, maximum_coordinate)
     plt.savefig(f"{folder}/UGVs_movement_in_Y_direction.png")
     plt.close()
 
@@ -76,6 +80,8 @@ def create_graph_z_over_time(coord_icp, times_icp, objects_odom, folder, odom_to
     if coord_icp is not None:
         ax.plot(times_icp, coord_icp[2, :], color='red', linestyle='--', label='/icp_odom')
     plt.legend()
+    maximum_coordinate, minimum_coordinate = get_maximum_and_minimum_coordinates(objects_odom, coord_icp)
+    plt.ylim(minimum_coordinate, maximum_coordinate)
     plt.savefig(f"{folder}/UGVs_movement_in_Z_direction.png")
     plt.close()
 
@@ -149,6 +155,20 @@ def match_color_odom_topic(objects_odom):
     for idx, odom_topic in enumerate(objects_odom):
         odom_topics_colors[odom_topic.get_topic_name()] = colors[idx % len(colors)]
     return odom_topics_colors
+
+
+def get_maximum_and_minimum_coordinates(objects_odom, coord_icp):
+    maximum = -float('inf')
+    minimum = float('inf')
+    for idx, odom in enumerate(objects_odom):
+        coord_odom = odom.get_transformed_odom()
+        if coord_odom is not None:
+            maximum = max(maximum, np.amax(coord_odom))
+            minimum = min(minimum, np.amin(coord_odom))
+    if coord_icp is not None:
+        maximum = max(maximum, np.amax(coord_icp))
+        minimum = min(minimum, np.amin(coord_icp))
+    return maximum, minimum
 
 
 def write_info_to_data_availability(output_folder):
