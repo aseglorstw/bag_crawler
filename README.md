@@ -139,9 +139,26 @@ This file might look like this:
   <br><sub>A folder named ".web_server_spot_2022-10-20-12-39-17.bag" for the bag file "/robingas/data/22-10-20-unhost/spot_2022-10-20-12-39-17.bag".</sub>
 </p>
 
+**In addition to the data described above, several other files can be noticed:**
 
 
+- Several images with suffix "demo" are made on the middle bag of the file and serve to briefly demonstrate where this file was recorded.
 
+- A logging file ".data_availability.json", which contains information about which parts of the bag file were processed. In this case it looks like this:
+  ```json 
+    {
+      "icp": false,
+      "odom": true,
+      "point_cloud": true,
+      "joy": true,
+      "video": true,
+      "graphs": true,
+      "bag_info": true
+    }
+  ```
+Based on this information we can say that the icp topic was not processed or was not found. 
+
+- The .npz and joy.json files are used to log the icp, odom, and topix reads to which commands are sent to control the robot with the joystick. 
 
 
 
