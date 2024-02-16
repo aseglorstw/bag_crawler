@@ -48,8 +48,9 @@ class VideoDataProcessor:
         video_name = f"{folder}/{self.get_name_for_video(topic_name)}_video.avi"
         video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (640, 480), True)
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
-            if msg_number == mid_video and not is_gray and not is_depth:
-                demo_image = cv2.imdecode(np.fromstring(CompressedImage(*self.slots(msg)).data, np.uint8), cv2.IMREAD_COLOR)
+            if msg_number == mid_video and not is_depth:
+                demo_image = self.get_processed_image(CompressedImage(*self.slots(msg)), is_depth, is_gray, upper_limit,
+                                                 lower_limit, rotation_angle, -1)
                 self.add_image_to_demo(demo_image, topic_name)
             if msg_number % save_interval == 0:
                 time_from_start = int(rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time)
@@ -77,10 +78,10 @@ class VideoDataProcessor:
     def save_demo_images(self, output_folder):
         if "demo_panorama" in self.demo_images:
             cv2.imwrite(os.path.join(output_folder, "demo_panorama.jpg"), self.demo_images["demo_panorama"])
-        elif "demo_image_front_color" in self.demo_images:
+        elif len([key for key in self.demo_images.keys() if "color" in key]) > 0:
             for key in [key for key in self.demo_images.keys() if "color" in key]:
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
-        elif "demo_image_front_gray" in self.demo_images:
+        elif len([key for key in self.demo_images.keys() if "gray" in key]) > 0:
             for key in [key for key in self.demo_images.keys() if "gray" in key]:
                 cv2.imwrite(os.path.join(output_folder, f"{key}.jpg"), self.demo_images[key])
 
@@ -170,7 +171,8 @@ class VideoDataProcessor:
         if abs(rotation_angle) > 0:
             image = self.get_rotated_image(image, rotation_angle)
         image = cv2.resize(np.asarray(image, dtype=np.uint8), (640, 480))
-        image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        if time_from_start != -1:
+            image = cv2.putText(image, self.get_datetime(time_from_start), (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         return image
 
     @staticmethod
@@ -255,11 +257,12 @@ class VideoDataProcessor:
 
     def add_image_to_demo(self, image, topic_name):
         is_grey = self.get_is_gray(topic_name)
-        position_keywords = ["front", "left", "right", "rear"]
+        position_keywords = ["frontright", "frontleft", "front", "left", "right", "rear", "back"]
         for position_keyword in position_keywords:
             if position_keyword in topic_name:
                 key = f"demo_image_{position_keyword}_gray" if is_grey else f"demo_image_{position_keyword}_color"
-                self.demo_images[key] = image if not is_grey else None
+                self.demo_images[key] = image
+                break
         if "pano" in topic_name or "omnicam" in topic_name:
             self.demo_images["demo_panorama"] = image
 
