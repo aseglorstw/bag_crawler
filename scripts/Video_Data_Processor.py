@@ -49,8 +49,8 @@ class VideoDataProcessor:
         video_out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'MJPG'), fps, (640, 480), True)
         for msg_number, (topic, msg, time) in enumerate(self.bag.read_messages(topics=[topic_name])):
             if msg_number == mid_video and not is_depth:
-                demo_image = self.get_processed_image(CompressedImage(*self.slots(msg)), is_depth, is_gray, upper_limit,
-                                                 lower_limit, rotation_angle, -1)
+                demo_image = self.get_processed_image(CompressedImage(*self.slots(msg)), is_depth, is_gray,
+                                                      upper_limit, lower_limit, rotation_angle, -1)
                 self.add_image_to_demo(demo_image, topic_name)
             if msg_number % save_interval == 0:
                 time_from_start = int(rospy.Time.from_sec(time.to_sec()).to_sec() - self.start_time)
