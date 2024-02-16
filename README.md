@@ -134,7 +134,11 @@ This file might look like this:
 
 **The post-processed data for each bag-file is saved in a separate folder.**
 
-TODO
+<p align="center">
+  <img src="https://i.imgur.com/cqT7kOV.png">
+  <br><sub>A folder named ".web_server_spot_2022-10-20-12-39-17.bag" for the bag file "/robingas/data/22-10-20-unhost/spot_2022-10-20-12-39-17.bag".</sub>
+</p>
+
 
 
 
