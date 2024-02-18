@@ -184,7 +184,7 @@ Use this command to copy an image from your local disk to a folder on the server
 
 ```
 singularity shell bag_crawler.sif
-sourse /opt/ros/noetic/setup.bash
+source /opt/ros/noetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
