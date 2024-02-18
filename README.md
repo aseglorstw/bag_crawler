@@ -241,9 +241,19 @@ In a situation where you want to process or reprocess only part of the bag files
     "ugv_2022-05-20-14-51-44.bag"
 ]
 ```
-2. Use the "Bag_Ignore.py" module. To do this you will need the absolute path to the bag file. 
+2. Use the "Bag_Ignore.py" module. To do this you will need the absolute path to the bag file.  
 
-   To add a bag file to the ignore list, use the command:
+To add file.bag to the ignore list, use the command:
+   
+```
+singularity exec --bind /directory bag_crawler.sif python ~/catkin_ws/src/bag_crawler/scripts/Bag_Ignore.py -add /directory/file.bag   
+```
+
+To remove this command:
+   
+```
+singularity exec --bind /directory bag_crawler.sif python ~/catkin_ws/src/bag_crawler/scripts/Bag_Ignore.py -rm /directory/file.bag
+```
 
 
 - **Running the script.**
