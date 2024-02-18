@@ -193,8 +193,10 @@ cd src
 git clone https://github.com/aseglorstw/bag_crawler.git
 cd ..
 catkin_make
+exit
 ```
 
+Then you need to go to the container and build the project inside it, you can see more details about building in the [ROS documentation](https://wiki.ros.org/ROS/Tutorials/BuildingPackages).
 
 ## Usage
 
