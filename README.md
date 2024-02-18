@@ -163,8 +163,38 @@ Based on this information we can say that the icp topic was not processed or was
 
 
 ## Installation
+1. **Creating a .sif file.**
 
-TODO
+```
+wget https://raw.githubusercontent.com/aseglorstw/bag_crawler/master/singularity/build.sh
+wget https://raw.githubusercontent.com/aseglorstw/bag_crawler/master/singularity/recepie.def
+chmod +x build.sh
+./build.sh
+```
+Create a folder in a convenient location and build a container in it using the instructions above.
+
+2.**Copy the image to the server.**
+
+```
+scp bag_crawler.sif username@login3.rci.cvut.cz:/mnt/personal/username/conteiners/
+```
+Use this command to copy an image from your local disk to a folder on the server, such as the "containers" folder.
+
+3.**Assembling the project.**
+
+```
+singularity shell bag_crawler.sif
+sourse /opt/ros/noetic/setup.bash
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/
+catkin_make
+source devel/setup.bash
+cd src
+git clone https://github.com/aseglorstw/bag_crawler.git
+cd ..
+catkin_make
+```
+
 
 ## Usage
 
