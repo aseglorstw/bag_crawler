@@ -173,14 +173,14 @@ chmod +x build.sh
 ```
 Create a folder in a convenient location and build a container in it using the instructions above.
 
-2.**Copy the image to the server.**
+2. **Copy the image to the server.**
 
 ```
 scp bag_crawler.sif username@login3.rci.cvut.cz:/mnt/personal/username/conteiners/
 ```
 Use this command to copy an image from your local disk to a folder on the server, such as the "containers" folder.
 
-3.**Assembling the project.**
+3. **Assembling the project.**
 
 ```
 singularity shell bag_crawler.sif
@@ -200,5 +200,38 @@ Then you need to go to the container and build the project inside it, you can se
 
 ## Usage
 
-TODO
+- **Configuration file.**
+
+The configuration file can, but should not, be used. The situations where a configuration file is used are described above. There are three types of configuration file:
+1. The global configuration file ".bag_crawler_global_config.json"  must be located in the root folder.
+2. The local configuration file ".bag_crawler_local_config.json" will be used for bag files that are in the same folder as the configuration file.
+3. The configuration file for one particular bag file must be in the same folder and contain the suffix ".config.json" instead of the suffix ".bag".  
+
+<p align="center">
+  <img src="https://i.imgur.com/xipDMeE.png">
+  <br><sub>Example of a configuration file for a folder with one bag file. This configuration file will be used only for bag files in this folder. </sub>
+</p>
+
+The configuration file might look something like this:
+```json 
+{
+    "elements_of_control": {
+        "/local_joy/joy": "gamepad_PC" 
+    }
+}
+```
+You can add other topics to the "elements_of_control" values depending on the robot and bind the control method to them. The script at the stage of plotting the trajectory graph with joystick control marks will try to find in the configuration file the tops to which control types "robot_gamepad" or "gamepad_PC" are mapped.
+
+- **Re-processing of bag files.**
+
+
+
+- **Running the script.**
+
+You can run the script for processing using the following command:
+```
+ singularity exec --bind /root_directory bag_crawler.sif ~/catkin_ws/src/bag_crawler/singularity/run_script.sh /root_directory 
+```
+
+Here "/root_directory" is the folder from which the script will start looking for bag files.  
 
