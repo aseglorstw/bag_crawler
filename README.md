@@ -224,6 +224,11 @@ You can add other topics to the "elements_of_control" values depending on the ro
 
 - **Re-processing of bag files.**
 
+In case the script is called again on a folder that has already been processed, the program will check the logging file ".data_availability.json". The following are the situations that may occur:
+1. "icp": false or "odom": false or "point_cloud": false or "joy": false - the script will try to read the missing topic again, load the rest from the .npz or .json files if they were read successfully, and generate the graphs and the rest of the data once more. 
+2. "video": false - the script will try again to create the video.
+3. "graphs": false - script will load all the counted tops and create graphs.
+4. "bag_info": false - The script will load saved data from topics and, based on it, will generate files - bag_info.json, topics_info.json and other files of this kind.
 
 
 - **Running the script.**
