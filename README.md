@@ -158,7 +158,7 @@ This file might look like this:
   ```
 Based on this information we can say that the icp topic was not processed or was not found. 
 
-- The .npz and joy.json files are used to log the icp, odom, and topix reads to which commands are sent to control the robot with the joystick. 
+- The .npz and joy.json files are used to log the icp, odom, and topics reads to which commands are sent to control the robot with the joystick. 
 
 
 
@@ -221,14 +221,14 @@ The configuration file might look something like this:
     }
 }
 ```
-You can add other topics to the "elements_of_control" values depending on the robot and bind the control method to them. The script at the stage of plotting the trajectory graph with joystick control marks will try to find in the configuration file the tops to which control types "robot_gamepad" or "gamepad_PC" are mapped.
+You can add other topics to the "elements_of_control" values depending on the robot and bind the control method to them. The script at the stage of plotting the trajectory graph with joystick control marks will try to find in the configuration file the topics to which control types "robot_gamepad" or "gamepad_PC" are mapped.
 
 - **Re-processing of bag files.**
 
  In case the script is called again on a folder that has already been processed, the program will check the logging file ".data_availability.json". The following are the situations that may occur:
  1. "icp": false or "odom": false or "point_cloud": false or "joy": false - the script will try to read the missing topic again, load the rest from the .npz or .json files if they were read successfully, and generate the graphs and the rest of the data once more. 
  2. "video": false - the script will try again to create the video.
- 3. "graphs": false - script will load all the counted tops and create graphs.
+ 3. "graphs": false - script will load all the counted topics and create graphs.
  4. "bag_info": false - The script will load saved data from topics and, based on it, will generate files - bag_info.json, topics_info.json and other files of this kind.
 
 - **Ignoring bag files.**
